@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body></body>
+  <script>
+    function fn1() {
+      console.log("fn1");
+    }
+    function fn2() {
+      console.log("fn2");
+    }
+    //自定义事件
+    let handle = {};
+    //handle = {myevent:[fn1,fn2]};
+    //绑定事件
+    function addEvent(eventName, fn) {
+      if (typeof handle[eventName] === "undefined") {
+        handle[eventName] = [];
+      }
+      handle[eventName].push(fn);
+    }
+
+    function tigger(eventName){
+        if(typeof handle[eventName] === "undefined"){
+            return ;
+        }
+        handle[eventName].forEach(fn => {
+            fn();
+        });
+    }
+    addEvent("myevent",fn1);
+    addEvent("myevent",fn2);
+    tigger("myevent");
+
+  </script>
+</html>
