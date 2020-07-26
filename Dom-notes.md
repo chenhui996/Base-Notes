@@ -112,4 +112,65 @@
   - Object;
 - 复杂数据类型不会新开辟内存地址;
 
+# insetBefore()
 
+- 插入标签之前
+- obj.insetBefore(newNode,oldNode);
+  - 必须有两个参数：
+    - newNode：需插入的节点;
+    - oldNode：插入这个节点之前;
+
+# replaceChild()
+
+- 替换节点；
+- obj.replaceChild(newNode,oldNode);
+  - 必须有两个参数：
+    - newNode：需插入的节点;
+    - oldNode：插入这个节点之前;
+
+# node.remove()
+
+- 删除节点;
+- 返回 undefind;
+
+# parent.removeChild()
+
+- 删除 parent 下的某一个节点;
+
+# cloneNode()
+
+- 克隆节点
+  - 参数为布尔值：
+    - true:深拷贝;
+    - false:浅拷贝;
+
+# 尺寸相关 
+
+# offset
+
+- offsetWidth:可视宽度;
+  - 元素本身宽度 + padding + border；
+- offsetHeight:可视高度;
+  - 元素本身高度 + padding + border；
+- offsetLeft: 距离定位父级的left坐标;
+- offsetTop: 距离定位父级的top坐标;
+
+# client
+
+- clientWidth: 可视宽度 + border;
+- clientHeight: 可视高度 + border;
+- clientLeft: 左边框宽度;
+- clientTop: 上边框宽度;
+
+# scroll
+
+- scrollWidth: 内容宽度;
+  - 注意，滚动条可能会影响宽度;
+- scrollHeight: 内容高度;
+  - 内容高度若比元素高度高，则为内容高度;
+- scrollLeft: 左右滚动距离;
+- scrollTop: 上下滚动距离;
+
+# getBoundingClientRect()
+
+- 方法返回元素的大小及其相对于视口的位置
