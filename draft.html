@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body></body>
+  <script>
+    function LoadImg() {
+      return new Promise((res, rej) => {
+        let img = new Image();
+        // img.src =
+        //   "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1596087043136&di=914e8f74ed557ed8789d5413ef5e987f&imgtype=0&src=http%3A%2F%2Fpic1.win4000.com%2Fwallpaper%2F0%2F587c7e395b9a0.jpg";
+        img.src =
+          "https://timgsa.baidu.com/tim";
+        img.onload = function () {
+          document.body.appendChild(img);
+          res("success");
+        };
+        img.onerror = function () {
+          rej("err");
+        };
+      });
+    }
+    LoadImg()
+      .then((res) => {
+        console.log(res);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  </script>
+</html>

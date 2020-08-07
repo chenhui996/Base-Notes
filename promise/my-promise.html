@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="./KPromise.js"></script>
+  </head>
+  <body>
+    <h1>自己封装primose</h1>
+  </body>
+  <script>
+    //promise对象三种状态
+    let p = new KPromise((resolve, reject) => {
+    //   setTimeout(() => {
+    //       resolve("resolveValue");
+    //   }, 1000);
+      resolve("resolveValue");
+    });
+    // console.log(p,"dsds");
+    p.then(res=>{
+        console.log("111",res)
+    });
+    
+  </script>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body></body>
+  <script>
+    // 1.获取字符串中的数字，对比用正则和不用正则的区别;
+    let str = "dsadsasa2365fdfdg659863dsjsz12325rfg53610";
+
+    // 不用正则
+    // function getNumber(str) {
+    //   let arr = [];
+    //   let temp = "";
+    //   for (let i = 0; i < str.length; i++) {
+    //     if (!isNaN(str[i])) {
+    //       temp += str[i];
+    //     } else {
+    //       if (temp !== "") {
+    //         arr.push(temp);
+    //         temp = "";
+    //       }
+    //     }
+    //   }
+    //   if (temp !== "") {
+    //     arr.push(temp);
+    //   }
+    //   return arr;
+    // }
+    // console.log(getNumber(str));
+
+    // 用正则
+    const reg = /\d+/g;
+    const arr = str.match(reg);
+    console.log(arr);
+  </script>
+</html>

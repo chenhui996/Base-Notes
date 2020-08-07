@@ -199,3 +199,8 @@ arr.sort(function(a,b){
       - arr:调用forEach的当前数组;
   - thisArg(可选):
     - 控制当前callback中的this指向;
+
+# isNaN()
+
+- isNaN(value):
+- api: 判断value转换为Number类型后，是否为NaN(字符串会被隐式转换后，再做判断);
