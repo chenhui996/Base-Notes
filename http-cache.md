@@ -101,7 +101,7 @@
 - Cache-Control 可以由多个字段组合而成;
   - 主要有以下几个取值：
 
-### max-age
+#### max-age
 
 - max-age 指定一个时间长度，在这个时间段内缓存是有效的，单位是 s;
   - 例如设置 Cache-Control:max-age=31536000:
@@ -112,35 +112,35 @@
   - 再次访问这个资源就命中了缓存;
   - 不会向服务器请求资源而是直接从浏览器缓存中取;
 
-### s-maxage
+#### s-maxage
 
 - s-maxage 同 max-age:
   - 覆盖 max-age、Expires，但仅适用于'共享缓存';
   - 在'私有缓存'中被忽略;
 
-### public
+#### public
 
 - public 表明响应可以被任何对象缓存:
   - 发送请求的客户端、代理服务器等等;
 
-### private
+#### private
 
 - private 表明响应只能被单个用户缓存;
   - 可能是操作系统用户、浏览器用户;
   - 是非共享的，不能被代理服务器缓存;
 
-### no-cache
+#### no-cache
 
 - no-cache 强制所有缓存了该响应的用户:
   - 在使用已缓存的数据前，发送带验证器的请求到服务器;
   - 不是字面意思上的不缓存;
   - 也就是在用之前，先发个带验证器的请求到服务器确认，服务器只是返回确认结果，不是返回缓存;
 
-### no-store
+#### no-store
 
 - no-store 禁止缓存，每次请求都要向服务器重新获取数据;
 
-### must-revalidate
+#### must-revalidate
 
 - must-revalidate 指定如果页面是过期的:
   - 则去服务器进行获取;
