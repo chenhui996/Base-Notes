@@ -172,3 +172,21 @@ server.listen(3000);
 # pug模版引擎
 
 - 靠代码缩进来表示闭合标签;
+
+# createServer
+
+- 返回一个Server类的实例化对象;
+- 等同于：
+```js
+const server = new Server();
+```
+
+# request
+
+- http.ClientRequest 类;
+- request 存储当前请求的客户端：信息和方法;
+
+# response
+
+- http.ServerResponse 类;
+- response 类提供服务器响应相关的信息和方法;

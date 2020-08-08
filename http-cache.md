@@ -1,4 +1,4 @@
-### HTTP 缓存机制
+# HTTP 缓存机制
 
 - Web 缓存大致可以分为:
   - 数据库缓存;
@@ -15,7 +15,7 @@
   - 等等;
 - 这里我们只讨论 HTTP 缓存相关内容;
 
-# HTTP 缓存
+### HTTP 缓存
 
 - 在具体了解 HTTP 缓存之前先来明确几个术语:
   - 缓存命中率:
@@ -43,7 +43,7 @@
 - 但是代理服务器不解析 HTML 内容;
   - 一般应用广泛的是用 HTTP 头信息控制缓存;
 
-# 浏览器缓存分类
+### 浏览器缓存分类
 
 - 浏览器缓存分为:
   - 强缓存;
@@ -69,7 +69,7 @@
   - Expires 或者 Cache-Control 两个字段来控制的:
     - 用来表示资源的缓存时间;
 
-# Expires
+### Expires
 
 - 缓存过期时间，用来指定资源到期的时间;
 - 是服务器端的具体的时间点;
@@ -89,7 +89,7 @@
         - 服务器与客户端时间偏差变大以后，就会导致缓存混乱;
         - 于是发展出了 Cache-Control;
 
-# Cache-Control
+### Cache-Control
 
 - Cache-Control 是一个相对时间:
   - 例如 Cache-Control:3600;
@@ -101,7 +101,7 @@
 - Cache-Control 可以由多个字段组合而成;
   - 主要有以下几个取值：
 
-# max-age
+### max-age
 
 - max-age 指定一个时间长度，在这个时间段内缓存是有效的，单位是 s;
   - 例如设置 Cache-Control:max-age=31536000:
@@ -112,35 +112,35 @@
   - 再次访问这个资源就命中了缓存;
   - 不会向服务器请求资源而是直接从浏览器缓存中取;
 
-# s-maxage
+### s-maxage
 
 - s-maxage 同 max-age:
   - 覆盖 max-age、Expires，但仅适用于'共享缓存';
   - 在'私有缓存'中被忽略;
 
-# public
+### public
 
 - public 表明响应可以被任何对象缓存:
   - 发送请求的客户端、代理服务器等等;
 
-# private
+### private
 
 - private 表明响应只能被单个用户缓存;
   - 可能是操作系统用户、浏览器用户;
   - 是非共享的，不能被代理服务器缓存;
 
-# no-cache
+### no-cache
 
 - no-cache 强制所有缓存了该响应的用户:
   - 在使用已缓存的数据前，发送带验证器的请求到服务器;
   - 不是字面意思上的不缓存;
   - 也就是在用之前，先发个带验证器的请求到服务器确认，服务器只是返回确认结果，不是返回缓存;
 
-# no-store
+### no-store
 
 - no-store 禁止缓存，每次请求都要向服务器重新获取数据;
 
-# must-revalidate
+### must-revalidate
 
 - must-revalidate 指定如果页面是过期的:
   - 则去服务器进行获取;
@@ -152,7 +152,7 @@
 - 服务器根据 http 头信息中的 Last-Modify/If-Modify-Since 或 Etag/If-None-Match 来判断是否命中协商缓存;
 - 如果命中，则 http 返回码为 304，浏览器从缓存中加载资源;
 
-# Last-Modify/If-Modify-Since
+### Last-Modify/If-Modify-Since
 
 - 浏览器第一次请求一个资源的时候:
   - 服务器返回的 header 中会加上 Last-Modify;
@@ -171,7 +171,7 @@
         - 资源变化了最后修改时间也可以一致;
         - 于是出现了 ETag/If-None-Match;
 
-# ETag/If-None-Match
+### ETag/If-None-Match
 
 - 与 Last-Modify/If-Modify-Since 不同的是:
   - Etag/If-None-Match 返回的是一个校验码（ETag: entity tag）;
@@ -179,7 +179,7 @@
   - ETag 值的变更则说明资源状态已经被修改;
   - 服务器根据浏览器上发送的 If-None-Match 值来判断是否命中缓存;
 
-# ETag 扩展说明
+### ETag 扩展说明
 
 - 我们对 ETag 寄予厚望，希望它对于每一个 url 生成唯一的值;
   - 资源变化时 ETag 也发生变化;
@@ -195,15 +195,15 @@
   - 使用抗碰撞散列函数来生成;
   - 所以，理论上 ETag 也是会重复的，只是概率小到可以忽略;
 
-# 既生Last-Modified何生Etag？
+### 既生 Last-Modified 何生 Etag？
 
-- 你可能会觉得使用Last-Modified:
+- 你可能会觉得使用 Last-Modified:
   - 已经足以让浏览器知道本地的缓存副本是否足够新;
-- 为什么还需要Etag（实体标识）呢？
-- HTTP1.1中Etag的出现:
-  - 主要是为了解决几个Last-Modified比较难解决的问题：
-    - Last-Modified标注的最后修改只能精确到秒级;  
-      - 如果某些文件在1秒钟以内，被修改多次的话;
+- 为什么还需要 Etag（实体标识）呢？
+- HTTP1.1 中 Etag 的出现:
+  - 主要是为了解决几个 Last-Modified 比较难解决的问题：
+    - Last-Modified 标注的最后修改只能精确到秒级;
+      - 如果某些文件在 1 秒钟以内，被修改多次的话;
       - 它将不能准确标注文件的修改时间;
   - 如果某些文件会被定期生成;
-    - 当有时内容并没有任何变化，但Last-Modified却改变了，导致文件没法使用缓存
+    - 当有时内容并没有任何变化，但 Last-Modified 却改变了，导致文件没法使用缓存；
