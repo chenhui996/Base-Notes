@@ -1,9 +1,9 @@
-### Node.js
+# Node.js
 
 - 很多人把 node.js 当作框架，这是错误的;
 - node.js ———— 它就是 js!
 
-# node.js 与 js 有什么区别？
+## node.js 与 js 有什么区别？
 
 - node.js:
   - 运行在服务端的 js;
@@ -21,7 +21,7 @@
   - 访问它的电脑，被称为客户端;
 - 服务端和客户端，是一个相对的概念;
 
-# createServer
+### createServer
 
 - 创建服务端命令
 
@@ -36,20 +36,20 @@ server.listen(3000);
 
 - 这样，一个服务端就创建好了;
 
-# require
+### require
 
 - 用于引入模块、 JSON、或本地文件;
 
-# listen(port)
+### listen(port)
 
 - 监听端口
 - port:端口号;
 
-# 本机 ip 地址
+### 本机 ip 地址
 
 - \$ifconfig
 
-# nodemon
+### nodemon
 
 - 此插件可以帮助我们自动重启服务端;
   - 由于服务端不会自动重启;
@@ -63,15 +63,15 @@ server.listen(3000);
   - 组件之间有独立的命名空间;
   - 有利于代码的'可读性'和'可维护性';
 
-# module.exports
+### module.exports
 
 - 导出组件;
 
-# exports
+### exports
 
 - exports 是 module.exports 的一个引用;
 
-# node_modules
+### node_modules
 
 - 针对第三方的，存放模块的文件夹;
 - node 里所有的模块（主要是针对第三方，自己写的一般自己放一个文件夹）;
@@ -92,46 +92,46 @@ server.listen(3000);
     - 通过命令行：\$npm i;
     - 即可全部下载安装，顶乐;
 
-# dependencies
+### dependencies
 
 - 运行依赖;
   - 一直需要的依赖;
 
-# devDependencies
+### devDependencies
 
 - 开发依赖;
   - 过河拆桥，开发完打包后，就没用了;
 
-# npm
+### npm
 
 - 包管理器;
 - 模块管理器;
 - www.npmjs.com
 
-# npm i
+### npm i
 
 - npm install 简写;
 
-# npm i XXX --save
+### npm i XXX --save
 
 - 会写进 package.jason 里面的 dependencies(运行依赖);
 - 简写 -S;
 
-# npm i XXX -D
+### npm i XXX -D
 
 - 会写进 package.jason 里面的 devDependencies(开发依赖);
 
-# npm install XXX -g
+### npm install XXX -g
 
 - 全局安装;
 - 安装目录:
   - /Users/chenhui/.nvm/versions/node/v10.15.3/lib/node_modules
 
-# npm update XXX
+### npm update XXX
 
 - 更新组件;
 
-# buffer
+### buffer
 
 - 缓冲区;
 - 在 node.js 是一个类，是一个数据格式;
@@ -139,25 +139,25 @@ server.listen(3000);
   - 呈现形式：二位 16 进制呈现;
   - 实际：二进制;
 
-# alloc
+### alloc
 
 - 通过 Buffer.alloc(number)创建指定大小的 buffer 数据;
 
-# from
+### from
 
 - Buffer.from(string);
 - 通过字符串创建;
 
-# stream
+### stream
 
 - 形象翻译：流;
 - 当文件过大时，优化性能，可以采用 stream 流来进行文件拆分，依次运行;
 
-# createReadStream
+### createReadStream
 
 - 创建拆分数据流;
 
-# createWriteStream
+### createWriteStream
 
 - 创建写入流;
 - pipe：
@@ -169,11 +169,11 @@ server.listen(3000);
   - CMS 列表页;
   - CMS 详情页;
 
-# pug 模版引擎
+### pug 模版引擎
 
 - 靠代码缩进来表示闭合标签;
 
-# createServer
+### createServer
 
 - 返回一个 Server 类的实例化对象;
 - 等同于：
@@ -182,12 +182,12 @@ server.listen(3000);
 const server = new Server();
 ```
 
-# request
+### request
 
 - http.ClientRequest 类;
 - request 存储当前请求的客户端：信息和方法;
 
-# response
+### response
 
 - http.ServerResponse 类;
 - response 类提供服务器响应相关的信息和方法;
@@ -196,13 +196,22 @@ const server = new Server();
 
 - 文件操作
 
-# fs.readFileSync
+### fs.readFileSync
+
+- 同步读取文件内容;
+
+### fs.readFile
 
 - 异步读取文件内容;
 
-# fs.readFile
+### fs.writeFile
 
-- 同步读取文件内容;
+- 异步写文件;
+- 权限：
+  - a:追加写入;
+  - w:写入;
+  - r:读取;
+- fs.writeFile("文件名","文件内容",{flag:"权限"},callback);
 
 ## 浏览器的地址
 
@@ -210,10 +219,8 @@ const server = new Server();
 - 给谁看：
   - http.js 看的(服务端文件);
 - 地址看到什么内容：
-
   - 取决于在 http.js 你给它输出什么内容;
   - 本身并不存在地址;
-
 - 官方总结：
   - 客户端访问的地址(url)：
     - 与后端的文件不是一对一的关系;
@@ -233,21 +240,21 @@ console.log(request.url);
 
 - request.url 得到发请求的地址;
 
-## url与资源
+## url 与资源
 
-- url需要定义规则：
-  - 如果url与资源都映射，我们通过代码一个个去写，是基本不可能;
+- url 需要定义规则：
+  - 如果 url 与资源都映射，我们通过代码一个个去写，是基本不可能;
   - 所以，我们需要去定义规则：
-    - 满足这个规则的url;
+    - 满足这个规则的 url;
     - 就是指定的目录中匹配;
 
 ### url.startsWith("/")
 
-- 以/开头的url;
+- 以/开头的 url;
 
-### __dirname
+### `__dirname`
 
-- node中的内置变量;
+- node 中的内置变量;
 - 返回当前文件的绝对路径;
 
 ## 报文
@@ -263,15 +270,18 @@ console.log(request.url);
 - 设置浏览器的解析方式：
   - 正常情况下，传给浏览器中文，会乱码;
   - 需要给浏览器设定解析方式;
+
 ```js
-response.setHeader("Content-Type","text/html;charset=utf-8");
+response.setHeader("Content-Type", "text/html;charset=utf-8");
 ```
+
 - 这样，中文就不会乱码了;
 - 浏览器就会根据二进制特征去分析了：
   - html;
   - 中文;
   - 等等;
-- 甚至可以在头信息中将其设置为zip包，自动调用浏览器的下载功能:
+- 甚至可以在头信息中将其设置为 zip 包，自动调用浏览器的下载功能:
+
 ```js
-response.setHeader("Content-Type","application/zip");
+response.setHeader("Content-Type", "application/zip");
 ```
