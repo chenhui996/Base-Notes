@@ -206,6 +206,21 @@ const server = new Server();
 
 ### fs.writeFile
 
+- fs.writeFile('文件路径'，'要写入的内容'，['编码']，'回调函数');
+- 写入的时候如果没有这个文件，会自动创建这个文件;
+- 如果被写入的文件已存在内容，那么写入的话，会覆盖之前的内容;
+- 写入数据的类型必须是字符串或 buffer 二进制数据;
+  - 对象等数据写入后;
+  - 接收的是数据类型;
+- 编码部分一般省略即可，或填写'utf-8';
+- 回调函数中，只有 err 一个参数，写入错误即可判断调用;
+- fs.writeFileSync()同步版本;
+
+### fs.watch()
+
+- 监听文件发生改变;
+- 可以用来手写 nodemon 等监听插件;
+
 - 异步写文件;
 - 权限：
   - a:追加写入;
@@ -285,3 +300,50 @@ response.setHeader("Content-Type", "text/html;charset=utf-8");
 ```js
 response.setHeader("Content-Type", "application/zip");
 ```
+
+## nunjucks
+
+- 基于 node.js 的模版引擎；
+
+### nunjucks.renderString
+
+- 输出模版字符串
+- nunjucks.renderString('Hello {{ username }}',{username:"James"})
+  - 输出为：Hello James
+
+# webserver
+
+- 解析请求;
+- 处理响应;
+
+## koa
+
+- 处理了请求和响应的基本逻辑;
+- 提供一个接口进行扩展;
+- ctx:
+  - 上下文对象;
+  - 是个对象:
+    - ctx= {
+      - request,//Koa 处理过后的
+      - response,//Koa 处理过后
+      - req,node 原来的
+      - res node 原来
+    - };
+- next:
+  - 传递给下一个中间件;
+
+## koa-router
+
+- 路由插件;
+
+### routers
+
+- 返回一个中间件函数;
+- router.routers();
+- 只要有人访问了，router.routers()返回的中间件就会执行;
+  - 使用 router 提供的 get，post，put...这些方法来注册 url 函数;
+    - 这些注册的函数，也会被当作中间件进行执行;
+    - 所以每个函数也有 ctx 方法;
+  - 访问后，router.routers()执行，中间件就会分析 url;
+    - 把分许 url 与上面 get 等方法注册的时候填入的 url 进行一个匹配;
+    - 满足匹配要求就执行对应的'注册函数';
