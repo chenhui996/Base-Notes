@@ -38,6 +38,8 @@ function makeWorkers(people) {
 <ul>makeWorkers(people)</ul>;
 ```
 
-- 在创建一个新的数组时使用map;
+- 在创建一个新的数组时使用 map;
 - 当你不需要制作一个新的数组，而是要对数据做一些事情时
-    - 就使用forEach;
+  - 就使用 forEach;
+    <br>
+- 两者都比 JavaScript 内置的 for 循环慢;
