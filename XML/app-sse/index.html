@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="box"></div>
+    <h1>EventSource</h1>
+    <script>
+      let box = document.querySelector('#box')
+      let evtSource = new EventSource("/getData");
+
+      evtSource.addEventListener('open', function(){
+        console.log("Turned on");
+      });
+
+      evtSource.addEventListener('abc', e=>{
+        console.log("e",e);
+        let data = JSON.parse(e.data);
+
+            box.innerHTML += `<p>${data.time}</p>`;
+      });
+    </script>
+  </body>
+</html>

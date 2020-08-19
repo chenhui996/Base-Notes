@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1 id="hOne">1</h1>
+    <textarea name="" id="textarea" cols="100" rows="10"></textarea><br>
+    <input type="text" id="content">
+    <button id="btn">Send</button>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let textarea = document.querySelector('#textarea');
+        let content = document.querySelector('#content');
+        let btn = document.querySelector('#btn');
+
+        const socket = io('/');
+
+        socket.on('hello', data => {
+            writeData(data);
+        });
+
+        socket.on('message', data => {
+            writeData(data);
+        });
+        socket.on('userUpdate', data => {
+            console.log(socket.id);
+        });
+
+        btn.onclick=function(){
+            writeData('I say: ' + content.value);
+            socket.emit('message', content.value);
+            content.value = '';
+            content.focus();
+        }
+        content.onclick = function(){
+            hOneData();
+        }
+        function hOneData(){
+            let hOne = document.querySelector('#hOne');
+            hOne.innerHTML = socket.id;
+        }
+        function writeData(data){
+            textarea.innerHTML += data +'\r\n';
+        }
+      </script>
+</body>
+</html>
