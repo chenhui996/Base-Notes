@@ -3,7 +3,7 @@
 - 本文档为本人学习axios的学习笔记;
 - 后期也可作为知识手册进行回顾;
 - 已上传至github，欢迎各位同学进行交流补充;
-  - github地址: 
+  - github地址: https://github.com/chenhui996/Base-Notes/blob/master/Axios-Notes.md
 
 ## Axios概念
 
