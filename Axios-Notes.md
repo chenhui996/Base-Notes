@@ -186,18 +186,23 @@ const myAxios = axios.create({
 ```js
 axios({
   // ...
+  // 下面即为config的配置项
 });
 ```
 
 ### url
 
 - 用于请求的服务器 URL;
-- url: '/user',
+```js
+url: '/user',
+```
 
 ### method
 
 - 是创建请求时使用的方法;
-- method: 'get',
+```js
+method: 'get',
+```
 
 ### baseURL
 
@@ -205,7 +210,9 @@ axios({
   - 除非 `url` 是一个绝对 URL;
 - 可以通过设置一个 `baseURL`:
   - 便于为 axios 实例的方法传递相对 URL;
-- baseURL: 'https://baidu.com/api/',
+```js
+baseURL: 'https://baidu.com/api/',
+```
 
 ### transformRequest
 
@@ -217,5 +224,5 @@ transformRequest: [
     // 这里修改马上要发送的 data 属性
     return data;
   },
-];
+],
 ```
