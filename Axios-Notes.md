@@ -193,6 +193,7 @@ axios({
 ### url
 
 - 用于请求的服务器 URL;
+
 ```js
 url: '/user',
 ```
@@ -200,6 +201,7 @@ url: '/user',
 ### method
 
 - 是创建请求时使用的方法;
+
 ```js
 method: 'get',
 ```
@@ -210,6 +212,7 @@ method: 'get',
   - 除非 `url` 是一个绝对 URL;
 - 可以通过设置一个 `baseURL`:
   - 便于为 axios 实例的方法传递相对 URL;
+
 ```js
 baseURL: 'https://baidu.com/api/',
 ```
@@ -226,3 +229,270 @@ transformRequest: [
   },
 ],
 ```
+
+### transformResponse
+
+- 在传递给 then/catch 前, 允许修改响应数据
+
+```js
+transformResponse: [function (data) {
+    // 对 data 进行任意转换处理
+    // 理解: 是这是请求完成后，拿回来的数据，进行处理;
+    return data;
+  }],
+```
+
+### headers
+
+- 即将被发送的自定义请求头
+
+```js
+headers: {'X-Requested-With': 'XMLHttpRequest'},
+```
+
+### params
+
+- 即将与请求一起发送的 URL 参数
+- 必须是一个:
+  - 无格式对象:(plain object);
+  - URLSearchParams 对象;
+
+```js
+params: {
+    ID: 12345
+},
+```
+
+### paramsSerializer
+
+- 负责 `params` 序列化的函数;
+
+```js
+paramsSerializer: function(params) {
+    // 作者菜语：这个暂时无法理解，可待后续'会'了后，来回顾
+    return Qs.stringify(params, {arrayFormat: 'brackets'})
+},
+```
+
+### data
+
+- 作为请求主体被发送的数据;
+- 只适用于这些请求方法:
+  - PUT
+  - POST
+  - PATCH
+- 在没有设置 `transformRequest` 时，必须是以下类型之一：
+  - string
+  - plain object
+  - ArrayBuffer
+  - ArrayBufferView
+  - URLSearchParams
+  - 浏览器专属:
+    - FormData
+    - File
+    - Blob
+  - Node 专属:
+    - Stream
+
+```js
+data: {
+    firstName: 'chen'
+  },
+```
+
+### timeout
+
+- 指定请求超时的毫秒数(0 表示无超时时间)
+- 如果请求话费了超过 `timeout` 的时间:
+  - 请求将被中断;
+
+```js
+timeout: 1000,
+```
+
+### withCredentials
+
+- 表示跨域请求时是否需要使用凭证;
+
+```js
+// 作者菜语：本人没用过，暂时无法理解深刻
+withCredentials: false, // default
+```
+
+### adapter
+
+- 允许自定义处理请求，以使测试更轻松;
+- 返回一个 promise 并应用一个有效的响应;
+
+```js
+// 作者菜语：想象不到具体使用场景，暂时无法理解深刻
+adapter: function (config) {
+    /* ... */
+},
+```
+
+### maxContentLength
+
+- 定义允许的响应内容的最大尺寸
+
+```js
+ maxContentLength: 2000,
+```
+
+### responseType
+
+- 表示服务器响应的数据类型，可以是:
+  - arraybuffer
+  - blob
+  - document
+  - json
+  - text
+  - stream
+
+```js
+responseType: 'json',
+```
+
+### proxy
+
+- 定义代理服务器
+
+```js
+proxy: {
+    host: '127.0.0.1',
+    port: 9000,
+    auth: {
+      username: 'mikeymike',
+      password: 'rapunz3l'
+    }
+  },
+```
+
+### cancelToken
+
+- 指定用于取消请求的 cancel token;
+
+```js
+cancelToken: new CancelToken(function (cancel) {});
+```
+
+## 小结
+
+- 上面总结了部分我常用的一些配置项
+  - 具体用的比较偏的，切我也没看懂，就暂时没整理，等后面牛了，再进行补充;
+
+## then
+
+- 使用 then 时，你将接收下面这样的响应 :
+
+```js
+axios.get("/user/123").then(function (response) {
+  console.log(response.data);
+  console.log(response.status);
+  console.log(response.statusText);
+  console.log(response.headers);
+  console.log(response.config);
+  // 整理了response的输出，以后用的时候辅助调试;
+});
+```
+
+## 配置默认值
+
+- 你可以指定将被用在各个请求的配置默认值
+
+### 全局的 axios 默认值
+
+```js
+axios.defaults.baseURL = "https://api.example.com";
+axios.defaults.headers.common["Authorization"] = AUTH_TOKEN;
+axios.defaults.headers.post["Content-Type"] =
+  "application/x-www-form-urlencoded";
+
+// 自定义默认值
+const instance = axios.create({
+  baseURL: "https://api.example.com",
+});
+instance.defaults.headers.common["Authorization"] = AUTH_TOKEN;
+```
+
+## 配置的优先顺序
+
+- 配置会以一个优先顺序进行合并;
+- 这个顺序是：
+  - 在 lib/defaults.js 找到的库的默认值;
+  - 然后是实例的 defaults 属性;
+  - 最后是请求的 config 参数;
+- 后者将优先于前者;
+
+```js
+// 使用由库提供的配置的默认值来创建实例
+// 此时超时配置的默认值是 `0`
+var instance = axios.create();
+
+// 覆写库的超时默认值
+// 现在，在超时前，所有请求都会等待 2.5 秒
+instance.defaults.timeout = 2500;
+
+// 为已知需要花费很长时间的请求覆写超时设置
+instance.get("/longRequest", {
+  timeout: 5000,
+});
+```
+
+- 就跟 js 一样，自上而下进行编译覆盖，没有啥函数提升的坑;
+
+## 拦截器
+
+- 在请求或响应被 then 或 catch 处理前拦截它们;
+
+```js
+// 添加请求拦截器
+axios.interceptors.request.use(function (config){
+    // 发送前，还可以在这做一些操作，做完了return
+    return config;
+}), function (error) {
+    // 对请求错误做些什么
+    return Promise.reject(error);
+});
+
+// 添加响应拦截器
+// 这里的数据，之后就真要给then 或 catch了
+axios.interceptors.response.use(function (response) {
+    // 对响应数据做点什么
+    return response;
+}, function (error) {
+    // 对响应错误做点什么
+    return Promise.reject(error);
+});
+```
+
+## 取消
+
+- 使用 cancel token 取消请求
+
+```js
+const CancelToken = axios.CancelToken;
+const source = CancelToken.source();
+// get
+axios.get("/user/123", {
+  cancelToken: source.token,
+});
+//post
+axios.post(
+  "/user/123",
+  {
+    name: "new name",
+  },
+  {
+    cancelToken: source.token,
+  }
+);
+```
+
+## 小结
+
+- 本篇文档为本人通读'官方文档'以及'学习资源'，自己理解并记录的学习文档，并非转载或抄袭;
+    - 但由于水平有限，仅将自己理解且会用的内容记录了进来，所以是一篇个人向学习记录文档;
+- 若有童鞋看到，仅供参考;
+
+# 暗号：axios
