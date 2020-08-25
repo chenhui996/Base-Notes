@@ -82,3 +82,113 @@ axios
     - 请求过程中的任意失败，都会被 catch()进行捕获;
 
 ## 执行 POST 请求
+
+- axios 的 post 请求，与 get 请求类似，直接调用 post 方法即可:
+
+```js
+// post，顾名思义，就是带数据传输
+axios
+  .post("/user", {
+    // 要发送的数据扔这
+    firstNmae: "chen",
+    lastName: "hui",
+  })
+  .then(function (response) {
+    console.log(response);
+  })
+  .catch(function (error) {
+    console.log(error);
+  });
+```
+
+## 执行多个并发请求
+
+- 与 promise 的 all 方法类似,全部的请求都执行;
+
+```js
+// 定义一个axios的get请求;
+function getUserAccount() {
+  return axios.get("/user/123");
+}
+// 定义一个axios的post请求;
+function postUserPermissions() {
+  return axios.post("/user", {
+    firstNmae: "chen",
+    lastName: "hui",
+  });
+}
+
+// 直接用axios的all方法，进行'全部的请求'执行并发送
+axios.all([getUserAccount(), postUserPermissions()]).then(
+  axios.spred(function (acct, perms) {
+    // 两个请求都执行完成
+    // axios.spred: 处理并发请求的助手函数
+  })
+);
+```
+
+- 这里用了 axio 的 spred 方法;
+- axios.all 与 axios.spred:
+  - 处理并发请求的助手函数;
+  - 上面的例是两个并发请求:
+    - 故要用到 axios.spred，处理并发;
+      </br>
+
+### 小结
+
+- 上面，就是 axios 主要的概念以及最基础的操作了;
+- 下面，继续深入看与学习;
+
+## axios API
+
+- 可以通过向 axios 传递相关配置来创建请求
+
+### axios(config)
+
+- 各种配置，直接配：
+
+```js
+// 用config直接给配置，发送一个post请求
+axios({
+  method: "post",
+  url: "/user/123",
+  data: {
+    fitstName: "chen",
+    lastName: "hui",
+  },
+});
+```
+
+### 并发
+
+- 处理并发请求的助手函数
+  - axios.all(iterable)
+  - axios.spread(callback)
+
+## 创建实例
+
+### axios.create([config])
+
+- 可以使用'自定义配置'新建一个 axios 实例:
+
+```js
+const myAxios = axios.create({
+  baseURL: "https://baidu.com/api/",
+  timeout: 1000,
+  headers: { "X-Custom-Header": "foobar" },
+});
+```
+
+## 请求的配置
+
+- axios(config)中的 config：
+
+### url
+
+- url:
+  - 用于请求的服务器 URL;
+
+### method
+
+- method:
+  - 是创建请求时使用的方法;
