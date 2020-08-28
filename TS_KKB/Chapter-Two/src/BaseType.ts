@@ -13,17 +13,38 @@ if (ele) {
 // };
 
 
-interface Person{
-  username: string,
-  age: number
+// interface Person{
+//   username: string,
+//   age: number
+// }
+
+// let a: Person = {
+//   username: "cain",
+//   age: 100,
+// };
+
+// let a1: Person = {
+//   username: "snake",
+//   age: 123131,
+// };
+
+// class Person{
+//   // username: string
+//   constructor(public username: string, public age: number){
+
+//   }
+// }
+
+// let user: Person = new Person('cain', 18);
+
+interface AjaxOptions {
+  url: string;
+  method: string;
 }
 
-let a: Person = {
-  username: "cain",
-  age: 100,
-};
+function ajax(options: AjaxOptions){}
 
-let a1: Person = {
-  username: "snake",
-  age: 123131,
-};
+ajax({
+  url: '',
+  method: 'get'
+});
