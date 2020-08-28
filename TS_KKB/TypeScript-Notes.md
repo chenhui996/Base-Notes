@@ -151,15 +151,74 @@ tsc -p ./configs/ts.json
   - 基础的简单的类型标注;
   - 高级的深入的类型标注;
 
-### null和undefind
+### null 和 undefind
 
 - 是所有类型的子类型：
-  - 所有类型的值，都可以设置为null和undefind,不会报错;
-- 所有未标注的对象的类型，都为any;
+  - 所有类型的值，都可以设置为 null 和 undefind,不会报错;
+- 所有未标注的对象的类型，都为 any;
 
 ### strictNullChecks
 
 - 严格的空值检查字段;
-- 写在tsconfig.json的配置项;
+- 写在 tsconfig.json 的配置项;
   - strictNullChecks:true
 
+## 内置对象类型
+
+### 对象标注
+
+```ts
+let a: Object = {};
+```
+
+### 数组标注
+
+```ts
+let arr: Array<number> = [1, 2, 3];
+```
+
+### 日期标注
+
+```ts
+let a: Date = new Date();
+```
+
+### 字面量标注：
+
+- 对象内容若有属性：
+  - 必须在声明变量名处'挨个'标注完整;
+
+```ts
+let a: { username: string; age: number } = {
+  username: "cain",
+  age: 100,
+};
+```
+
+- 缺点：
+  - 不太方便;
+  - 不利于复用;
+- 解决方案：
+  - 用接口的形式:
+    - 提高复用性;
+
+### 接口
+
+- 给类型定义名称;
+
+```ts
+interface Person {
+  username: string;
+  age: number;
+}
+
+let a: Person = {
+  username: "cain",
+  age: 100,
+};
+
+let a1: Person = {
+  username: "snake",
+  age: 123131,
+};
+```
