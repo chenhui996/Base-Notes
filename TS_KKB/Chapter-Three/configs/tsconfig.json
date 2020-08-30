@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "outDir": "../dist",
+        "target": "ES5",
+        "watch": true,
+        "strictNullChecks": true,
+        "noImplicitAny": true
+    },
+    // 编译目录
+    // ** 目录
+    // * 文件
+    "include": ["../src/**/*"]
+}
