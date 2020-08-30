@@ -450,3 +450,54 @@ let p1: Point = {
 
 - 注意：
   - 接口是一种'类型'，不能作为'值'使用;
+
+### readonly
+
+- 在定义 interface 时，还可以给定义的属性加上只读属性：readonly;
+
+```ts
+interface Point {
+  readonly x: number;
+  readonly y: string;
+  color?: string;
+  // 属性后面加？，代表这个属性在给一个'数据'进行'类型标注'时，可以不用此属性;
+}
+```
+
+### 任意属性
+
+- 我们不可能永远能预先在 interface 里写好所有的类型;
+  - 所以需要给一个可扩展的属性 ———— 任意属性;
+  - 直接上代码:
+
+```ts
+interface Point {
+  readonly x: number;
+  readonly y: string;
+  color?: string;
+
+  // [key: string]:number;
+  // 由于color与[key: string]类型冲突，故要改写：
+  [key: string]: string | underfind;
+  // key 只能被标注为'数字'或'字符串';
+}
+```
+
+- 定义任意属性时:
+  - 若定义的是字符串类型;
+  - 但是数据类型是数字,那么会进行隐式转换;
+    - 将数字转成字符串;
+
+### 标注函数的 interface
+
+```ts
+interface Point {
+  (x: number, y: string): number;
+}
+
+let fn1: Point = function (a: number, b: string): number {
+  return a + b;
+};
+```
+
+## 高级类型
