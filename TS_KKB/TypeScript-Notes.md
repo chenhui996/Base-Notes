@@ -501,3 +501,112 @@ let fn1: Point = function (a: number, b: string): number {
 ```
 
 ## 高级类型
+
+- 掌握？
+  - 满足更多的标注需求,使用:
+    - 联合类型
+    - 交叉类型
+    - 字面量类型
+  - 简化标注操作,使用:
+    - 类型别名
+    - 类型推导
+  - 掌握'类型断言'的使用;
+
+### 联合类型
+
+- 也可以称为:
+  - 多选类型;
+- 标注'一个变量'为'多个类型之一'时;
+  - 可以选择联合类型标注;
+- 它们之间是'或'的关系;
+
+```ts
+// 其中，value可能是字符串，也可能是数字，可用联合类型
+function css(el: Element, attr: string, value: string | number) {
+  return value;
+}
+
+// 字符串的情况：
+// css(box, 'width', '100px');
+
+// 数字的情况
+// css(box, 'opacity', 1);
+
+// 所以，要用到联合类型
+// value: string | number
+```
+
+### 交叉类型
+
+- 交叉类型也可以称为:
+  - 合并类型;
+    - 把多种类型合并到一起;
+    - 成为一种新的类型;
+    - '且'的关系;
+- 对一个对象进行扩展:
+
+```ts
+interface o1 {
+  x: number;
+  y: string;
+}
+interface o2 {
+  z: boolean;
+}
+
+// 由于target转换成es5，故Object.assign会提示报错;
+let obj: o1 & o2 = Object.assign({}, { x: 1, y: "cain" }, { z: true });
+// 解决方案：
+// 在tsconfig.json中:
+// target的转换输出成es6;
+// 用lib配置第三方库:
+// lib:['ES2015']
+
+// 这个时候，obj就拥有x y z三个属性;
+// 验证：咱们在ts中引用不会报错，即说明交叉类型使用成功;
+obj.x;
+obj.y;
+obj.z;
+```
+
+- 用 & 将两个 interface 标注合并成一个，一起使用;
+- 记得 tsconfig.json 中 lib 配置的坑;
+
+### 字变量类型
+
+- 标注的不是某个类型:
+  - 而是一个'固定值';
+- 配合'联合类型'会更有用;
+
+```ts
+// 简单来说，标注了字变量类型，你以后'只能引用'标注的那些'固定的值'了;
+function setPosition(
+  el: Element,
+  direction: "left" | "top" | "right" | "bottom"
+) {
+  return direction;
+}
+
+// ok
+// setPosition(box, 'bottom');
+
+// err
+// setPosition(box, 'haha');
+```
+
+### 类型别名
+
+- 很简单，先定义类型，再在用到时引用;
+- 咱们用上面的例子看:
+
+```ts
+//先定义，再引用
+
+// 定义
+let dir = "left" | "top" | "right" | "bottom";
+
+// 引用
+function setPosition(el: Element, direction: dir) {
+  return direction;
+}
+```

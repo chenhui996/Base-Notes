@@ -1,13 +1,14 @@
 {
     "compilerOptions": {
-        "outDir": "../dist",
-        "target": "ES5",
+        "outDir": "./dist",
+        "target": "ES6",
         "watch": true,
         "strictNullChecks": true,
-        "noImplicitAny": true
+        "noImplicitAny": true,
+        // "lib": ["ES2015"]
     },
     // 编译目录
     // ** 目录
     // * 文件
-    "include": ["../src/**/*"]
+    "include": ["./src/**/*"]
 }
