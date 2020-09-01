@@ -678,3 +678,104 @@ let img = <HTMLImageElement>document.querySelector("#img");
 // 或:
 let img = document.querySelector("#img") as HTMLImageElement;
 ```
+
+## 函数详解
+
+- 掌握?
+  - 掌握 TS 中的'函数类型标注';
+  - 函数'可选参数'和'参数默认值';
+  - 剩余参数;
+  - 函数中的 this;
+  - 函数重载;
+
+### 函数的标注
+
+- 一个函数的标注包含:
+  - 参数
+  - 返回值
+
+```ts
+// 例1:
+function fn(a1: string): string {
+  return a1;
+}
+
+// 例2:
+let fn2: (a2: string) => string = function (a2) {
+  return a2;
+};
+
+// 例3:
+type callback = (a3: string) => string;
+
+let fn3: callback = function (a3) {
+  return a3;
+};
+
+// 例4:
+interface ICallBack {
+  (a: string): string;
+}
+let fn4: ICallBack = function (a4) {
+  return a4;
+};
+```
+
+### 可选参数和默认参数
+
+#### 可选参数
+
+- 通过'参数名'后面添加 ? 来标注该参数是可选的;
+
+```ts
+function css(el: Element, attr: string, value?: any) {
+  return attr;
+}
+
+let div = document.querySelector("div");
+
+// 正常
+div && css(div, "width", "100px");
+// value可选，所以不加的情况
+div && css(div, "width");
+```
+
+#### 默认参数
+
+- 我们还可以给'参数'设置默认参数
+  - 有默认值的参数:
+    - 也是可选的
+  - 设置了'默认值'的参数可以根据值:
+    - 自动推导类型
+
+```ts
+// 定义一个函数，一个显式的数组标注，一个直接给予默认值参数
+function sort(items: Array<number>, order = "desc") {
+  return items;
+}
+
+// order是直接给予默认值的参数，是可选的;
+// order可传可不穿，不穿，默认用desc;
+sort([1, 2, 3]);
+
+// 在传默认值的情况下，用'联合类型'来限定值
+function sort2(items: Array<number>, order: "desc" | "abc" = "desc") {
+  return items;
+}
+```
+
+#### 剩余参数
+
+- 剩余参数是一个数组;
+  - 标注时要注意;
+
+```ts
+interface IObj {
+  [key: string]: any;
+}
+function merge(target: IObj, ...other: Array<IObj>) {
+  return other;
+}
+let newObj = merge({ x: 1 }, { y: 2 }, { z: 3 });
+// 简单来说，就是对一整个数组进行标注;
+```
