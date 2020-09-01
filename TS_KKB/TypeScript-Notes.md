@@ -779,3 +779,105 @@ function merge(target: IObj, ...other: Array<IObj>) {
 let newObj = merge({ x: 1 }, { y: 2 }, { z: 3 });
 // 简单来说，就是对一整个数组进行标注;
 ```
+
+### 函数中的 this
+
+- 函数中的 this 类型，怎么标注？
+  - 普通函数;
+  - 箭头函数;
+
+#### 普通函数
+
+- 对于普通函数而言:
+  - this 是会随着调用环境的变化而变化的;
+  - 所以默认情况下，普通函数中的 this 被标注为 any;
+- 我们可以在函数的第一个参数位上:
+  - 显式的标注 this 的类型;
+
+```ts
+interface T {
+  a: number;
+  fn: (x: number) => void;
+}
+
+let obj: T = {
+  a: 1,
+  // 注意，需要在首位显式的标注this，且其标注的this不占参数位
+  fn(this: T, x: number) {
+    return x;
+  },
+};
+```
+
+- 或用'断言'的方式进行标注:
+
+```ts
+interface T {
+  a: number;
+  fn: (x: number) => void;
+}
+let obj: T = {
+  a: 1,
+  // 注意，需要在首位显式的标注this，且其标注的this不占参数位
+  fn(x: number) {
+    return (<T>this).a;
+  },
+};
+// 不好，因为每次都要声明，还要写在函数内部;
+```
+
+#### 箭头函数
+
+- 箭头函数中的 this 取决于函数的作用域;
+  - 直接写在箭头函数外的作用域上定义;
+
+### 函数重载
+
+- 有的时候，同一个函数会:
+  - 接收'不同类型'的参数;
+  - 返回'不同类型'的返回值;
+- 我们可以使用'函数重载'来实现;
+```ts
+function showOrHide(
+  el: Element,
+  attr: string,
+  value: "block" | "none" | number
+) {
+  //
+}
+
+let div = document.querySelector("div");
+
+if (div) {
+  showOrHide(div, "display", "none");
+  showOrHide(div, "opacity", 1);
+  // 由于咱css比较6，主观上不会写错;
+  // 但是ts就是给写错的时候准备的;
+  // 假设写成：showOrHide( div, 'display', 1 );
+  // 就报错了;
+}
+// 所以，对于这个例子，我们需要的是'一对对正确的'css样式'组合';
+// 不能随便拼接
+
+// 我们来看看'函数重载'
+
+// display的情况
+function showOrHide2(el: HTMLElement, attr: "display", value: "block" | "none");
+// opacity的情况
+function showOrHide2(el: HTMLElement, attr: "opacity", value: number);
+// 其他情况
+function showOrHide2(el: HTMLElement, attr: any, value: any) {
+    el.style[attr] = value;
+}
+
+let div2 = document.querySelector("div");
+
+if (div2) {
+  showOrHide2(div2, "display", "none");
+  showOrHide2(div2, "opacity", 1);
+  // err
+  // showOrHide2(div2, "opacity", "none");
+}
+```
+
+
