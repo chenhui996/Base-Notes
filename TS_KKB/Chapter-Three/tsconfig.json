@@ -1,11 +1,11 @@
 {
     "compilerOptions": {
         "outDir": "./dist",
-        "target": "ES6",
+        "target": "ES5",
         "watch": true,
         "strictNullChecks": true,
         "noImplicitAny": true,
-        // "lib": ["ES2015"]
+        "lib": ["ES6","DOM"]
     },
     // 编译目录
     // ** 目录

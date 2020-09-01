@@ -1,9 +1,14 @@
-function setPosition(el: Element, direction: 'left' | 'top' | 'right' | 'bottom' ){
-    return direction;
+function setPosition(
+  el: Element,
+  direction: "left" | "top" | "right" | "bottom"
+) {
+  return direction;
 }
 
+let boxW = document.querySelector("div");
+
 // ok
-// setPosition(box, 'bottom');
+boxW && setPosition(boxW, "bottom");
 
 // err
-// setPosition(box, 'haha');
+// box&&setPosition(box, 'haha');

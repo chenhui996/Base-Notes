@@ -521,19 +521,22 @@ let fn1: Point = function (a: number, b: string): number {
 - 它们之间是'或'的关系;
 
 ```ts
-// 其中，value可能是字符串，也可能是数字，可用联合类型
 function css(el: Element, attr: string, value: string | number) {
   return value;
 }
 
-// 字符串的情况：
-// css(box, 'width', '100px');
+let box = document.querySelector("div");
 
-// 数字的情况
-// css(box, 'opacity', 1);
+// 其中，value可能是字符串，也可能是数字
 
+if (box) {
+  // 字符串的情况：
+  css(box, "width", "100px");
+
+  // 数字的情况
+  css(box, "opacity", 1);
+}
 // 所以，要用到联合类型
-// value: string | number
 ```
 
 ### 交叉类型
@@ -587,26 +590,91 @@ function setPosition(
   return direction;
 }
 
+let boxW = document.querySelector("div");
+
 // ok
-// setPosition(box, 'bottom');
+boxW && setPosition(boxW, "bottom");
 
 // err
-// setPosition(box, 'haha');
+// box&&setPosition(box, 'haha');
 ```
 
-### 类型别名
+#### 使'类型别名'定义'函数'类型
 
-- 很简单，先定义类型，再在用到时引用;
-- 咱们用上面的例子看:
+- type 来定义函数类型;
 
 ```ts
-//先定义，再引用
+type callback = (a: string) => string;
+let fn: callback = function (a) {};
 
-// 定义
-let dir = "left" | "top" | "right" | "bottom";
+// 或者直接
+let fn: (a: string) => string = function (a) {};
+```
 
-// 引用
-function setPosition(el: Element, direction: dir) {
-  return direction;
+#### interface 与 type 区别
+
+- interface:
+  - 只能描述:
+    - object
+    - class
+    - function
+  - 同名 interface 自动合并，利于扩展;
+- type:
+  - 不能重名;
+  - 能描述所有数据;
+
+### 类型推导
+
+- 每次都'显式标注类型'会比较麻烦;
+- TS 提供了一种更加方便的特性:
+  - 类型推导
+- TS 编译器会根据'当前上下文':
+  - 自动推导出对应的类型标注;
+  - 这个'过程'发生在:
+    - 初始化变量
+    - 设置函数默认参数值
+    - 返回函数值
+
+```ts
+// 自动推断x为number
+let x = 1;
+// err
+x = "a";
+
+// 函数推导：根据'参数的默认值'和'函数的返回值'，进行自动推断'两者'的'类型';
+function fn(a = 1) {
+  return a * a;
 }
+// 参数a的类型标注将被赋予number类型
+// fn的返回值的类型标注将被赋予number类型;
+```
+
+- 字面量类型推导:
+
+```ts
+function fn(a = 1) {
+  if (true) {
+    return 100;
+  } else {
+    return "cain";
+  }
+}
+// 鼠标放在fn上，即可看到:
+// function fn(a?: number): 100 | "cain"
+```
+
+### 类型断言
+
+- 标注一个更加精确的类型(缩小类型标注范围);
+
+```ts
+let img = document.querySelector("#img");
+// 明显，img的类型为Element;
+// 但是Element是元素的统称，不够精确;
+
+// 所以可以写成:
+let img = <HTMLImageElement>document.querySelector("#img");
+
+// 或:
+let img = document.querySelector("#img") as HTMLImageElement;
 ```
