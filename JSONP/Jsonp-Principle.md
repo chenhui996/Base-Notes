@@ -45,3 +45,80 @@ xxx.call(undefined, "你要的数据");
   - 浏览器接收到了响应;
   - 就会执行 xxx.call(undefined,'你要的数据');
 - 于是乎，'请求方'就知道了他要的数据了(成功拿到数据);
+
+## JSONP 如何使用
+
+- 现在我们来基于 node 来做一个 JSONP 跨域请求 :
+- 先是'服务端':
+
+```js
+// 服务端：
+const Koa = require('koa');
+const bodyParser = require("koa-bodyparser");
+const { getUser } = require("./mock");
+const app = new Koa();
+
+app.use(bodyParser());
+
+app.use(async (ctx, next) => {
+    const { path: curPath } = ctx.request;
+
+    if (curPath === '/jsonp') {
+    // 设置响应头
+    ctx.set('Content-Type', 'application/javascript;charset=utf-8');
+    ctx.set('X-Content-Type-Options', 'nosniff');
+
+    const callback = ctx.query.callback;
+    let data =  getUser(ctx.query.type);
+    data = JSON.stringify(data);
+    ctx.body = `${callback}(${data})`
+    console.log(ctx.query)
+    }
+};
+
+console.log("服务器已启动！")
+app.listen(3030);
+```
+
+- 然后是'客户端':
+
+```ts
+const btn: HTMLElement = document.getElementById("btn");
+btn.addEventListener(
+  "click",
+  () => {
+    let url = "http://127.0.0.1:3030/jsonp?type=all&callback=getdata";
+    loadScripr(url);
+  },
+  false
+);
+function loadScripr(src: string): void {
+  const script: HTMLScriptElement = document.createElement("script");
+  script.src = src;
+  script.onload = () => {
+    // 每次动态创建script标签之后,都将script标签删掉 这很重要哦，不然整个页面的 script 标签要爆炸了
+    document.body.removeChild(script);
+  };
+  script.onerror = () => {
+    console.error("请求失败了");
+    delete window["getdata"];
+    document.body.removeChild(script);
+  };
+  document.body.appendChild(script);
+}
+
+function getdata(data: any): void {
+  // data 为服务端返回的数据
+  // to do something
+  alert(JSON.stringify(data));
+}
+```
+
+- 最后得到：
+
+```js
+<script>// data 为后端返回的数据 getdata(data)</script>
+```
+
+- 类似这样的结构;
+- 那为什么会出现这这样的情况呢？
