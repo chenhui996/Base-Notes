@@ -76,8 +76,51 @@ npm install -D jest babel-jest babel-core babel-preset-env regenerator-runtime
 - 在项目根目录下创建 test 目录;
   - 并在 test 目录下创建 functions.test.js 文件;
 
-**
+---
 
 - Jest 会自动找到'项目'中'所有使用':
   - .spec.js 或.test.js 文件命名的测试文件
   - 并执行;
+- 通常我们在编写测试文件时:
+  - 遵循的命名规范:
+    - 测试文件的文件名 = 被测试模块名 + .test.js
+    - 例如被测试模块为 functions.js;
+    - 那么对应的测试文件命名为 functions.test.js;
+
+#### 在 src/functions.js 中创建被测试的模块
+
+```js
+function sum(a, b) {
+  return a + b;
+}
+
+export default sum;
+```
+
+#### 在 test/functions.test.js 文件中创建测试用例
+
+```js
+import sum from "../src/functions";
+
+test("sum(2+2)等于4", () => {
+  expect(sum(2, 2)).toBe(4);
+});
+```
+
+#### 运行 npm run test, Jest 会在 shell 中打印出以下消息：
+
+```
+ PASS  test/functions.test.js
+  √ sum(2 + 2) 等于 4 (7ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        4.8s
+```
+
+## 常用的几个Jest断言
+
+- 上面测试用例中的:
+    - expect(sum(2, 2)).toBe(4);
+    - 为一句断言;

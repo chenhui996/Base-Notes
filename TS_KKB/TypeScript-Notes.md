@@ -837,6 +837,7 @@ let obj: T = {
   - 接收'不同类型'的参数;
   - 返回'不同类型'的返回值;
 - 我们可以使用'函数重载'来实现;
+
 ```ts
 function showOrHide(
   el: Element,
@@ -867,7 +868,7 @@ function showOrHide2(el: HTMLElement, attr: "display", value: "block" | "none");
 function showOrHide2(el: HTMLElement, attr: "opacity", value: number);
 // 其他情况
 function showOrHide2(el: HTMLElement, attr: any, value: any) {
-    el.style[attr] = value;
+  el.style[attr] = value;
 }
 
 let div2 = document.querySelector("div");
@@ -898,6 +899,89 @@ if (div2) {
   - 把特征相似的抽象成一个一个的类;
   - 然后通过这些'类'实例化出来的'具体对象'来完成具体'业务需求';
 
-### 类的基础 
+### 类的基础
 
-...
+- 在类的基础中，包含下面几个核心知识点:
+  - class 关键字
+  - 构造函数: constructor
+  - 成员属性定义
+  - 成员方法
+  - this 关键字
+
+```ts
+// 用public，直接定义类型
+class User {
+  constructor(public username: string, public age: number) {
+    // 里面不需要this.username和this.age了
+    // public已帮我处理了
+  }
+}
+```
+
+### 修饰符
+
+- 对类成员:
+  - 属性
+  - 方法
+- 进行一定的访问控制;
+  - 来保证数据的安全;
+  - 通过'类修饰符'可以做到;
+- 目前 TS 提供了四种修饰符:
+  - public: 公有，默认
+  - protected: 受保护
+  - private: 私有
+  - readonly: 只读
+
+#### public 修饰符
+
+- 这是'类'成员的默认修饰符，他的访问级别为：
+  - 自身
+  - 子类
+  - 类外
+
+#### protected 修饰符
+
+- 它的访问级别为：
+  - 自身
+  - 子类
+
+#### private 修饰符
+
+- 它的访问级别为：
+  - 自身
+
+#### readonly 修饰符
+
+- 只读修饰符只能针对：
+  - 成员属性使用;
+  - 且必须在'声明时'或'构造函数里'被'初始化';
+- 他的访问级别为：
+  - 自身
+  - 子类
+  - 类外
+
+## 抽象类
+
+- 一个'基类(父类)'的一些方法'无法确定'具体的'行为';
+  - 而是由'继承的子类'去实现，看下面的例子:
+- 现在前端比较流行组件化设计，比如 React
+
+```js
+class MyComponent extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {};
+  }
+
+  render() {
+    // ...
+  }
+}
+```
+
+- 根据上面代码，我们可以大致设计如下'类'结构:
+  - 每个组件都有一个 props 属性;
+    - 可以通过'构造函数'进行初始化，由父级定义;
+- 每个组件都有一个 state 属性，由父级定义;
+- 每个组件都必须有一个 render 方法;
+
