@@ -119,8 +119,132 @@ Snapshots:   0 total
 Time:        4.8s
 ```
 
-## 常用的几个Jest断言
+## 常用的几个 Jest 断言
 
 - 上面测试用例中的:
-    - expect(sum(2, 2)).toBe(4);
-    - 为一句断言;
+  - expect(sum(2, 2)).toBe(4);
+  - 为一句断言;
+- Jest 为我们提供了 expect 函数:
+  - 用来'包装'被测试的方法并'返回一个对象';
+  - 该对象中包含一系列的匹配器:
+    - 来让我们更方便的进行断言;
+    - 上面的 toBe 函数即为一个匹配器;
+
+### 我们来介绍几种常用的 Jest 断言，其中会涉及多个匹配器
+
+#### .not
+
+- .not 修饰符:
+  - 允许你测试结果:
+    - 不等于某个值的情况;
+  - 这和英语的语法几乎完全一样，很好理解;
+
+```js
+import sum from "../src/functions";
+
+test("sum(2, 2) 不等于 5", () => {
+  expect(sum(2, 2)).not.toBe(5);
+});
+```
+
+#### .toEqual()
+
+- .toEqual 匹配器:
+  - 会递归的检查对象:
+    - 所有'属性'和'属性值'是否相等;
+- 所以如果要进行:
+  - 应用类型的比较时;
+    - 请使用.toEqual 匹配器而不是.toBe;
+
+```js
+// 待测试组件
+export default {
+  getAuthor() {
+    return {
+      name: "LITANGHUI",
+      age: 24,
+    };
+  },
+};
+```
+
+```js
+// jest测试文件
+import functions from "../src/functions";
+
+test("getAuthor()返回的对象深度相等", () => {
+  expect(functions.getAuthor()).toEqual(functions.getAuthor());
+});
+// .toEqual后面的functions.getAuthor()可以自己定义
+test("getAuthor()返回的对象内存地址不同", () => {
+  expect(functions.getAuthor()).not.toBe(functions.getAuthor());
+});
+// .toEqual后面的functions.getAuthor()可以自己定义
+```
+
+#### .toHaveLength
+
+- .toHaveLength:
+  - 可以很方便的用来测试:
+    - '字符串'和'数组类型'的'长度'是否满足预期;
+
+```js
+// 待测试组件
+function arrayNum(num) {
+  if (!Number.isInteger(num)) {
+    throw Error("我只接收整数，老哥");
+  }
+
+  let result = [];
+  for (let i = 0; i <= num - 1; i++) {
+    result.push(i);
+  }
+
+  return result;
+}
+export default arrayNum;
+```
+
+```js
+// jest测试文件
+import arrayNum from "../src/functions";
+
+test("arrayNum的作用是可以测数组的长度", () => {
+  expect(arrayNum(10)).toHaveLength(10);
+});
+```
+
+#### .toThrow
+
+- .toThorw 能够让我们测试:
+  - 被测试方法是否'按照预期抛出异常';
+  - 但是在使用时需要注意的是:
+    - 我们必须使用一个函数将:
+      - 将被测试的函数做一个包装;
+  - 正如下面 getIntArrayWrapFn 所做的那样;
+    - 否则会因为'函数抛出'导致该'断言失败';
+
+```js
+// functions.test.js
+import arrayNum  from '../src/functions';
+test("getIntArray(3.3)应该抛出错误", () => {
+  // 用getIntArrayWrapFn包装'将要被测试的函数';
+  expect(() => {
+    arrayNum(3.3);
+  }).toThrow("我只接收整数，老哥"); // toThrow里面若有错误信息，需要跟组件内抛出的错误信息匹配
+});
+```
+
+#### .toMatch
+
+- .toMatch 传入一个正则表达式:
+  - 它允许我们用来进行'字符串类型'的正则匹配;
+
+```js
+// functions.test.js
+import functions from "../src/functions";
+
+test('getAuthor().name应该包含"li"这个姓氏', () => {
+  expect(functions.getAuthor().name).toMatch(/li/i);
+});
+```

@@ -1,5 +1,13 @@
-function sum(a, b){
-    return a + b;
-}
+function arrayNum(num){
+    if(!Number.isInteger(num)){
+        throw Error("我只接收整数，老哥");
+    }
 
-export default sum;
+    let result = [];
+    for(let i =0; i<=num-1; i++){
+        result.push(i);
+    }
+
+    return result
+}
+export default arrayNum;

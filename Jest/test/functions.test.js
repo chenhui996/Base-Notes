@@ -1,5 +1,10 @@
-import sum  from '../src/functions';
+import arrayNum  from '../src/functions';
 
-test('sum(2+2)等于4', ()=>{
-    expect(sum(2,2)).toBe(4);
+test('arrayNum的作用是可以测数组的长度', ()=>{
+    expect(arrayNum(10)).toHaveLength(10);
 });
+test('getIntArray(3.3)应该抛出错误', () => {
+    // 用getIntArrayWrapFn包装'将要被测试的函数';
+    expect(() => {arrayNum(3.3)}).toThrow("我只接收整数，老哥");// toThrow里面若有错误信息，需要跟组件内抛出的错误信息匹配
+  });
+
