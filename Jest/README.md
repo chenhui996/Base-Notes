@@ -225,7 +225,7 @@ test("arrayNum的作用是可以测数组的长度", () => {
     - 否则会因为'函数抛出'导致该'断言失败';
 
 ```js
-// functions.test.js
+// jest测试文件
 import arrayNum from "../src/functions";
 test("getIntArray(3.3)应该抛出错误", () => {
   // 用箭头函数包装'将要被测试的函数';
@@ -248,3 +248,67 @@ test('getAuthor().name应该包含"li"这个姓氏', () => {
   expect(functions.getAuthor().name).toMatch(/li/i);
 });
 ```
+
+## 测试异步函数
+
+### 安装 axios
+
+- 这里我们使用最常用的 http 请求库 axios 来进行请求处理;
+
+```
+npm install axios
+```
+
+### 编写 http 请求函数
+
+- 我们将请求:
+  - http://jsonplaceholder.typicode.com/users/1
+- 这是由 JSONPlaceholder 提供的 mock 请求地址;
+
+```js
+// 待测试组件
+import axios from "axios";
+export default {
+  fetchUser() {
+    return axios
+      .get("http://jsonplaceholder.typicode.com/users/1")
+      .then((res) => res.data)
+      .catch((error) => console.log(error));
+  },
+};
+```
+
+```js
+// jest测试文件
+import functions from "../src/AxiosBtn.js";
+test("fetchUser() 可以请求到一个含有name属性值为Leanne Graham的对象", () => {
+  expect.assertions(1);
+  return functions.fetchUser().then((data) => {
+    expect(data.name).toBe("Leanne Graham");
+  });
+});
+```
+
+- 上面我们调用了 expect.assertions(1):
+  - 它能确保在'异步的测试用例'中:
+    - 有一个断言会在'回调函数'中'被执行';
+  - 这在'进行异步代码的测试'中十分有效;
+
+#### 使用 async 和 await 精简异步代码
+
+- 当然我们既然安装了Babel;
+- 为何不使用async和await的语法来精简我们的异步测试代码呢?;
+- 但是别忘记都需要调用expect.assertions方法;
+
+```js
+// 用async和await来精简异步测试
+test('用async和await来精简异步测试', async () => {
+    expect.assertions(1);
+    const data = await functions.fetchUser();
+    expect(data.address.street).toBe('Kulas Light');
+});
+```
+
+# 参考资料
+
+- https://www.jianshu.com/p/70a4f026a0f1
