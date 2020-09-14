@@ -221,14 +221,14 @@ test("arrayNum的作用是可以测数组的长度", () => {
   - 但是在使用时需要注意的是:
     - 我们必须使用一个函数将:
       - 将被测试的函数做一个包装;
-  - 正如下面 getIntArrayWrapFn 所做的那样;
+  - 正如下面 箭头函数 所做的那样;
     - 否则会因为'函数抛出'导致该'断言失败';
 
 ```js
 // functions.test.js
-import arrayNum  from '../src/functions';
+import arrayNum from "../src/functions";
 test("getIntArray(3.3)应该抛出错误", () => {
-  // 用getIntArrayWrapFn包装'将要被测试的函数';
+  // 用箭头函数包装'将要被测试的函数';
   expect(() => {
     arrayNum(3.3);
   }).toThrow("我只接收整数，老哥"); // toThrow里面若有错误信息，需要跟组件内抛出的错误信息匹配
