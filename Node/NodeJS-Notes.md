@@ -347,3 +347,24 @@ response.setHeader("Content-Type", "application/zip");
   - 访问后，router.routers()执行，中间件就会分析 url;
     - 把分许 url 与上面 get 等方法注册的时候填入的 url 进行一个匹配;
     - 满足匹配要求就执行对应的'注册函数';
+
+### koa-router 里面的通配符 ———— `*`
+
+- 通配符`*`，按照路由的正常逻辑写:
+  - 我们会写错:
+
+```js
+// 错误写法
+router.all("*", async (ctx) => {
+  throw Boom.notFound("没有该路由");
+});
+```
+
+- 正确写法：
+
+```js
+// 正确写法
+router.all("/(.*)", async (ctx) => {
+  throw Boom.notFound("没有该路由");
+});
+```

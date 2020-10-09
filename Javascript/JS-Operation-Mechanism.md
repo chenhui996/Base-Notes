@@ -586,4 +586,68 @@ console.log("我是同步任务2");
 
 ### 宏任务(macrotask)
 
-- 在 ECMAScript 中，macrotask 也被称为 task
+- 在 ECMAScript 中，macrotask 也被称为 task;
+
+---
+
+- 我们可以将每次'执行栈'执行的代码当做是一个宏任务;
+  - 包括每次从'事件队列'中获取一个事件回调:
+    - 并放到'执行栈'中执行;
+- 每一个宏任务会'从头到尾'执行完毕，'不会执行其他';
+
+---
+
+- 由于:
+  - JS引擎线程
+  - GUI渲染线程
+- 是互斥的关系;
+- 故浏览器为了能够使:
+  - 宏任务
+  - DOM任务
+- 有序的进行:
+  - 会在一个'宏任务'执行结果'后':
+    - 在下一个'宏任务'执行'前':
+      - GUI渲染线程开始工作;
+        - 对页面进行渲染;
+```
+宏任务 -> GUI渲染 -> 宏任务 -> GUI渲染 -> 宏任务 -> GUI渲染 -> 宏任务 ->...
+```
+
+- 常见的宏任务:
+  - 主代码块
+  - setTimeout
+  - setInterval
+  - setImmediate ()-Node
+  - requestAnimationFrame ()-浏览器
+
+### 微任务(microtask)
+
+- ES6新引入了Promise标准;
+- 同时浏览器实现上多了一个microtask微任务概念;
+- 在ECMAScript中，microtask也被称为jobs;
+
+---
+
+- 我们已经知道'宏任务'结束后;
+  - 会执行渲染;
+    - 然后执行下一个'宏任务';
+- 而微任务可以理解成:
+  - 在当前'宏任务'执行后'立即执行'的任务;
+
+---
+
+- 当一个'宏任务'执行完:
+  - 会在渲染前:
+    - 将'执行期间'所产生的'所有微任务'都执行完;
+
+```
+宏任务 -> 微任务 -> GUI渲染 -> 宏任务 -> 微任务 -> GUI渲染 -> 宏任务 -> ...
+```
+
+- 常见微任务:
+  - process.nextTick ()-Node
+  - Promise.then()
+  - catch
+  - finally
+  - Object.observe
+  - MutationObserver(手写Promise，可以用到)
