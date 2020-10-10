@@ -967,3 +967,77 @@ console.log(8);
 
 - 上面的一切都是针对于:
   - 浏览器的 EventLoop;
+
+---
+
+- 虽然 NodeJS 中的 JavaScript 运行环境也是 V8:
+  - 也是单线程;
+  - 但是:
+    - 还是有一些与'浏览器中的表现'是不一样的;
+
+---
+
+- 其实'nodejs'与'浏览器'的'区别':
+  - 就是 nodejs 的'宏任务'分'好几种类型':
+    - 而'这好几种'又有'不同的任务队列':
+      - 而不同的'任务队列'又有'顺序区别';
+        - 而'微任务'是穿插在每一种'宏任务'之间的;
+
+---
+
+- 在 node 环境下:
+  - process.nextTick 的优先级高于 Promise:
+    - 可以简单理解为:
+      - 在宏任务结束后:
+        - 会先执行:
+          - 微任务队列中的 nextTickQueue 部分;
+            - 然后才会执行微任务中的 Promise 部分;
+- 图解:
+  - ![图解](./assets/node.png)
+- 上图来自 NodeJS 官网;
+- 如上图所示:
+  - nodejs 的宏任务分好几种类型;
+  - 我们只简单介绍大体内容了解，不详细解释，不然又是啰哩啰嗦一大篇;
+
+---
+
+- NodeJS 的 Event Loop 相对比较麻烦:
+
+```js
+// Node会先执行所有类型为 timers 的 MacroTask;
+// 然后执行所有的 MicroTask(NextTick例外);
+
+// 进入 poll 阶段;
+// 执行几乎所有 MacroTask;
+// 然后执行所有的 MicroTask;
+
+// 再执行所有类型为 check 的 MacroTask;
+// 然后执行所有的 MicroTask;
+
+// 再执行所有类型为 close callbacks 的 MacroTask;
+// 然后执行所有的 MicroTask;
+
+// 至此，完成一个 Tick，回到 timers 阶段
+
+// ...
+
+// 如此反复，无穷无尽...
+```
+
+- 反观浏览器中 Event Loop 就比较容易理解:
+
+```js
+// 先执行一个 MacroTask，然后执行所有的 MicroTask
+
+// 再执行一个 MacroTask，然后执行所有的 MicroTask
+
+// ...
+
+// 如此反复，无穷无尽...
+```
+
+## 转载
+
+- 作者：isboyjc
+- 链接：https://juejin.im/post/6844904050543034376
+- 来源：掘金
