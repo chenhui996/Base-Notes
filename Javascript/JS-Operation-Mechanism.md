@@ -754,20 +754,20 @@ console.log(3);
           - 塞入到消息队列的尾部;
     - 消息队列中的任务都是宏任务;
   - 微任务是如何产生的呢？
-    - 当执行到script脚本的时候:
-      - js引擎会为全局创建一个'执行上下文':
+    - 当执行到 script 脚本的时候:
+      - js 引擎会为全局创建一个'执行上下文':
         - 在该'执行上下文中'维护了一个'微任务队列';
         - 当遇到微任务:
           - 就会把'微任务回调'放在'微队列'中;
-          - 当所有的js代码执行完毕:
+          - 当所有的 js 代码执行完毕:
             - 在'退出全局上下文之前'引擎会去'检查该队列';
               - 有回调就执行，没有就退出执行上下文;
-                - 这也就是为什么'微任务'要'早于宏任务'(因为本质上来说，code外面包裹着一个最大的宏任务);
+                - 这也就是为什么'微任务'要'早于宏任务'(因为本质上来说，code 外面包裹着一个最大的宏任务);
                 - 也是大家常说的:
                   - 每个宏任务都有一个微任务队列;
-                    - 由于定时器是浏览器的API:
+                    - 由于定时器是浏览器的 API:
                       - 所以定时器是宏任务;
-                      - 在js中遇到定时器会也是放入到浏览器的队列中;
+                      - 在 js 中遇到定时器会也是放入到浏览器的队列中;
 
 ---
 
@@ -784,7 +784,186 @@ console.log(3);
   - 再渲染，没有'微任务'则直接渲染;
 - 然后再接着执行下一个宏任务;
 
-## 图解完整的Event Loop
+## 图解完整的 Event Loop
 
 - 图解
   ![图解](./assets/Event-loop.png)
+
+## 关于 Promise
+
+- new Promise(() => {}).then()
+  - 我们来看这样一个 Promise 代码:
+
+```js
+new Promise((resolve) => {
+  console.log("1");
+  resolve();
+}).then(() => {
+  console.log("2");
+});
+console.log("3");
+```
+
+- 上面代码输出 1 3 2:
+  - 前面的 new Promise() 这一部分是一个构造函数 ———— 这是一个同步任务
+  - 后面的 .then() 才是一个异步微任务，这一点是非常重要的;
+
+## 关于 async/await 函数
+
+- async/await 本质上:
+  - 还是基于 Promise 的一些封装;
+  - 而 Promise 是属于微任务的一种;
+    - 所以在使用'await 关键字'与'Promise.then 效果'类似;
+
+```js
+setTimeout(() => console.log(4));
+
+async function test() {
+  console.log(1);
+  await Promise.resoleve();
+  console.log(3);
+}
+
+test();
+
+console.log(2);
+```
+
+- 上述代码输出 1 2 3 4;
+  - 可以理解为:
+    - await 以前的代码:
+      - 相当于与 new Promise 的同步代码;
+    - await 以后的代码:
+      - 相当于 Promise.then 的异步;
+
+## 举栗印证
+
+- 接下来这个来自网上随意找的一个比较简单的面试题，求输出结果:
+
+```js
+function test() {
+  console.log(1);
+  setTimeout(function () {
+    // timer1
+    console.log(2);
+  }, 1000);
+}
+
+test();
+
+setTimeout(function () {
+  // timer2
+  console.log(3);
+});
+
+new Promise(function (resolve) {
+  console.log(4);
+  setTimeout(function () {
+    // timer3
+    console.log(5);
+  }, 100);
+  resolve();
+}).then(function () {
+  setTimeout(function () {
+    // timer4
+    console.log(6);
+  }, 0);
+  console.log(7);
+});
+
+console.log(8);
+```
+
+- 结合我们上述的:
+  - 'JS 运行机制'
+    - 再来看这道题就简单明了的多了;
+
+---
+
+- JS 是顺序从上而下执行:
+  - 执行到 test():
+    - test 方法为同步;
+      - 直接执行:
+        - console.log(1)打印 1;
+        - test 方法中:
+          - setTimeout 为异步宏任务;
+            - '回调'我们把它'记做 timer1'放入'宏任务队列';
+
+---
+
+- 接着执行:
+  - test 方法下面:
+    - 有一个 setTimeout 为'异步宏任务';
+      - '回调'我们把它'记做 timer2'放入'宏任务队列';
+
+---
+
+- 接着执行 promise:
+  - new Promise 是同步任务:
+    - 直接执行:
+      - 打印 4;
+      - new Promise 里面的:
+        - setTimeout 是'异步宏任务';
+          - '回调'我们记做'timer3'放到'宏任务队列';
+  - Promise.then 是微任务，放到微任务队列;
+
+---
+
+- console.log(8)是同步任务，直接执行，打印 8;
+
+---
+
+- 主线程任务执行完毕:
+  - 检查微任务队列中发现:
+    - 有 Promise.then
+      - 执行：
+        - 开始执行微任务：
+          - 发现有 setTimeout 是'异步宏任务';
+            - '记做 timer4'放到'宏任务队列';
+          - '微任务队列'中的 console.log(7)是'同步任务';
+            - 直接执行:
+              - 打印 7;
+
+---
+
+- 微任务执行完毕，第一次循环结束;
+
+---
+
+- 检查宏任务队列:
+  - 里面有:
+    - timer1
+    - timer2
+    - timer3
+    - timer4
+  - 四个定时器宏任务:
+    - 按照'定时器延迟时间'得到可以'执行的顺序':
+      - 即 Event Queue:
+        - timer2
+        - timer4
+        - timer3
+        - timer1
+    - 依次拿出放入执行栈末尾执行:
+      - 插播一条:
+        - 浏览器 event loop 的 Macrotask queue:
+          - 就是'宏任务队列'在每次循环中只会读取一个任务;
+
+---
+
+- 执行 timer2，console.log(3)为同步任务，直接执行，打印 3
+  - 检查没有微任务，第二次 Event Loop 结束
+- 执行 timer4，console.log(6)为同步任务，直接执行，打印 6
+  - 检查没有微任务，第三次 Event Loop 结束
+- 执行 timer3，console.log(5)同步任务，直接执行，打印 5
+  - 检查没有微任务，第四次 Event Loop 结束
+- 执行 timer1，console.log(2)同步任务，直接执行，打印 2
+  - 检查没有微任务，也没有宏任务，第五次 Event Loop 结束
+
+---
+
+- 结果：1，4，8，7，3，6，5，2
+
+## 提一下 NodeJS 中的运行机制
+
+- 上面的一切都是针对于:
+  - 浏览器的 EventLoop;
