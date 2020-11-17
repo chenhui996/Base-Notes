@@ -1,7 +1,7 @@
 # echart 学习笔记
 
 - 本人在学习 echarts 的过程中，记录的学习笔记, 已上传至 github:
-  - 地址:
+  - 地址: https://github.com/chenhui996/Base-Notes/blob/master/Echarts-Notes.md
 
 ## 使用流程：
 
