@@ -1,7 +1,7 @@
 # 微信小程序
 
 - 微信小程序个人学习笔记，已上传至 github，会随着学习的深入陆续补充:
-  - 地址:
+  - 地址: https://github.com/chenhui996/Base-Notes/blob/master/WeChat-Applet.md
 
 ## 窥小程序框架细节 - 启动流程
 
