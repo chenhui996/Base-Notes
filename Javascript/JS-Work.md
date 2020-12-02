@@ -227,3 +227,23 @@ function square(n) {
     - 相比'早期的 JavaScript 的引擎'转换成'字节码'或'解释执行';
       - Node.js 可以用 V8 提供的 JS2C 工具将 JavaScript 转译为 C++代码;
   - JavaScript 和其他语言性能上的差距已经不足为道了;
+
+### 链接及装载
+
+- 目标代码基本不能独立运行:
+  - '应用程序'一般都会由'多个部分（模块）'组成;
+  - 比如'C++中一个简单的输出'就要'引入标准库 iostream':
+
+```C++
+#include <iostream>
+using namespace std;
+int main(){
+    cout << "Happy Hacking!\n";
+    return 0;
+}
+```
+
+- 编译器需要把多份目标代码（库）链接起来:
+  - 才能生成可执行文件;
+- 至此，我们简单的了解了编译过程;
+  - 但实际上编译比我们所讲的要复杂得多，在此就不在展开了;
