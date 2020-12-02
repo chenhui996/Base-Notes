@@ -82,13 +82,13 @@
 - 语义化的 '好处' 主要有两点:
   - 开发者友好:
     - 使用 '语义类标签 ' 增强了 '可读性';
-      - 开发者也能够:
+      - 开发者能够:
         - 清晰地看出网⻚的结构;
       - 也更为便于团队的 '开发和维护';
   - 机器友好:
     - 带有语义的文字 '表现力丰富';
       - 更适合 '搜索引擎的爬虫' 爬取有效信息;
-      - 语义类还可以支持 '读屏软件'，根据文章可以 '自动生成目录';(ps:例如识别所有 h1 标签，然后收集后，生成目录等等)
+      - 语义类还可以支持 '读屏软件'，根据文章可以 '自动生成目录';(ps:例如识别所有 h1 标签，收集后，生成目录等等)
 
 ---
 
@@ -99,5 +99,117 @@
     - 根本没有对应的语义，也不需要什么 SEO;
 
 ## HTML5 与 HTML4 的不同之处
+
+- 文件类型声明(<!DOCTYPE>)仅有一型:
+  - `<!DOCTYPE HTML>`;
+- 新的解析顺序:
+  - 不再基于 SGML;
+- 新的元素:
+  - section
+  - video
+  - progress
+  - nav
+  - meter
+  - time
+  - aside
+  - canvas
+  - command
+  - datalist
+  - details
+  - embed
+  - figcaption
+  - figure
+  - footer
+  - header
+  - hgroup
+  - keygen
+  - mark
+  - output
+  - rp
+  - rt
+  - ruby
+  - source
+  - summary
+  - wbr
+- input 元素的新类型:
+  - date, email, url 等等;
+- 新的属性:
+  - ping(用于 a 与 area)
+  - charset(用于 meta)
+  - async(用于 script)
+- 全域属性:
+  - id
+  - tabindex
+  - repeat
+- 新的全域属性:
+  - contenteditable
+  - contextmenu
+  - draggable
+  - dropzone
+  - hidden
+  - spellcheck
+- 移除元素:
+  - acronym
+  - applet
+  - basefont
+  - big
+  - center
+  - dir
+  - font
+  - frame
+  - frameset
+  - isindex
+  - noframes
+  - strike
+  - tt
+
+---
+
+- 主要就是新增了一些属性、元素和方法等，然后移除了部分元素;
+
+## 有哪些常用的 meta 标签?
+
+- meta 标签由:
+  - name 和 content 两个属性来定义;
+    - 来描述一个 'HTML 网⻚文档' 的 '属性';
+      - 例如作者、日期和时间、网⻚描述、关键词、⻚面刷新等;
+    - 除了一些 http 标准规定了一些 name:
+      - 作为大家使用的共识;
+        - 开发者也可以自定义 name;
+
+### 常用 meta:
+
+- charset:
+  - 用于描述 'HTML 文档' 的 '编码形式';
+
+```js
+<meta charset="UTF-8" >
+```
+
+- http-equiv:
+  - 顾名思义，相当于 http 的文件头作用:
+    - 比如下面的代码就可以设置 http 的缓存过期日期;
+
+```js
+<meta http-equiv="expires" content="Wed, 20 Jun 2019 22:33:00 GMT">
+```
+
+- viewport:
+  - Web 开发人员可以控制视口的大小和比例;
+    - 移动前端最熟悉不过;
+
+```js
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+```
+
+- apple-mobile-web-app-status-bar-style:
+  - 为了自定义评估工具栏的颜色;
+    - 开发过 PWA 应用的开发者应该很熟悉;
+
+```js
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+```
+
+## src和href的区别?
 
 - ...
