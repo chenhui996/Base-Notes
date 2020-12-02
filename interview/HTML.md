@@ -16,7 +16,7 @@
 
 - 文档解析类型有:
   - BackCompat:怪异模式;
-    》 浏览器使用自己的 '怪异模式' 解析渲染⻚面;
+    - 浏览器使用自己的 '怪异模式' 解析渲染⻚面;
     - 如果没有声明 DOCTYPE ，'默认' 就是这个模式;
   - CSS1Compat:标准模式;
     - 浏览器使用 W3C 的标准解析渲染⻚面;
@@ -190,7 +190,7 @@
   - 顾名思义，相当于 http 的文件头作用:
     - 比如下面的代码就可以设置 http 的缓存过期日期;
 
-```js
+```html
 <meta http-equiv="expires" content="Wed, 20 Jun 2019 22:33:00 GMT">
 ```
 
@@ -198,7 +198,7 @@
   - Web 开发人员可以控制视口的大小和比例;
     - 移动前端最熟悉不过;
 
-```js
+```html
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 ```
 
@@ -206,7 +206,7 @@
   - 为了自定义评估工具栏的颜色;
     - 开发过 PWA 应用的开发者应该很熟悉;
 
-```js
+```html
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 ```
 
@@ -294,7 +294,7 @@
   src="clock-demo-thumb-200.png"
   alt="Clock"
   srcset="clock-demo-thumb-200.png 200w, clock-demo-thumb-200.png 400w"
-  sizes="(min-width:600px) 200px 50vw"
+  sizes="(min-width:600px) 200px, 50vw"
 />
 ```
 
@@ -322,6 +322,31 @@
 </picture>
 ```
 
-## script标签中defer和async的区别?
+## script 标签中 defer 和 async 的区别?
+
+- defer:
+  - '浏览器' 指示 '脚本':
+    - 在 '文档' 被 '解析后' 执行;
+      - script 被 '异步加载' 后并不会立刻执行;
+        - 而是等待:
+          - 文档被 '解析完毕' 后执行;
+- async:
+  - 同样是:
+    - '异步加载' 脚本;
+  - 区别是:
+    - 脚本 '加载完毕' 后立即执行;
+      - 这导致 async 属性下的脚本是乱序的;
+        - 对于 script 有 '先后依赖关系' 的情况:
+          - 并不适用;
+
+## 有几种前端储存的方式?
+
+- cookies
+- localstorage
+- sessionstorage
+- Web SQL
+- IndexedDB
+
+## 这些方式的区别是什么?(追问)
 
 - ...
