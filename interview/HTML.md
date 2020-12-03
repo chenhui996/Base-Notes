@@ -191,7 +191,7 @@
     - 比如下面的代码就可以设置 http 的缓存过期日期;
 
 ```html
-<meta http-equiv="expires" content="Wed, 20 Jun 2019 22:33:00 GMT">
+<meta http-equiv="expires" content="Wed, 20 Jun 2019 22:33:00 GMT" />
 ```
 
 - viewport:
@@ -199,7 +199,10 @@
     - 移动前端最熟悉不过;
 
 ```html
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1, maximum-scale=1"
+/>
 ```
 
 - apple-mobile-web-app-status-bar-style:
@@ -207,7 +210,10 @@
     - 开发过 PWA 应用的开发者应该很熟悉;
 
 ```html
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta
+  name="apple-mobile-web-app-status-bar-style"
+  content="black-translucent"
+/>
 ```
 
 ## src 和 href 的区别?
@@ -258,12 +264,13 @@
       - 这也是为什么建议把 js 脚本放在底部而不是头部的原因;
 
 ---
+
 ### 若看不明白, 再次总结
 
-- href用于建立 '当前页面' 与 '引用资源' 之间的关系（链接）
-- src则会 '替换' 当前标签;
-- 遇到href，页面会 '并行加载' 后续内容;
-- 而src则不同，浏览器需要 '加载完毕src的内容' 才会继续往下走;
+- href 用于建立 '当前页面' 与 '引用资源' 之间的关系（链接）
+- src 则会 '替换' 当前标签;
+- 遇到 href，页面会 '并行加载' 后续内容;
+- 而 src 则不同，浏览器需要 '加载完毕 src 的内容' 才会继续往下走;
 
 ## 知道 img 的 srcset 的作用是什么?(追问)
 
@@ -357,45 +364,45 @@
 
 ## 这些方式的区别是什么?(追问)
 
-- cookies:
-    - 在HTML5标准前:
-        - 本地储存的主要方式;
-    - 优点是:
-        - 兼容性好;
-        - 请求头自带cookie方便;
-    - 缺点是:
-        - 大小只有4k;
-        - 自动 '请求头' 加入cookie浪费流量;
-        - 每个domain限制20个cookie:
-            - 使用起来麻烦需要自行封装;
-- localStorage:
-    - HTML5加入的:
-        - 以键值对(Key-Value)为标准的方式;
-    - 优点是:
-        - 操作方便;
-        - 永久性储存(除非手动删除);
-        - 大小为5M
-        - 兼容IE8+
-- sessionStorage:
-    - 与localStorage基本类似;
-        - 区别是:
-            - sessionStorage当⻚面关闭后会被清理;
-            - 而且 '与' cookie、localStorage不同:
-                - 它不能在 '所有同源窗口' 中共享;
-                    - 是会话级别的储存方式;
-- Web SQL:
-    - 2010年被W3C废弃的:
-        - 本地数据库数据存储方案;
-    - 但是主流浏览器(火狐除外)都已经有了相关的实现:
-        - web sql类似于SQLite:
-            - 是真正意义上的关系型数据库;
-                - 由于用sql进行操作;
-                    - 当我们用JavaScript时要进行转换， 较为繁琐;
-- IndexedDB:
-    - 是被正式纳入HTML5标准的:
-        - 数据库储存方案;
-    - 它是NoSQL数据库;
-    - 用键值对进行储存;
-    - 可以进行快速读取操作:
-        - 非常适合web场景;
-    - 同时用JavaScript进行操作会非常方便;
+- **cookies**:
+  - 在 HTML5 标准前:
+    - 本地储存的主要方式;
+  - 优点是:
+    - 兼容性好;
+    - 请求头自带 cookie 方便;
+  - 缺点是:
+    - 大小只有 4k;
+    - 自动 '请求头' 加入 cookie 浪费流量;
+    - 每个 domain 限制 20 个 cookie:
+      - 使用起来麻烦需要自行封装;
+- **localStorage**:
+  - HTML5 加入的:
+    - 以键值对(Key-Value)为标准的方式;
+  - 优点是:
+    - 操作方便;
+    - 永久性储存(除非手动删除);
+    - 大小为 5M
+    - 兼容 IE8+
+- **sessionStorage**:
+  - 与 localStorage 基本类似;
+    - 区别是:
+      - sessionStorage 当⻚面关闭后会被清理;
+      - 而且 '与' cookie、localStorage 不同:
+        - 它不能在 '所有同源窗口' 中共享;
+          - 是会话级别的储存方式;
+- **Web SQL**:
+  - 2010 年被 W3C 废弃的:
+    - 本地数据库数据存储方案;
+  - 但是主流浏览器(火狐除外)都已经有了相关的实现:
+    - web sql 类似于 SQLite:
+      - 是真正意义上的关系型数据库;
+        - 由于用 sql 进行操作;
+          - 当我们用 JavaScript 时要进行转换， 较为繁琐;
+- **IndexedDB**:
+  - 是被正式纳入 HTML5 标准的:
+    - 数据库储存方案;
+  - 它是 NoSQL 数据库;
+  - 用键值对进行储存;
+  - 可以进行快速读取操作:
+    - 非常适合 web 场景;
+  - 同时用 JavaScript 进行操作会非常方便;
