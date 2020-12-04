@@ -348,50 +348,94 @@ box-sizing: padding-box // 火狐的私有模型，没人用
 #### 伪类(pseudo-class)
 
 - 伪类(pseudo-class) 是一个以冒号(:)作为前缀;
-    - 被添加到:
-        - 一个选择器末尾的 '关键字';
+  - 被添加到:
+    - 一个选择器末尾的 '关键字';
 - 当你希望样式:
-    - 在特定状态下:
-        - 才被呈现到指定的元素时:
-            - 你可以往元素的选择器后面加上:
-                - 对应的伪类;(hover、active、focus...);
+  - 在特定状态下:
+    - 才被呈现到指定的元素时:
+      - 你可以往元素的选择器后面加上:
+        - 对应的伪类;(hover、active、focus...);
 
 #### 伪元素
 
 - 伪元素用于:
-    - 创建一些 '不在文档树中的元素';
-        - 并为其添加样式;
+  - 创建一些 '不在文档树中的元素';
+    - 并为其添加样式;
 - 比如说:
-    - 我们可以通过::before;
-        - 来在一个元素前增加一些 '文本';
-            - 并为这些文本添加样式;
+  - 我们可以通过::before;
+    - 来在一个元素前增加一些 '文本';
+      - 并为这些文本添加样式;
 
-> 虽然用户可以看到这些文本，但是这些文本实际上不在文档树中;(icon用的居多)
+> 虽然用户可以看到这些文本，但是这些文本实际上不在文档树中;(icon 用的居多)
 
 ### 区别
 
 - 其实上文已经表达清楚两者区别了;
-    - 伪类是:
-        - 通过在 '元素选择器上' 加入 '伪类' 改变 '元素状态';
-    - 伪元素是:
-        - 通过对 '元素的操作' 进行对 '元素的改变';
+  - 伪类是:
+    - 通过在 '元素选择器上' 加入 '伪类' 改变 '元素状态';
+  - 伪元素是:
+    - 通过对 '元素的操作' 进行对 '元素的改变';
 
 > 通过 p::before 对文本添加额外的元素;
 > 通过 p:first-child 改变了文本的第一个子元素样式;
 
-## 你对flex的理解?
+## 你对 flex 的理解?
 
-- web应用有 '不同设备尺寸' 和 '分辨率';
-    - 这时需要 '响应式界面设计' 来满足 '复杂的布局需求';
-- Flex弹性盒模型的优势在于:
-    - 开发人员只是 '声明布局应该具有的行为';
-        - 而不需要给出具体的实现方式;
-        - 浏览器负责完成实际布局;
+- web 应用有 '不同设备尺寸' 和 '分辨率';
+  - 这时需要 '响应式界面设计' 来满足 '复杂的布局需求';
+- Flex 弹性盒模型的优势在于:
+  - 开发人员只是 '声明布局应该具有的行为';
+    - 而不需要给出具体的实现方式;
+    - 浏览器负责完成实际布局;
 - 当布局涉及到:
-    - 不定宽度
-    - 分布对⻬的场景时;
-        - 就要优先考虑弹性盒布局;
+  - 不定宽度
+  - 分布对⻬的场景时;
+    - 就要优先考虑弹性盒布局;
 
-## 关于CSS的动画与过渡问题
+## 关于 CSS 的动画与过渡问题
 
-- ..
+- transition 过渡是:
+  - 通过 '初始' 和 '结束' 两个状态之间的 '平滑过渡';
+    - 实现简单动画的;
+
+```css
+transition-property: 过渡属性(默认值为all)
+transition-duration: 过渡持续时间(默认值为0s)
+transiton-timing-function: 过渡函数(默认值为ease函数)
+transition-delay: 过渡延迟时间(默认值为0s)
+```
+
+- 而 animation 则是:
+  - 通过关键帧@keyframes 来实现:
+    - 更为复杂的动画效果;
+
+```css
+div {
+  width: 300px;
+  height: 100px;
+  background-color: pink;
+  animation-name: test;
+  animation-duration: 3s;
+  animation-timing-function: ease;
+  animation-delay: 0s;
+  animation-iteration-count: infinite;
+  animation-direction: normal;
+  animation-play-state: running;
+  animation-fill-mode: none;
+}
+/* 关于keyframes关键帧的内容稍后介绍     */
+@keyframes test {
+  0% {
+    background-color: lightblue;
+  }
+  30% {
+    background-color: lightgreen;
+  }
+  60% {
+    background-color: lightgray;
+  }
+  100% {
+    background-color: black;
+  }
+}
+```
