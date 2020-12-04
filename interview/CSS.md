@@ -160,33 +160,35 @@
 
 ## 清除浮动有哪些方法?
 
-- 空div方法: 
+- 空 div 方法:
+
 ```html
 <div style="clear:both;"></div>
 ```
+
 - Clearfix 方法:
-    - 上文使用.clearfix类已经提到;
-- overflow: 
-    - auto或overflow: hidden方法，使用BFC;
+  - 上文使用.clearfix 类已经提到;
+- overflow:
+  - auto 或 overflow: hidden 方法，使用 BFC;
 
-> 在flex已经成为布局主流之后，浮动这种东⻄越来越少⻅了，毕竟它的副作用太大
+> 在 flex 已经成为布局主流之后，浮动这种东⻄越来越少⻅了，毕竟它的副作用太大
 
-## 你对css sprites的理解，好处是什么?
+## 你对 css sprites 的理解，好处是什么?
 
 ### 是什么 ?
 
-- 雪碧图也叫CSS精灵:
-    - 是一CSS图像合成技术;
-        - 开发人员往往将:
-            - 小图标合并在一起之后的图片:
-                - 称作雪碧图;
+- 雪碧图也叫 CSS 精灵:
+  - 是一 CSS 图像合成技术;
+    - 开发人员往往将:
+      - 小图标合并在一起之后的图片:
+        - 称作雪碧图;
 
 ### 如何操作?
 
-- 使用工具(PS之类的)将多张图片打包成一张雪碧图;
-    - 并为其生成合适的 CSS;
+- 使用工具(PS 之类的)将多张图片打包成一张雪碧图;
+  - 并为其生成合适的 CSS;
 - 每张图片都有相应的 CSS 类:
-    - 该类 定义了background-image、background-position和background-size属性;
+  - 该类 定义了 background-image、background-position 和 background-size 属性;
 - 使用图片时，将相应的类添加到你的元素中;
 
 ### 好处
@@ -196,12 +198,134 @@
 
 ### 不足
 
-- CSS Sprite维护成本较高;
-    - 如果⻚面背景有少许改动，一般就要改这张合并的图片;
-- 加载速度优势在http2开启后荡然无存:
-    - HTTP2多路复用;
-        - 多张图片也可以重复利用一个连接通道搞定;
+- CSS Sprite 维护成本较高;
+  - 如果⻚面背景有少许改动，一般就要改这张合并的图片;
+- 加载速度优势在 http2 开启后荡然无存:
+  - HTTP2 多路复用;
+    - 多张图片也可以重复利用一个连接通道搞定;
 
-## 你对媒体查询的理解?
+## 你对 '媒体查询' 的理解?
 
-- ...
+### 是什么
+
+- 媒体查询由:
+  - 一个可选的媒体类型;
+  - 和零个或多个:
+    - 使用媒体功能的:
+      - 限制了样式表范围的表达式;
+- 组成;
+- 这些表达式描述了媒体特征:
+  - 最终会被解析为 true 或 false;
+- 如果媒体查询中:
+  - 指定的媒体类型:
+    - '匹配' 展示文档所使用的 '设备类型';
+      - 并且 '所有的表达式' 的值都是 true;
+        - 那么该 '媒体查询的结果' 为 true;
+          - 那么 '媒体查询内的样式' 将会 '生效';
+
+```html
+<!-- link元素中的CSS媒体查询 -->
+<link rel="stylesheet" media="(max-width: 800px)" href="example.css" />
+<!-- 样式表中的CSS媒体查询 -->
+<style>
+  @media (max-width: 600px) {
+    .facet_sidebar {
+      display: none;
+    }
+  }
+</style>
+```
+
+## 你对盒模型的理解
+
+### 是什么?
+
+- 当对一个文档进行布局(lay out)的时候:
+  - 浏览器的 '渲染引擎' 会:
+    - 根据标准之一的:
+      - CSS 基础框盒模型(CSS basic box model);
+        - 将 '所有元素' 表示为一个个矩形的盒子(box);
+          - CSS 决定这些盒子的:
+            - 大小、位置以及属性(例如颜色、背 景、边框尺寸...)。;
+- 盒模型由:
+  - content(内容)
+  - padding(内边距)
+  - border(边框)
+  - margin(外边距)
+- 组成;
+
+## '标准盒模型' 和 '怪异盒模型' 有什么区别?
+
+- 在 W3C 标准下:
+  - 我们定义元素的 width 值:
+    - 即为盒模型中的 content 的宽度值;
+  - height 值:
+    - 即为盒模型中的 content 的高度值;
+- 因此，'标准盒模型'下:
+
+> 元素的宽度 = margin-left + border-left + padding-left + width + padding-right + border-right + margin-right
+
+- 而 IE '怪异盒模型'(IE8 以下):
+  - width 的宽度:
+    - 并不是 content 的宽度;
+    - 而是 border-left + padding-left + content 的宽度值 + padding-right + border-right 之和;
+  - height 同理;
+- 在 '怪异盒模型' 下:
+
+> 元素占据的宽度 = margin-left + width + margin-right
+
+---
+
+- 虽然现代浏览器默认使用 W3C 的标准盒模型;
+  - 但是在不少情况下;
+    - 怪异盒模型更好用;
+      - 于是 W3C 在 css3 中加入 box- sizing;
+
+```css
+box-sizing: content-box // 标准盒模型
+box-sizing: border-box // 怪异盒模型
+box-sizing: padding-box // 火狐的私有模型，没人用
+```
+
+## 谈谈对 BFC 的理解
+
+### 是什么?
+
+- 书面解释:
+  - BFC(Block Formatting Context)这几个英文拆解;
+    - Box:
+      - CSS 布局的基本单位;
+        - Box 是 CSS 布局的对象和基本单位;
+      - 直观点来说:
+        - 就是 '一个⻚面' 是由很多个 Box 组成的;
+          - 实际就是上个问题说的盒模型
+    - Formatting context:
+      - 块级上下文格式化;
+      - 它是⻚面中的一块渲染区域;
+        - 并且有一套渲染规则;
+          - 它决定了其子元素将如何定位;
+          - 以及和其他元素的关系和相互作用;
+- 简而言之，它是一块独立的区域;
+  - 让处于 BFC 内部的元素与外部的元素互相隔离;
+
+### 如何形成?
+
+- BFC 触发条件:
+  - 根元素，即 HTML 元素;
+  - position: fixed/absolute;
+  - float 不为 none;
+  - overflow 不为 visible;
+  - display 的值为:
+    - inline-block
+    - table-cell
+    - table-caption
+
+### 作用是什么?
+
+- 防止margin发生重叠;
+- 两栏布局，防止文字环绕等;
+- 防止元素塌陷;
+
+## 为什么有时候人们用translate来改变位置而不是定位?
+
+- ..
