@@ -263,17 +263,49 @@ for (let i = 0; i < 40000; i++) {
 
 - 说完了 setTimeout，当然不能错过他的孪生兄弟：setInterval;
 - 对于 '执行顺序' 来说:
-    - setInterval会:
-        - **每隔指定的时间**:
-            - 将 '注册的函数' 置入 Task Queue;
-                - 如果前面的任务耗时太久，那么同样需要等待;
+  - setInterval 会:
+    - **每隔指定的时间**:
+      - 将 '注册的函数' 置入 Task Queue;
+        - 如果前面的任务耗时太久，那么同样需要等待;
 
 ---
 
 - 这里需要说的是:
-    - 对于 setInterval(fn,ms) 来说:
-        - 我们制定每 xx ms执行一次 fn:
-            - 其实是每 xx ms，会有一个fn 进入到 Task Queue 中;
+  - 对于 setInterval(fn,ms) 来说:
+    - 我们制定每 xx ms 执行一次 fn:
+      - 其实是每 xx ms，会有一个 fn 进入到 Task Queue 中;
 
-> 一旦 setInterval 的回调函数fn执行时间超过了xx ms，那么就完全看不出来有时间间隔了;
->> 仔细回味回味，是不是那么回事？
+> 一旦 setInterval 的回调函数 fn 执行时间超过了 xx ms，那么就完全看不出来有时间间隔了;
+>
+> > 仔细回味回味，是不是那么回事？
+
+### 宏微任务优先级
+
+- 一句话理解:
+  - 一次事件循环回来后;
+  - 开始去执行 Task Queue 中的 task;
+    - 但是这里的 task 有优先级;
+  - 优先执行 MicroTask Queue 中的 task;
+    - 执行完后在执行 MacroTask Queue 中的 task;
+
+#### 小试牛刀
+
+- 期中考试:
+
+```js
+console.log('script start');
+
+setTimeout(function() {
+  console.log('setTimeout');
+}, 0);
+
+Promise.resolve().then(function() {
+  console.log('promise1');
+}).then(function() {
+  console.log('promise2');
+});
+```
+
+## Node 环境下的 Event Loop
+
+- ..
