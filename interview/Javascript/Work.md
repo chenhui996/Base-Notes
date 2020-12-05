@@ -168,4 +168,34 @@ console.log("这是一个同步任务");
 
 ### 宏任务(MacroTask)、微任务(MicroTask)
 
+- JavaScript 的任务:
+  - 不仅仅分为:
+    - '同步任务' 和 '异步任务';
+  - 同时从 '另一个维度':
+    - 也分为了:
+      - '宏任务(MacroTask)' 和 '微任务(MicroTask)';
+
+---
+
+- 先说说 '宏任务(MacroTask)':
+  - 所有的 '同步任务代码' 都是 MacroTask;（这么说其实不是很严谨，下面解释）
+    - setTimeout、setInterval、I/O、UI Rendering 等都是宏任务;
+
+---
+
+- 微任务(MicroTask):
+  - 为什么说上述不严谨:
+    - 我却还是强调:
+      - 所有的 '同步任务' 都是 '宏任务(MacroTask)' 呢 ????
+  - 因为我们仅仅需要记住几个 '微任务(MicroTask)' 即可，排除法!!!!
+    - 别的都是 '宏任务(MacroTask)';
+- 微任务(MicroTask)包括:
+  - Process.nextTick
+  - Promise.then catch finally(注意我不是说 Promise)
+  - MutationObserver
+
+> 只要技术上述几个微任务，其他全是宏任务;
+
+## 浏览器环境下的 Event Loop
+
 - ..
