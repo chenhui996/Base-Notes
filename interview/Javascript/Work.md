@@ -262,4 +262,18 @@ for (let i = 0; i < 40000; i++) {
 #### setInterval
 
 - 说完了 setTimeout，当然不能错过他的孪生兄弟：setInterval;
-- ..
+- 对于 '执行顺序' 来说:
+    - setInterval会:
+        - **每隔指定的时间**:
+            - 将 '注册的函数' 置入 Task Queue;
+                - 如果前面的任务耗时太久，那么同样需要等待;
+
+---
+
+- 这里需要说的是:
+    - 对于 setInterval(fn,ms) 来说:
+        - 我们制定每 xx ms执行一次 fn:
+            - 其实是每 xx ms，会有一个fn 进入到 Task Queue 中;
+
+> 一旦 setInterval 的回调函数fn执行时间超过了xx ms，那么就完全看不出来有时间间隔了
+> 仔细回味回味，是不是那么回事？
