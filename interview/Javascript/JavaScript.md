@@ -326,7 +326,7 @@ var name = "cxk";
 ## 类型转换的规则有哪些?
 
 - 在:
-  - if语句
+  - if 语句
   - 逻辑语句
   - 数学运算逻辑
   - ==
@@ -335,6 +335,249 @@ var name = "cxk";
   - 坑一: '字符串连接符' 与 '算术运算符' 隐式转换规则混淆;
   - 坑二: '关系运算符' :
     - 会把 '其他数据类型' 转换成 'number' 之后再比较关系;
-  - 坑三: '复杂数据类型' 在隐式转换时会 '先转成String',然后 '再转成Number'运算;
+  - 坑三: '复杂数据类型' 在隐式转换时会 '先转成 String',然后 '再转成 Number'运算;
   - 坑四: '逻辑非隐式转换' 与 '关系运算符隐式转换' 搞混淆;
 - ![隐式类型转换](./src/static/img/ITC.png "Implicit type conversion")
+
+## 类型转换的原理是什么?
+
+- 类型转换指的是:
+  - 将一种类型转换为另一种类型,例如:
+
+```js
+var b = 2;
+console.log(typeof b); //number
+var a = String(b);
+console.log(typeof a); //string
+```
+
+- 类型转换分为:
+  - '显式' 和 '隐式';
+- 但是不管是隐式转换还是显式转换:
+  - 都会遵循一定的原理;
+
+---
+
+- 由于 JavaScript 是一⻔ '动态类型' 的语言:
+  - 可以随时赋予任意值;
+    - 但是:
+      - 各种 '运算符或条件判断中' 是需要 '特定类型' 的;
+        - 因此 JavaScript 引擎:
+          - 会在 '运算时':
+            - 为变量设定 '类型';
+
+---
+
+- 这看起来很美好:
+  - JavaScript 引擎帮我们搞定了 '类型' 的问题;
+    - 但是引擎毕竟不是 ASI(超级人工智能);
+      - 它的很多动作会跟我们 预期相去甚远;
+        - 我们可以从一到面试题开始:
+
+```js
+{
+}
++[]; //0
+```
+
+- 答案是 0;
+- 是什么原因造成了上述结果呢?
+  - 这是因为 JavaScript 中类型转换:
+    - 可以从 '原始类型' 转为 '引用类型';
+    - 同样可以将 '引用类型' 转为 '原始类型';
+
+## 谈谈你对原型链的理解?
+
+- 这个问题关键在于两个点:
+  - 一个是 '原型对象' 是什么;
+  - 另一个是 '原型链是如何形成的';
+
+## 原型对象
+
+- 绝大部分的函数(少数内建函数除外):
+  - 都有一个 prototype 属性;
+    - 这个属性是:
+      - 原型对象用来创建 '新对象实例';
+        - 而所有被创建的对象:
+          - 都会 '共享原型对象';
+            - 因此这些对象便可以:
+              - 访问 '原型对象' 的属性;
+
+---
+
+- 例如 hasOwnProperty() 方法存在于 Obejct 原型对象中:
+  - 它便可以被任何对象当做自己的方法使用;
+
+> 用法: object.hasOwnProperty( propertyName )
+> hasOwnProperty() 函数的返回值为 Boolean 类型;
+>
+> > 如果对象 object 具有名称为 propertyName 的属性;
+> >
+> > > 返 回 true ，否则返回 false;
+
+```js
+var person = {
+  name: "Messi",
+  age: 29,
+  profession: "football player",
+};
+
+console.log(person.hasOwnProperty("name")); //true
+console.log(person.hasOwnProperty("hasOwnProperty")); //false
+console.log(Object.prototype.hasOwnProperty("hasOwnProperty")); //true
+```
+
+- 由以上代码可知:
+  - hasOwnProperty() 并不存在于 person 对象中;
+    - 但是 person 依然可以拥有此方法;
+
+> 所以 person 对象是如何找到 Object 对象中的方法的呢?
+> 靠的是原型链;
+
+## 原型链
+
+- 原因是每个对象都有 `__proto__` 属性:
+  - 此属性指向:
+    - 该对象的 '构造函数的原型';
+
+---
+
+- 对象可以通过:
+
+  - `__proto__` 与:
+    - 上游的 '构造函数的原型对象' 连接起来;
+      - **而上游的原型对象也有一个 `__proto__ `, 这样就形成了原型链**;
+
+- ![经典原型链图](./src/static/img/PrototypeChain.png "Prototype chain");
+
+## 如何判断是否是数组?
+
+- es6 中加入了新的判断方法
+
+```js
+if (Array.isArray(value)) {
+  return true;
+}
+```
+
+- 在考虑兼容性的情况下可以用 toString 的方法:
+
+```js
+if (!Array.isArray) {
+  Array.isArray = function (arg) {
+    return Object.prototype.toString.call(arg) === "[object Array]";
+  };
+}
+```
+
+## 谈一谈你对 this 的了解?
+
+- this 的指向不是在编写时确定的:
+  - 而是在执行时确定的;
+- 同时:
+  - this 不同的指向在于遵循了一定的规则;
+
+---
+
+- 首先，在默认情况下:
+  - this 是指向全局对象的:
+    - 比如在浏览器就是指向 window;
+
+```js
+name = "Bale";
+function sayName() {
+  console.log(this.name);
+}
+sayName(); //"Bale"
+```
+
+- 其次，如果函数被调用的位置:
+  - 存在上下文对象时:
+    - 那么函数是被 '隐式绑定' 的;
+
+```js
+function f() {
+  console.log(this.name);
+}
+var obj = {
+  name: "Messi",
+  f: f,
+};
+
+obj.f(); //被调用的位置恰好被对象obj拥有，因此结果是Messi
+```
+
+- 再次，显示改变 this 指向，常⻅的方法就是 call、apply、bind
+- 以 bind 为例:
+
+```js
+function f() {
+  console.log(this.name);
+}
+var obj = {
+  name: "Messi",
+};
+var obj1 = {
+  name: "Bale",
+};
+
+f.bind(obj)(); //Messi
+// 由于bind将obj绑定到f函数上后返回一个新函数,因此需要再在后面加上括号进行执行,这是bind与apply和call的 区别
+```
+
+- 最后，也是优先级最高的绑定 new 绑定;
+- 用 new 调用一个构造函数:
+  - 会创建一个新对象;
+    - 在创造这个新对象的过程中;
+      - 新对象会:
+        - 自动绑定到 Person 对象的 this 上;
+          - 那么 this 自然就指向这个新对象;
+
+```js
+function Person(name) {
+  this.name = name;
+  console.log(name);
+}
+var person1 = new Person("Messi"); //Messi
+```
+
+> 绑定优先级: new 绑定 > 显式绑定 >隐式绑定 >默认绑定
+
+## 那么箭头函数的 this 指向哪里?
+
+- 箭头函数不同于传统 JavaScript 中的函数:
+  - 箭头函数并没有属于自己的 this;
+- 它的所谓的 this 是:
+  - 捕获其所在上下文的 this 值，作为自己的 this 值;
+- 并且由于没有属于自己的 this:
+  - 箭头函数是不会被 new 调用的;
+    - 这个所谓的 this 也不会被改变;
+
+---
+
+- 我们可以用 Babel 理解一下箭头函数:
+
+```js
+// ES6
+const obj = {
+  getArrow() {
+    return () => {
+      console.log(this === obj);
+    };
+  },
+};
+```
+
+- 转化后
+
+```js
+// ES5，由 Babel 转译
+var obj = {
+  getArrow: function getArrow() {
+    var _this = this;
+    return function () {
+      console.log(_this === obj);
+    };
+  },
+};
+```
