@@ -1,8 +1,8 @@
-### Event
+#  Event
 
 - 浏览器给予的功能,均为默认事件(默认行为);
 
-# addEventListener()
+### addEventListener()
 
 - div.addEventListener('eventType', callback(),[Boolean || {Object}]):
   - eventType: 事件类型;
@@ -20,21 +20,21 @@
 
 ## 事件流
 
-# 事件冒泡
+### 事件冒泡
 
 - js 特性;
 - 执行'子元素事件触发时'，父元素如有'同样事件'，也会执行;
 - 由小到大;
 
-# 事件捕获
+### 事件捕获
 
 - 由大到小;
 
-# preventDefault()
+## preventDefault()
 
 - 阻止浏览器默认行为;
 
-# removeEventListener()
+## removeEventListener()
 
 - 取消元素事件;
 - div.removeEventListener("eventType", 命名函数;
@@ -43,18 +43,18 @@
 
 ## Event 事件对象
 
-# Event.target
+### Event.target
 
 - 目标元素;
   - 事件触发的目标源元素;
 - 可用 Event.target.tagName 扩展添加一些逻辑条件;
 
-# Event.currentTarget
+### Event.currentTarget
 
 - 起始元素;
   - 事件绑定元素;
 
-# 事件委托
+## 事件委托
 
 - 事件委托优点：
   - 可减少需要添加事件绑定的元素;
@@ -63,33 +63,33 @@
   - 事件处理函数中需要判断事件源增加逻辑复杂度;
   - 祖父级和事件之间不能有阻止冒泡;
 
-# mouseover
+### mouseover
 
 - 鼠标移入;
   - 事件触发的目标源元素;
 
-# mouseout
+### mouseout
 
 - 鼠标移出;
   - 事件触发的目标源元素;
 
-# mouseenter
+### mouseenter
 
 - 鼠标移入;
   - 事件绑定元素;
 
-# mouseleave
+### mouseleave
 
 - 鼠标移出;
   - 事件绑定元素;
 
-# e.cancelBubble()
+### e.cancelBubble()
 
 - 取消时间冒泡
   - Boolean;
   - 意思就是在这一层就隔断;
 
-# e.stopPropagation()
+### e.stopPropagation()
 
 - 取消时间冒泡
   - Boolean;
