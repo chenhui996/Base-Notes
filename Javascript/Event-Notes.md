@@ -85,12 +85,12 @@
 
 ### e.cancelBubble()
 
-- 取消时间冒泡
+- 取消事件冒泡
   - Boolean;
   - 意思就是在这一层就隔断;
 
 ### e.stopPropagation()
 
-- 取消时间冒泡
+- 取消事件冒泡
   - Boolean;
   - 意思就是在这一层就隔断;
