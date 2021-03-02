@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <input id="input" />
+  </body>
+  <script>
+    // 手写防抖 debounce 函数
+    function debounce(fn, delay = 500) {
+      // timer 是闭包中
+      let timer = null;
+      console.log("yep");
+      return function () {
+        if (timer) {
+          clearTimeout(timer);
+        }
+        timer = setTimeout(() => {
+          fn.apply(this, arguments);
+          timer = null;
+        }, delay);
+      };
+    }
+
+    const input1 = document.getElementById("input");
+
+    input1.addEventListener(
+      "keyup",
+      debounce(function () {
+        console.log(input1.value);
+      }, 1600)
+    );
+  </script>
+</html>
