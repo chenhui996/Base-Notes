@@ -149,6 +149,7 @@ useEffect(() => {
         - 在函数内清除副作用。
 
 > 注意，模拟 WillUnMount, 但不完全相等。
+> 准确的说：返回的函数，会在下一次 effect 执行之前，被执行。
 
 ```js
 // 模拟 class 组件的 WillUnMount
@@ -171,6 +172,14 @@ useEffect(() => {
 - 模拟 componentDidUpdate - useEffect 无依赖，或者依赖 [a, b]。
 - 模拟 componentWillUnMount - useEffect 中返回一个函数。
 
+## useEffect 执行总结
+
+- useEffect 依赖 []，组件销毁时执行 fn，等同于 WillUnMount。
+- useEffect 无依赖或依赖 [a, b]，组件更新时执行 fn。
+  - 即，下一次执行 useEffect 之前，就会执行 fn，无论更新或卸载。
+
+> fn 指的是 useEffect 返回的回调函数。
+
 ## useEffect 让纯函数有了副作用
 
 - 默认情况下，执行纯函数，输入参数，返回结果：
@@ -180,3 +189,11 @@ useEffect(() => {
 - 而组件需要副作用，所以需要 useEffect “钩” 入纯函数中。
 
 > 因为需要，所以存在。———— 技术向业务妥协。
+
+---
+
+## 小结
+
+- 函数组件更适合 React 组件，但需要 Hooks 增强功能。
+- useState 可实现 state 和 setState。
+- useEffect 可模拟组件主要的生命周期。
