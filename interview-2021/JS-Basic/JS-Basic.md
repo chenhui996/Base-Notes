@@ -564,4 +564,8 @@ loadImg(url)
 
 ---
 
+## promise 简介
 
+- Promise 是 ES6 加入标准的一种异步编程解决方案。
+  - 通常用来表示一个异步操作的最终完成 (或失败)。
+- Promise 标准的提出，解决了 JavaScript 地狱回调的问题。
