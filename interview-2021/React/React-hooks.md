@@ -39,12 +39,12 @@
 - 模拟 componentWillUnMount - useEffect 中返回一个函数。
   - 注意：此处不是真正的 WillUnMount：
     - useEffect 依赖 []，组件销毁是执行 fn，等于 WillUnMount。
-    - useEffect 无依赖或依赖 [a, b]， 组件更新时执行 fn。
+    - useEffect 无依赖或依赖 [a, b]，组件更新时执行 fn。
       - 即，下一次执行 useEffect 之前，就会执行 fn，无论更新或卸载。
 
 ### 如何自定义 Hook？
 
--  就是正常写一个执行函数：
+- 就是正常写一个执行函数：
   - 函数名：useXxx。
 - 基本逻辑、思路：
   - 定义 state：useState
