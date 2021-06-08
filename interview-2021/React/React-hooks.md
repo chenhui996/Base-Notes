@@ -148,8 +148,8 @@
 ```js
 // 模拟 class 组件的 DidMount 和 DidUpdate。
 useEffect(() => {
-  console.log("模拟生命周期 DidMount 和 DidUpdate");
-});
+  console.log('模拟生命周期 DidMount 和 DidUpdate')
+})
 ```
 
 ### 只模拟 DidMount
@@ -161,8 +161,8 @@ useEffect(() => {
 ```js
 // 只模拟 class 组件的 DidMount。
 useEffect(() => {
-  console.log("只模拟生命周期 DidMount");
-}, []); // 第二参数 [], 表示不依赖于任何 state
+  console.log('只模拟生命周期 DidMount')
+}, []) // 第二参数 [], 表示不依赖于任何 state
 ```
 
 ### 精细模拟 DidUpdate
@@ -176,8 +176,8 @@ useEffect(() => {
 ```js
 // 精细模拟 class 组件的 DidUpdate。
 useEffect(() => {
-  console.log("只模拟生命周期 DidMount");
-}, [xxx, yyy]);
+  console.log('只模拟生命周期 DidMount')
+}, [xxx, yyy])
 ```
 
 ### 模拟 WillUnMount
@@ -195,15 +195,15 @@ useEffect(() => {
 // 模拟 class 组件的 WillUnMount
 useEffect(() => {
   let timerId = window.setInterval(() => {
-    console.log(Date.now());
-  });
+    console.log(Date.now())
+  })
 
   // 返回一个函数
   // 模拟 class 组件的 WillUnMount
   return () => {
-    window.clearInterval(timerId);
-  };
-}, []);
+    window.clearInterval(timerId)
+  }
+}, [])
 ```
 
 ## useEffect 使用总结
@@ -256,22 +256,22 @@ useEffect(() => {
 
 ```js
 // 创建 Context
-const ThemeContext = React.createContext(themes.light);
+const ThemeContext = React.createContext(themes.light)
 // 发布出去 ThemeContext.Provider
 function App() {
   return (
     <ThemeContext.Provider value={themes.dark}>
       {children}
     </ThemeContext.Provider>
-  ); // 记得挂载在根目录，用 {children} 就能传给所有子组件。
+  ) // 记得挂载在根目录，用 {children} 就能传给所有子组件。
 }
 ```
 
 ```js
 // 接收组件
-const theme = useContext(ThemeContext);
+const theme = useContext(ThemeContext)
 function AcrossCom() {
-  return <button style={{ background: theme.background }}>hello world</button>;
+  return <button style={{background: theme.background}}>hello world</button>
 }
 ```
 
@@ -332,22 +332,27 @@ function App(){
     - 都是对 props 的浅层对比，进行优化。
 
 ```js
-import React, { useState, memo, useMemo } from "react";
+import React, {useState, memo, useMemo} from 'react'
 
-const [name, setName] = useState("cain");
+// 父组件
+const Parent = () => {
+  const [name, setName] = useState('cain')
 
-// 这是第二步，对于需要进行比较的数据进行 useMemo 包裹
-// 用 useMemo 缓存数据，有依赖。
-const userInfo = useMemo(() => {
-  return { name, age: 20 };
-}, [name]);
+  // 这是第二步，对于需要进行比较的数据进行 useMemo 包裹
+  // 用 useMemo 缓存数据，有依赖。
+  const userInfo = useMemo(() => {
+    return {name, age: 20}
+  }, [name])
+
+  return <Child userInfo={userInfo} />
+}
 
 // 子组件
 // 这是第一步，对于可能不需要重复渲染的组件包括 memo。
 // 类似 class PrueComponent，对 props 进行浅层比较，判断是否要重新渲染。
 const Child = memo((props) => {
-  const { userInfo } = props;
-  console.log("Child render...", userInfo);
+  const {userInfo} = props
+  console.log('Child render...', userInfo)
 
   return (
     <div>
@@ -355,8 +360,8 @@ const Child = memo((props) => {
         This is Child {userInfo.name} {userInfo.age}
       </p>
     </div>
-  );
-});
+  )
+})
 ```
 
 #### 回顾下 shouldComponentUpdate
@@ -384,19 +389,19 @@ shouldComponentUpdate(nextProps, nextState){
   - 两者都是 React Hooks 的常见优化策略。
 
 ```js
-import React, { useCallback } from "react";
-import Child from "./child";
+import React, {useCallback} from 'react'
+import Child from './child'
 
 function Parent() {
   const handleChange = useCallback((e) => {
-    console.log(e.target.value);
-  }, []);
+    console.log(e.target.value)
+  }, [])
 
   return (
     <div>
       <Child onChange={handleChange} />
     </div>
-  );
+  )
 }
 ```
 
@@ -424,33 +429,33 @@ function Parent() {
   - 自定义返回结果，格式不限。
 
 ```js
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, {useState, useEffect} from 'react'
+import axios from 'axios'
 
 // 封装 axios 发送网络请求的自定义 Hook
 function useAxios(url) {
-  const [loading, setLoading] = useState(false);
-  const [data, setData] = useState();
-  const [error, setError] = useState();
+  const [loading, setLoading] = useState(false)
+  const [data, setData] = useState()
+  const [error, setError] = useState()
 
   useEffect(() => {
     // 利用 axios 发送网络请求
-    setLoading(true);
+    setLoading(true)
     axios
       .get(url)
       .then((res) => {
-        setData(res);
+        setData(res)
       })
       .catch((err) => {
-        setError(err);
+        setError(err)
       })
-      .finally(() => setLoading(false)); // 发送一个 get 请求，返回一个Promise
-  }, [url]);
+      .finally(() => setLoading(false)) // 发送一个 get 请求，返回一个Promise
+  }, [url])
 
-  return [loading, data, error];
+  return [loading, data, error]
 }
 
-export default useAxios;
+export default useAxios
 ```
 
 > 第三方 hooks: 1.https://nikgraf.github.io/react-hooks/ 2. https://github.com/umijs/hooks
@@ -522,27 +527,27 @@ export default useAxios;
 #### 自定义 Hook： useMousePosition
 
 ```js
-import { useState, useEffect } from "react";
+import {useState, useEffect} from 'react'
 
 function useMousePosition() {
-  const [x, setX] = useState(0);
-  const [y, setY] = useState(0);
+  const [x, setX] = useState(0)
+  const [y, setY] = useState(0)
 
   useEffect(() => {
     function mouseMoveHandler(event) {
-      setX(event.clientX);
-      setY(event.clientY);
+      setX(event.clientX)
+      setY(event.clientY)
     }
-    document.addEventListener("mousemove", mouseMoveHandler);
+    document.addEventListener('mousemove', mouseMoveHandler)
     return () => {
-      document.removeEventListener("mousemove", mouseMoveHandler);
-    };
-  }, []);
+      document.removeEventListener('mousemove', mouseMoveHandler)
+    }
+  }, [])
 
-  return [x, y];
+  return [x, y]
 }
 
-export default useMousePosition;
+export default useMousePosition
 ```
 
 ---
@@ -565,7 +570,7 @@ export default useMousePosition;
       - 只能用 setName 修改。
 
 ```js
-const [state, setState] = useState(obj.a); // 就算 obj.a 修改，但是 state 值不会变，其值仅能用 setState 修改。
+const [state, setState] = useState(obj.a) // 就算 obj.a 修改，但是 state 值不会变，其值仅能用 setState 修改。
 ```
 
 - 解决方案：
@@ -575,13 +580,13 @@ const [state, setState] = useState(obj.a); // 就算 obj.a 修改，但是 state
     - useRef：
 
 ```js
-const countRef = useRef(0);
+const countRef = useRef(0)
 // 然后传入 useEffect 的定时任务，代替 useState 的返回值。
 useEffect(() => {
   const timer = setInterval(() => {
-    setCount(++countRef.current);
-  }, 1000);
-}, []);
+    setCount(++countRef.current)
+  }, 1000)
+}, [])
 ```
 
 ### useEffect 内部不能修改 state。
@@ -602,6 +607,6 @@ useEffect(() => {
   - 可以将引用类型打散，再传入依赖：
 
 ```js
-const config = { a, b, c };
-useEffect(() => {}, [a, b, c]);
+const config = {a, b, c}
+useEffect(() => {}, [a, b, c])
 ```

@@ -179,7 +179,7 @@ res1.then((data) => {
 ```js
 // await 相当于 Promise 的 then。
 !(async function () {
-  const p1 = Promise.resole(300);
+  const p1 = Promise.resolve(300);
   const data = await p1; // await 相当于 Promise then
   console.log("data", data); // 300
 })();
