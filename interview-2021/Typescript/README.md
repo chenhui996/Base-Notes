@@ -28,6 +28,8 @@ type K3 = keyof {[x: string]: Person} // string | number
 
 是因为，在 js 中，对象的 key，obj[1] == obj["1"]。
 
+> 对象的 key，type 只能为 string 类型。
+
 ---
 
 ### keyof 操作类
@@ -81,8 +83,8 @@ const done = prop(todo, 'done') // const done: boolean
 
 解释一下上面的代码：
 
-- 首先定义一个 **泛型类型T**，并且使用到 **extends**，**类型约束**，使 **泛型类型T** 必须是 **object类型的子类型**，也就是**Todo的子类型**。
-- 然后使用 **keyof** 获取 **T类型的所有键**。其 **返回类型** 是 **联合类型**，也即是 **number | string | boolean**。
-- 最后再次使用 **extends** 关键字，将 **k类型** 必须是 **keyof T** 的 **子类型**。
+- 首先定义一个 **泛型类型 T**，并且使用到 **extends**，**类型约束**，使 **泛型类型 T** 必须是 **object 类型的子类型**，也就是**Todo 的子类型**。
+- 然后使用 **keyof** 获取 **T 类型的所有键**。其 **返回类型** 是 **联合类型**，也即是 **number | string | boolean**。
+- 最后再次使用 **extends** 关键字，将 **k 类型** 必须是 **keyof T** 的 **子类型**。
 
 > 此时在使用的时候，用户再次输入一个不存在的属性时，编译器就会报错提示了。
