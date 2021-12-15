@@ -7,6 +7,7 @@
 ### 简介
 
 TypeScript 允许我们 **遍历某种类型的属性**，并通过 keyof 操作符 **提取** 其 **属性的名称**。
+
 keyof 操作符，可以用于 **获取** 某种类型的 **所有键**，其 **返回类型** 是 **联合类型**。
 
 ### 使用
@@ -24,6 +25,7 @@ type K3 = keyof {[x: string]: Person} // string | number
 ```
 
 上述例子中，K3 返回的是 **string | number**。
+
 是因为，在 js 中，对象的 key，obj[1] == obj["1"]。
 
 ---
