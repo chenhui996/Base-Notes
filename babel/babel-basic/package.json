@@ -14,5 +14,8 @@
     "@babel/core": "^7.17.5",
     "@babel/plugin-transform-arrow-functions": "^7.16.7",
     "@babel/preset-env": "^7.16.11"
+  },
+  "dependencies": {
+    "core-js": "^3.21.1"
   }
 }

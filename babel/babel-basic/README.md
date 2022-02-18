@@ -133,7 +133,7 @@ $npx babel --help
 ```@babel/plugin-transform-arrow-functions```:
 
 ```shell
-$cnpm i --save-dev @babel/plugin-transform-arrow-functions
+$npm i --save-dev @babel/plugin-transform-arrow-functions
 $npx babel src --out-dir lib --plugins=@babel/plugin-transform-arrow-functions
 ```
 
@@ -181,7 +181,7 @@ presets 和 plugins 一样, 也可以 "创建自己的 preset", "分享" 你需�
 例如, 我们使用 ```env``` preset:
 
 ```shell
-$cnpm i --save-dev @babel/preset-env
+$npm i --save-dev @babel/preset-env
 ```
 
 **```env``` preset**:
@@ -401,3 +401,212 @@ console.log(num);
 ```
 
 ---
+
+## Polyfill
+
+小回顾：
+
+```Plugins``` 是提供的插件, 例如 "箭头函数转普通函数" ```@babel/plugin-transform-arrow-functions```.
+
+```Presets``` 是一组 ```Plugins``` 的集合.
+
+**而 Polyfill 是, 对 "执行环境" 或者 "其它功能" 的一个 "补充".**
+
+什么意思呢 🤔️?
+
+就像, 现在你想在 "edge10浏览器" 中, 使用 ES7 中的方法 ```includes()```.
+
+但是我们知道, "这个版本的浏览器环境" 是 "不支持" 你使用这个方法的.
+
+所以如果你强行使用, **并不能达到预期的效果.**
+
+
+而polyfill的作用正是如此:
+
+知道你的环境不允许, 那就帮你引用一个这个环境.
+
+也就是说, 此时 "编译后的代码" 就会变成这样:
+
+```js
+// 原来的代码
+var hasTwo = [1, 2, 3].includes(2);
+
+// 加了polyfill之后的代码
+require("core-js/modules/es7.array.includes");
+require("core-js/modules/es6.string.includes");
+var hasTwo = [1, 2, 3].includes(2);
+```
+
+这样说你应该就能看懂它的作用了吧 😁
+
+现在就让我们来学习一个重要的 polyfill, 它就是 ```@babel/polyfill```.
+
+**```@babel/polyfill``` 用来模拟完成 ES6+ 环境:**
+
+- 可以使用像 ```Promise``` 或者 ```WeakMap``` 这样的 "新内置函数".
+- 可以使用像 ```Array.from``` 或者 ```Object.assign``` 这样的 "静态方法".
+- 可以使用像 ```Array.prototype.includes``` 这样的 "实例方法".
+- 还有 ```generator``` 函数.
+
+为了实现这一点, Polyfill 增加了 **全局范围** 以及像 String 这样的 "原生原型".
+
+而 ```@babel/polyfill``` 模块包括了 ```core-js``` 和自定义 ```regenerator runtime```.
+
+对于 **库/工具** 来说:
+
+- 如果你不需要像 ```Array.prototype.includes``` 这样的 "实例方法".
+  - 可以使用 ```transform runtime``` 插件, 而不是使用 "污染全局的 ```@babel/polyfill```".
+- 对于 "应用程序", 建议安装使用 ```@babel/polyfill```.
+
+```shell
+$npm i --save @babel/polyfill
+```
+
+(注意 ```--save``` 选项而不是 ```--save-dev```, 因为这是一个需要在 "源代码之前运行的 polyfill"。)
+
+但是由于我们使用的是 ```env``` preset, 这里个配置中有一个叫做 "useBuiltIns" 的选项:
+
+- 如果将这个选择设置为 "usage", 就只包括你需要的 polyfill.
+
+此时的 ```babel.config.js``` 调整为:
+
+```js
+const presets = [
+	[
+		"@babel/env",
+		{
+			targets: {
+				edge: "17",
+				chrome: "64",
+				firefox: "67",
+				safari: '11.1'
+			},
+			useBuiltIns: "usage"
+		}
+	]
+]
+
+module.exports = { presets }
+```
+
+- 安装配置了 ```@babel/polyfill```:
+  - Babel 将 "检查你的所有代码".
+  - 查找 "目标环境" 中 "缺少的功能".
+    - 并引入 "仅包含所需" 的 polyfill.
+
+(如果我们没有将 ```env``` preset 的 "useBuiltIns" 选项的设置为 "usage" ，就必须在其他代码之前 require 一次完整的 polyfill。)
+
+还是上面👆的那个例子, 我们来改造一下, 使用 ```Edge17``` 中没有的 ```Promise.prototype.finally```:
+
+### src/index.js:
+
+```js
+const fn = () => 1; // ES6箭头函数, 返回值为1
+let num = 3 ** 2; // ES7求幂运算符
+let hasTwo = [1, 2, 3].includes(2)
+let foo = function(a, b, c, ) { // ES7参数支持尾部逗号
+    console.log('a:', a)
+    console.log('b:', b)
+    console.log('c:', c)
+}
+foo(1, 3, 4)
+Promise.resolve().finally();
+console.log(fn());
+console.log(num);
+console.log(hasTwo);
+```
+
+现在执行 ```npm run build``` 之后生成的 ```lib/index.js``` 变成了:
+
+```js
+"use strict";
+
+require("core-js/modules/es7.promise.finally");
+
+const fn = () => 1; // ES6箭头函数, 返回值为1
+
+
+let num = 3 ** 2; // ES7求幂运算符
+
+let hasTwo = [1, 2, 3].includes(2);
+
+let foo = function foo(a, b, c) {
+  // ES7参数支持尾部逗号
+  console.log('a:', a);
+  console.log('b:', b);
+  console.log('c:', c);
+};
+
+foo(1, 3, 4);
+Promise.resolve().finally();
+console.log(fn());
+console.log(num);
+console.log(hasTwo);
+```
+
+```@babel/polyfill``` 帮我们引入了 ```Edge17``` 环境中没有的 ```promise.finally()```
+
+---
+
+## 被 deprecated 的 @babel/polyfill
+
+上面介绍的 ```@babel/polyfill的polypill```, 其实它在 ```Babel7.4.0``` 以上已经 "不被推荐使用" 了.
+
+- 而是:
+  - 推荐使用 ```core-js@3``` + ```@babel/preset-env```
+  - 然后设置 ```@babel/preset-env``` 的 ```corejs``` 选项为 **3**.
+
+因此如果你按着, 我文章中讲方式使用 ```@babel/polyfill```, 是可以实现的, 不过控制台中会抛出一个警告⚠️:
+
+```
+WARNING: We noticed you're using the `useBuiltIns` option without declaring a core-js version. Currently, we assume version 2.x when no version is passed. Since this default version will likely change in future versions of Babel, we recommend explicitly setting the core-js version you are using via the `corejs` option.
+
+You should also be sure that the version you pass to the `corejs` option matches the version specified in your `package.json`'s `dependencies` section. If it doesn't, you need to run one of the following commands:
+
+  npm install --save core-js@2    npm install --save core-js@3
+  yarn add core-js@2              yarn add core-js@3
+```
+
+解决办法是卸载掉 ```@babel/polyfill```, 然后重新安装 ```core-js@版本号```. 
+
+然后重新配置一些 ```babel.config.js``` 文件.
+
+1. 安装 ```core-js@3```:
+
+```shell
+$npm i --save core-js@3
+```
+
+2. 添加 ```corejs``` 选项:
+
+```js
+const presets = [
+[
+  "@babel/env",
+      {
+        targets: {
+        edge: "17",
+        chrome: "64",
+        firefox: "67",
+        safari: '11.1'
+      },
+      useBuiltIns: "usage",
+      corejs: 3
+    }
+  ]
+]
+
+module.exports = { presets }
+```
+
+(useBuiltIns 选项还是不能去掉)
+
+现在重新 ```npm run build``` 之后就不会有这个警告了, 而且生成的 ```lib``` 也是正确的.
+
+---
+
+## 结语
+
+- ```babel/cli``` 允许我们从终端运行Babel.
+- ```env``` preset 只包含我们使用的功能的转换, 实现我们的 "目标浏览器中缺少的功能".
+- ```@babel/polyfill``` 实现 "所有新的JS功能", 为 "目标浏览器" 引入 "缺少的环境"(**但是Babel7.4.0以上不推荐使用**)
