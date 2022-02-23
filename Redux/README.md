@@ -822,3 +822,814 @@ Redux 通过 Reducer 函数, 就可以 "响应": 从组件中 dispatch 出来的
 > 但是，我们还有一点工作没有完成: 那就是将整个应用完全使用 Redux 重构.
 
 > 故，我们将使用我们在上面三节学到的知识，一步一步将我们的 "待办事项应用" 的 "其他部分" 重构成 Redux.
+
+---
+---
+
+## 第二部分: 引入 combineReducers 拆分和组合状态逻辑
+
+在这一部分中，我们将趁热打铁.
+
+运用上篇教程学到的 Redux 三大核心概念, 将待办事项的 "剩下部分重构完成".
+
+它涉及到:
+
+- 将 TodoList 和 Footer 部分的相关代码重构到 Redux.
+- 使用 Redux combineReducers API 进行 "逻辑拆分和组合".
+  - 使得我们可以在使用 Redux 便利的同时，又不至于让 "应用的逻辑" 看起来臃肿不堪.
+  - 复用 React 组件化的便利，我们可以让 "状态的处理" 也 "组件化".
+
+## 重构代码：将 TodoList 部分迁移到 Redux
+
+此时如果你在 "浏览器里面" 尝试这个 "待办事项小应用"，你会发现它还 "只可以添加新的待办事项".
+
+**对于 "完成和重做待办事项" 以及 "过滤查看待办事项" 这两个功能，目前我们还没有使用 Redux 实现.**
+
+所以当你 "点击单个待办事项" 时，浏览器会报错.(若之前函数内容已注释，则表现为无反应，空炮)
+
+同样, 当你 "点击底部的三个过滤器按钮" 时，浏览器不会有任何反应.
+
+> 在这一小节中，我们将使用 Redux 重构 “完成和重做待办事项” 功能.
+> 即你可以通过 "点击某个待办事项" 来完成它.
+
+**我们将运用 "Redux 最佳实践的开发方式" 来重构这一功能:**
+
+- 定义 Action Creators.
+- 定义 Reducers.
+- ```connect``` 组件以及, 在组件中 ```dispatch Action```.
+
+> 以后在开发 Redux 应用的时候，都可以使用 "这三步流程" 来周而复始地开发新的功能，或改进现有的功能.
+
+---
+
+### 定义 Action Creators
+
+首先我们要定义 "完成待办事项" 这一功能所涉及的 Action.
+
+打开 ```src/actions/index.js```，修改内容内容如下:
+
+```js
+let nextTodoId = 0;
+
+const addTodo = text => ({
+  type: "ADD_TODO",
+  id: nextTodoId++,
+  text
+});
+
+const toggleTodo = id => ({
+  type: "TOGGLE_TODO",
+  id
+});
+
+export { addTodo, toggleTodo }
+```
+
+可以看到，我们定义并导出了一个 toggleTodo 箭头函数:
+
+**它接收 id 并返回一个类型为 "TOGGLE_TODO" 的 Action.**
+
+---
+
+### 定义 Reducers
+
+接着我们来定义响应 dispatch(action) 的 Reducers.
+
+打开 src/index.js，修改 rootReducer 函数如下:
+
+```js
+import React from "react";
+import ReactDOM from "react-dom";
+import App, { VisibilityFilters } from "./components/App";
+
+import { createStore } from "redux";
+import { Provider } from "react-redux";
+
+const initialState = {
+  todos: [
+    {
+      id: 1,
+      text: "你好, 图雀",
+      completed: false
+    },
+    {
+      id: 2,
+      text: "我是一只小小小小图雀",
+      completed: false
+    },
+    {
+      id: 3,
+      text: "小若燕雀，亦可一展宏图！",
+      completed: false
+    }
+  ],
+  filter: VisibilityFilters.SHOW_ALL
+};
+
+const rootReducer = (state, action) => {
+  switch (action.type) {
+    case "ADD_TODO": {
+      const { todos } = state;
+
+      return {
+        ...state,
+        todos: [
+          ...todos,
+          {
+            id: action.id,
+            text: action.text,
+            completed: false
+          }
+        ]
+      };
+    }
+
+    case "TOGGLE_TODO": {
+      const { todos } = state;
+
+      return {
+        ...state,
+        todos: todos.map(todo =>
+          todo.id === action.id ? { ...todo, completed: !todo.completed } : todo
+        )
+      };
+    }
+    default:
+      return state;
+  }
+};
+
+const store = createStore(rootReducer, initialState);
+
+ReactDOM.render(
+  <Provider store={store}>
+    <App />
+  </Provider>,
+  document.getElementById("root")
+);
+```
+
+可以看到，我们在 switch 语句里面添加了一个 "TOGGLE_TODO" 的判断.
+
+并根据 action.id 来 "判断对应操作的 todo":
+
+- 取反它目前的 completed 属性.
+- 用来表示 "从完成到未完成"，或 "从未完成到完成" 的操作.
+
+### connect 和 dispatch(action)
+
+当定义了 Action，声明了响应 Action 的 Reducers 之后.
+
+我们开始定义 React 和 Redux 交流的接口:
+
+- connect 和 dispatch.
+  - connect: 将 Redux Store 的内容整合进 React.
+  - dispatch: 从 React 中发出操作 Redux Store 的指令.
+
+我们打开 src/components/TodoList.js 文件，对文件内容作出如下的修改:
+
+```js
+import React from "react";
+import PropTypes from "prop-types";
+import Todo from "./Todo";
+
+import { connect } from "react-redux";
+import { toggleTodo } from "../actions";
+
+const TodoList = ({ todos, dispatch }) => (
+  <ul>
+    {todos.map(todo => (
+      <Todo
+        key={todo.id}
+        {...todo}
+        onClick={() => dispatch(toggleTodo(todo.id))}
+      />
+    ))}
+  </ul>
+);
+
+TodoList.propTypes = {
+  todos: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      completed: PropTypes.bool.isRequired,
+      text: PropTypes.string.isRequired
+    }).isRequired
+  ).isRequired
+};
+
+export default connect()(TodoList);
+```
+
+可以看到，我们对文件做出了以下几步修改:
+
+- **首先从 react-redux 中导出 connect 函数:**
+  - 它负责给 TodoList 传入 dispatch 函数.
+  - 使得我们可以在 TodoList 组件中 dispatch Action.(const { dispatch } = props)
+- **然后我们导出了 ```toggleTodo``` Action Creators:**
+  - 并将之前从父组件接收 toggleTodo 方法并调用的方式, 改成:
+    - 当 Todo 被点击之后，我们 dispatch(toggle(todo.id)).
+- **我们删除 propsTypes 中不再需要的 toggleTodo.**
+
+### 删除无用代码
+
+当我们通过以上三步整合了 Redux 的内容之后，我们就可以删除原 App.js 中不必要的代码了.
+
+打开 ```src/components/App.js``` 修改内容如下:
+
+```js
+import React from "react";
+import AddTodo from "./AddTodo";
+import TodoList from "./TodoList";
+import Footer from "./Footer";
+
+import { connect } from "react-redux";
+
+export const VisibilityFilters = {
+  SHOW_ALL: "SHOW_ALL",
+  SHOW_COMPLETED: "SHOW_COMPLETED",
+  SHOW_ACTIVE: "SHOW_ACTIVE"
+};
+
+const getVisibleTodos = (todos, filter) => {
+  switch (filter) {
+    case VisibilityFilters.SHOW_ALL:
+      return todos;
+    case VisibilityFilters.SHOW_COMPLETED:
+      return todos.filter(t => t.completed);
+    case VisibilityFilters.SHOW_ACTIVE:
+      return todos.filter(t => !t.completed);
+    default:
+      throw new Error("Unknown filter: " + filter);
+  }
+};
+
+const App = (props) => {
+  const { todos, filter } = props;
+
+  const setVisibilityFilter = (filter) => {
+    // setFilter(filter);
+  }
+
+  return (
+    <div>
+      <AddTodo />
+      <TodoList
+        todos={getVisibleTodos(todos, filter)}
+      />
+      <Footer
+        filter={filter}
+        setVisibilityFilter={setVisibilityFilter}
+      />
+    </div>
+  );
+
+}
+
+const mapStateToProps = (state, props) => ({
+  todos: state.todos,
+  filter: state.filter
+});
+
+export default connect(mapStateToProps)(App);
+```
+
+可以看到:
+
+- 我们删除了 toggleTodo 方法.
+- 并对应删除了 toggleTodo 定义, 以及传给 TodoList 的 toggleTodo 属性.
+
+保存上述修改的代码，打开浏览器，你应该又可以 "点击单个待办事项" 来 "完成和重做" 它了:
+
+## 小结
+
+在本节中，我们介绍了 "开发 Redux 应用的最佳实践".
+
+并通过重构 "完成和重做待办事项“ 这一功能来 "详细实践" 了这一 "最佳实践".
+
+---
+
+## 重构代码：将 Footer 部分迁移到 Redux
+
+这一节中，我们将继续重构剩下的部分。我们将继续遵循上一节提到的 Redux 开发的最佳实践:
+
+- 定义 Action Creators
+- 定义 Reducers
+- connect 组件以及, 在组件中 dispatch Action.
+
+### 定义 Action Creators
+
+打开 ```src/actions/index.js``` 文件，修改内容如下:
+
+```js
+let nextTodoId = 0;
+
+const addTodo = text => ({
+    type: "ADD_TODO",
+    id: nextTodoId++,
+    text
+});
+
+const toggleTodo = id => ({
+    type: "TOGGLE_TODO",
+    id
+});
+
+const setVisibilityFilter = filter => ({
+    type: "SET_VISIBILITY_FILTER",
+    filter
+});
+
+export { addTodo, toggleTodo, setVisibilityFilter }
+```
+
+可以看到:
+
+- 我们创建了一个名为 setVisibilityFilter 的 Action Creators
+  - 它接收 filter 参数.
+  - 然后返回一个类型为 "SET_VISIBILITY_FILTER" 的 Action.
+
+### 定义 Reducers
+
+打开 ```src/index.js 文件```，修改代码如下:
+
+```js
+import React from "react";
+import ReactDOM from "react-dom";
+import App, { VisibilityFilters } from "./components/App";
+
+import { createStore } from "redux";
+import { Provider } from "react-redux";
+
+const initialState = {
+  todos: [
+    {
+      id: 100,
+      text: "你好, 图雀",
+      completed: false
+    },
+    {
+      id: 101,
+      text: "我是一只小小小小图雀",
+      completed: false
+    },
+    {
+      id: 102,
+      text: "小若燕雀，亦可一展宏图！",
+      completed: false
+    }
+  ],
+  filter: VisibilityFilters.SHOW_ALL
+};
+
+const rootReducer = (state, action) => {
+  console.log('in-rootReducer', action);
+  switch (action.type) {
+    case "ADD_TODO": {
+      const { todos } = state
+
+      return {
+        ...state,
+        todos: [
+          ...todos,
+          {
+            id: action.id,
+            text: action.text,
+            completed: false
+          }
+        ]
+      }
+    }
+    case "TOGGLE_TODO": {
+      const { todos } = state
+
+      return {
+        ...state,
+        todos: todos.map(todo =>
+          todo.id === action.id ? { ...todo, completed: !todo.completed } : todo
+        )
+      }
+    }
+    case "SET_VISIBILITY_FILTER": {
+      return {
+        ...state,
+        filter: action.filter
+      }
+    }
+    default: {
+      return state;
+    }
+  }
+
+};
+
+const store = createStore(rootReducer, initialState);
+
+ReactDOM.render(
+  <Provider store={store}>
+    <App />
+  </Provider>,
+  document.getElementById("root")
+);
+```
+
+可以看到:
+
+- 我们增加了一条 case 语句.
+  - 来响应 "SET_VISIBILITY_FILTER" Action.
+  - 通过接收新的 filter 来更新 Store 中的状态.
+
+### connect 和 dispatch(action)
+
+打开 ```src/components/Footer.js``` 文件，修改内容如下:
+
+```js
+import React from "react";
+import Link from "./Link";
+import { VisibilityFilters } from "./App";
+import { connect } from "react-redux";
+import { setVisibilityFilter } from '../actions'
+
+const Footer = ({ filter, dispatch }) => (
+  <div>
+    <span>Show: </span>
+    <Link
+      active={VisibilityFilters.SHOW_ALL === filter}
+      onClick={() => dispatch(setVisibilityFilter(VisibilityFilters.SHOW_ALL))}
+    >
+      All
+    </Link>
+    <Link
+      active={VisibilityFilters.SHOW_ACTIVE === filter}
+      onClick={() => dispatch(setVisibilityFilter(VisibilityFilters.SHOW_ACTIVE))}
+    >
+      Active
+    </Link>
+    <Link
+      active={VisibilityFilters.SHOW_COMPLETED === filter}
+      onClick={() => dispatch(setVisibilityFilter(VisibilityFilters.SHOW_COMPLETED))}
+    >
+      Completed
+    </Link>
+  </div>
+);
+
+export default connect()(Footer);
+```
+
+可以看到，上面的文件主要做了这几件事:
+
+- **首先从 react-redux 中导出 connect 函数:**
+  - 它负责给 Footer 传入 dispatch 函数.
+  - 使得我们可以在 Footer 组件中 dispatch Action.
+- **然后我们导出了 setVisibilityFilter Action Creators:**
+  - 将之前从 "父组件" 接收 setVisibilityFilter 方法并调用的方式:
+  - 改成了当 Link 被点击之后，我们 dispatch 对应的 Action.
+
+### 删除无用代码
+
+当我们通过以上三步整合了 Redux 的内容之后.
+
+我们就可以删除原 App.js 中不必要的代码了.
+
+打开 ```src/components/App.js``` 修改内容如下:
+
+```js
+import React from "react";
+import AddTodo from "./AddTodo";
+import TodoList from "./TodoList";
+import Footer from "./Footer";
+
+import { connect } from "react-redux";
+
+export const VisibilityFilters = {
+  SHOW_ALL: "SHOW_ALL",
+  SHOW_COMPLETED: "SHOW_COMPLETED",
+  SHOW_ACTIVE: "SHOW_ACTIVE"
+};
+
+const getVisibleTodos = (todos, filter) => {
+  switch (filter) {
+    case VisibilityFilters.SHOW_ALL:
+      return todos;
+    case VisibilityFilters.SHOW_COMPLETED:
+      return todos.filter(t => t.completed);
+    case VisibilityFilters.SHOW_ACTIVE:
+      return todos.filter(t => !t.completed);
+    default:
+      throw new Error("Unknown filter: " + filter);
+  }
+};
+
+const App = (props) => {
+  const { todos, filter } = props;
+
+  return (
+    <div>
+      <AddTodo />
+      <TodoList
+        todos={getVisibleTodos(todos, filter)}
+      />
+      <Footer
+        filter={filter}
+      />
+    </div>
+  );
+
+}
+
+const mapStateToProps = (state, props) => ({
+  todos: state.todos,
+  filter: state.filter
+});
+
+export default connect(mapStateToProps)(App);
+```
+
+可以看到:
+
+- 删除了 setVisibilityFilter 方法.
+- 传给 Footer 的 setVisibilityFilter 属性.
+
+保存上述修改的代码，打开浏览器.
+
+你应该又可以继续 "点击底部的按钮" 来 "过滤完成和未完成的待办事项" 了.
+
+## 小结
+
+在本节中，我们介绍了开发 Redux 应用的最佳实践.
+
+并通过重构 "过滤查看待办事项“ 这一功能来详细实践了这一最佳实践.
+
+自此，我们已经使用 Redux 重构了 "整个待办事项小应用"，但是重构完的这份代码还显得有点乱:
+
+- 不同类型的组件状态混在一起。
+- 当我们的应用逐渐变得复杂时，我们的 rootReducer 就会变得非常冗长.
+  
+> 所以是时候考虑 "拆分不同组件" 的 "状态" 了.
+
+> 我们将在 "下一节中讲解" 如何将 "不同组件的状态" 进行 "拆分"，以确保我们在 "编写大型应用" 时也可以显得很从容.
+
+---
+
+## combineReducers：组合拆分状态的 Reducers
+
+当应用逻辑逐渐复杂的时候.
+
+**我们就要考虑将巨大的 Reducer 函数拆分成一个个独立的单元.**
+
+> 这在算法中被称为 ”分而治之“.
+
+Reducers 在 Redux 中实际上, 是用来 "处理" Store 中存储的 State 中的 "某个部分":
+
+- 一个 Reducer 和 State 对象树中的 "某个属性" 一一对应.
+- 一个 Reducer 负责处理 State 中 "对应的那个属性".
+
+比如我们来看一下现在我们的 State 的结构:
+
+```js
+const initialState = {
+  todos: [
+    {
+      id: 1,
+      text: "你好, 图雀",
+      completed: false
+    },
+    {
+      id: 2,
+      text: "我是一只小小小小图雀",
+      completed: false
+    },
+    {
+      id: 3,
+      text: "小若燕雀，亦可一展宏图！",
+      completed: false
+    }
+  ],
+  filter: VisibilityFilters.SHOW_ALL
+};
+```
+
+因为 Reducer 对应着 State 相关的部分，这里我们的 State 有两个部分: 
+
+```todos``` 和 ```filter```，所以我们可以 "编写两个对应" 的 ```Reducer```.
+
+### 编写 Reducer：todos
+
+在 Redux 最佳实践中，因为 Reducer 对应修改 State 中的 "相关部分".
+
+当 State 对象树很大时，我们的 Reducer 也会有很多.
+
+> 所以我们一般会 **单独建一个 reducers 文件夹** 来存放这些 "reducers".
+
+我们在 ```src``` 目录下新建 ```reducers``` 文件夹.
+
+然后在里面新建一个 ```todos.js``` 文件，表示处理 State 中对应 ```todos``` 属性的 Reducer:
+
+```js
+const initialTodoState = [
+  {
+    id: 1,
+    text: "你好, 图雀",
+    completed: false
+  },
+  {
+    id: 2,
+    text: "我是一只小小小小图雀",
+    completed: false
+  },
+  {
+    id: 3,
+    text: "小若燕雀，亦可一展宏图！",
+    completed: false
+  }
+];
+
+const todos = (state = initialTodoState, action) => {
+  switch (action.type) {
+    case "ADD_TODO": {
+      return [
+        ...state,
+        {
+          id: action.id,
+          text: action.text,
+          completed: false
+        }
+      ];
+    }
+
+    case "TOGGLE_TODO": {
+      return state.map(todo =>
+        todo.id === action.id ? { ...todo, completed: !todo.completed } : todo
+      );
+    }
+
+    default:
+      return state;
+  }
+};
+
+export default todos;
+```
+
+可以看到，上面的代码做了这几件事:
+
+- **首先我们将原 ```initialState``` 里面的 ```todos``` 部分, 拆分到了 ```src/reducers/todos.js``` 文件里:**
+  - 我们定义了一个 initialTodoState 代表之前的 initialState 的 todos 部分，它是一个数组.
+    - 并把它赋值给 todos 函数中 state 参数的默认值.
+    - 即当 "调用此函数时"，如果传进来的 state 参数为 undefined 或者 null 时，这个 state 就是 initialState.
+- **接着我们定义了一个 todos 箭头函数:**
+  - 它的结构和 rootReducer 类似，都是接收两个参数：state 和 action.
+  - 然后进入一个 switch 判断语句.
+    - 根据 action.type 判断要相应的 Action 类型.
+    - 然后对 state 执行对应的操作.
+
+> 注意
+
+> 我们的 ```todos reducers``` 只负责处理 ```原 initialState``` 的 ```todos``` 部分.
+> 所以这里它的 state 就是原 todos 属性.
+> 它是一个数组, 所以我们在 switch 语句里，进行数据改变时，要对数组进行操作，并最后返回一个新的数组.
+
+### 编写 Reducer：filter
+
+我们前面使用 ```todos``` reducer 解决了 ```原 initialState``` 的 ```todos``` **属性操作问题**.
+
+现在我们马上来讲解剩下的 ```filter``` 属性的操作问题.
+
+在 ```src/reducers``` 文件夹下创建 ```filter.js``` 文件，在其中加入如下的内容:
+
+```js
+import { VisibilityFilters } from "../components/App";
+
+const filter = (state = VisibilityFilters.SHOW_ALL, action) => {
+  switch (action.type) {
+    case "SET_VISIBILITY_FILTER":
+      return action.filter;
+    default:
+      return state;
+  }
+};
+
+export default filter;
+```
+
+可以看到:
+
+- **定义了一个 filter 箭头函数:**
+  - 它接收两个参数：state 和 action.
+  - 因为这个 filter reducer 只负责处理原 initialState 的 filter 属性部分.
+    - 所以这里这个 state 参数就是, 原 filter 属性，**这里我们给了它一个默认值.**
+
+> 注意
+
+> filter 函数的剩余部分和 rootReducer 类似.
+> 但是注意, 这里它的 state 是对 "filter 属性" 进行操作.
+> 所以当判断 "SET_VISIBILITY_FILTER" action 类型时，它只是单纯的返回 action.filter.
+
+### 组合多个 Reducer
+
+当我们将 rootReducer 的逻辑拆分, 并 "对应处理" Store 中保存的 State 中的属性之后.
+
+**我们可以确保每个 reducer 都很小.**
+
+**这个时候我们就要考虑, 如何将这些小的 reducer 组合起来, 构成最终的 rootReducer.**
+
+这种组合就像, 我们组合 React 组件一样:
+
+最终 "只有一个根级组件"，在我们的 "待办事项小应用" 里面，**这个组件就是 App.js 组件**.
+
+Redux 为我们提供了 ```combineReducers``` API: **用来组合多个小的 reducer**.
+
+我们在 ```src/reducers``` 文件夹下创建 ```index.js``` 文件，并在里面添加如下内容:
+
+```js
+import { combineReducers } from "redux";
+
+import todos from "./todos";
+import filter from "./filter";
+
+export default combineReducers({
+  todos,
+  filter
+});
+```
+
+可以看到:
+
+- **我们从 redux 模块中导出了 combineReducers 函数.**
+- **然后导出了之前定义的 todos 和 filter reducer.**
+- **接着我们通过对象简洁表示法:**
+  - 将 todos 和 filter 作为对象属性合在一起，然后传递给 combineReducers 函数.
+  - 这里 combineReducers 内部就会对 todos 和 filter 进行操作.
+    - 然后生成类似我们之前的 rootReducer 形式.
+  - 最后我们导出生成的 rootReducer.
+
+> 这个通过 combineReducers 组合后的最终 state:
+>> 就是存储在 Store 里面的那棵 State JavaScript 对象状态树.
+
+> 分发 dispatch 的 Action.
+
+> 通过 combineReducers 组合 todos 和 filter reducer 之后.
+> 从 React 组件中 dispatch Action会: 遍历检查 todos 和 filter reducer.
+> 断是否存在响应: 对应 action.type 的 case 语句.
+> 如果存在，所有的这些 case 语句都会响应.
+
+### 删除不必要的代码
+
+当我们将原 rootReducer 拆分成了 todos 和 filter 两个 reducer.
+
+并通过 redux 提供的 combineReducers API 进行组合后.
+
+我们之前在 src/index.js 定义的 initialState 和 rootReducer 就不再需要了，所以我们马上来删除它们:
+
+```js
+import React from "react";
+import ReactDOM from "react-dom";
+import App, { VisibilityFilters } from "./components/App";
+
+import { createStore } from "redux";
+import { Provider } from "react-redux";
+import rootReducer from "./reducers";
+
+const store = createStore(rootReducer);
+
+ReactDOM.render(
+  <Provider store={store}>
+    <App />
+  </Provider>,
+  document.getElementById("root")
+);
+```
+
+可以看到:
+
+- 我们从删除了之前在 src/index.js 定义的 rootReducer.
+  - 转而使用了从 src/reducers/index.js 导出的 rootReducer.
+- 并且我们我们之前讲到:
+  - combineReducers 的第一个功能就是组合多个 reducer 的 state.
+    - 最终合并成一个大的 JavaScript 对象状态树.
+    - 然后自动存储在 Redux Store 里面.
+  - 所以我们不再需要给 createStore 显式的传递第二个 initialState 参数了.
+
+保存修改的内容，打开浏览器，可以照样可以 "操作所有的功能".
+
+> 你可以 "加点待办事项"，"点击某个待办事项" 以完成它，通过 "底部的三个过滤按钮" 查看 "不同状态下的待办事项".
+
+## 小结
+
+在这一小节中，我们讲解了 redux 提供的 combineReducers API，它主要解决两个问题:
+
+- 当应用逐渐复杂的时候，我们需要对 Reducer 进行 "拆分".
+  - 那么我们就需要把 "拆分后" 的 Reducer 进行 "组合"，**并合并所有的 State**.
+- 对于每个 React 组件 dispatch 的 Action:
+  - 将其分发给对应的 Reducer.
+
+当有了 ```combineReducers``` 之后, 不管我们的应用如何复杂:
+
+**我们都可以将 "处理应用状态" 的 "逻辑" 拆分都一个一个很简洁、易懂的 "小文件".**
+
+**然后 "组合这些小文件" 来完成 "复杂的应用逻辑".**
+
+这和 React 组件的组合思想类似，可以想见，组件式编程的威力是多么巨大！
+
+
