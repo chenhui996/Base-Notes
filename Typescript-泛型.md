@@ -20,7 +20,7 @@
 
 ---
 
-### 一、泛型是什么
+## 一、泛型是什么
 
 软件工程中，我们不仅要**创建**一致的**定义良好的 API**，同时也要考虑**可重用性**。
 
@@ -169,7 +169,7 @@ Semlinker: string
 
 泛型出了可以应用在 **函数** 和 **接口** 之外，它也可以应用在类中，下面我们就来看一下 **在类中如何使用泛型**。
 
-### 三、泛型类
+## 三、泛型类
 
 在类中使用泛型也很简单，我们只需要在**类名**后面，使用 <T, ...> 的语法定义任意多个**类型变量**，具体示例如下：
 
@@ -233,3 +233,90 @@ class MyComponent extends React.Component<Props, State> {
 ```
 
 在以上代码中，我们将**泛型与 React 组件**一起使用，以确保组件的 props 和 state 是类型安全的。
+
+---
+
+相信看到这里一些读者会有疑问，我们在什么时候需要使用泛型呢？
+
+两个参考标准：
+
+- 当你的函数、接口或类**将处理多种数据类型**时。
+- 当函数、接口或类在**多个地方**使用该数据类型时。
+
+很有可能你没有办法保证在项目早期就使用泛型的组件，但是随着项目的发展，组件的功能通常会被扩展。
+
+这种增加的可扩展性最终很可能会满足上述两个条件。
+
+**在这种情况下，引入泛型将比复制组件来满足一系列数据类型更干净。**
+
+我们将在本文的后面探讨更多满足这两个条件的用例。不过在这样做之前，让我们先介绍一下 Typescript 泛型提供的其他功能。
+
+## 四、泛型约束
+
+有时我们可能希望限制：每个**类型变量**接受的**类型数量**，这就是泛型约束的作用。
+
+下面我们来举几个例子，介绍一下**如何使用泛型约束**。
+
+### 4.1 确保属性存在
+
+有时候，我们希望**类型变量对应的类型上**存在某些属性。这时，除非我们**显式地**将**特定属性定义为类型变量**，否则编译器不会知道它们的存在。
+
+一个很好的例子：
+
+- 在处理**字符串或数组**时，我们会假设 length 属性是可用的。
+
+让我们再次使用 identity 函数并尝试输出参数的长度：
+
+```ts
+function identity<T>(arg: T) : T {
+    console.log(arg.length); // Error
+    return arg;
+}
+```
+
+在这种情况下，编译器将不会知道 **T** 确实含有 **length** 属性，尤其是在可以将**任何类型**赋给类型变量 **T** 的情况下。
+
+我们需要做的就是：让类型变量 **extends** 一个含有我们所需属性的接口，比如这样：
+
+```ts
+interface Length {
+    length: number;
+}
+
+function identity<T extends Length>(arg: T): T {
+    console.log(arg.length); // 可获取到length属性
+    return arg;
+}
+
+const result = {
+    length: 10,
+}
+
+console.log(identity(result));
+```
+
+**T extends Length** 用于告诉编译器，我们支持已经实现 Length 接口的任何类型。
+
+之后，当我们使用**不含有 length 属性的对象**作为参数调用 identity 函数时，TypeScript 会提示相关的错误信息：
+
+```ts
+identity(68); // Error
+// Argument of type '68' is not assignable to parameter of type 'Length'.(2345)
+```
+
+此外，我们还可以使用 **,** 号来分隔多种约束类型，比如：**<T extends Length, Type2, Type3>**。
+
+而对于上述的 **length** 属性问题来说：如果我们**显式**地将**变量设置为数组类型**，也可以解决该问题，具体方式如下：
+
+```ts
+function identity<T>(arg: T[]): T[] {
+   console.log(arg.length);  
+   return arg; 
+}
+
+// or
+function identity<T>(arg: Array<T>): Array<T> {      
+  console.log(arg.length);
+  return arg; 
+}
+```
