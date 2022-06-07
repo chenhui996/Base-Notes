@@ -75,8 +75,8 @@ console.log(identity<Number>(1)) // 1
 参考上面代码：
 
 - 当我们调用 ```identity<Number>(1)```，Number 类型就像参数 1 一样，它将在```出现 T 的任何位置 “填充该类型”```。
-- <T>：
-  - 图中 <T> 内部的 T 被称为 ```类型变量```，它是我们希望传递给 identity 函数的```类型占位符```。
+- ```<T>```：
+  - 图中 ```<T>``` 内部的 T 被称为 ```类型变量```，它是我们希望传递给 identity 函数的```类型占位符```。
   - 同时 T 被分配给 value 参数用来代替它的类型：
     - 此时 T 即可充当的各种类型，而不是特定的 Number 类型。
 
@@ -323,3 +323,86 @@ function identity<T>(arg: Array<T>): Array<T> {
 console.log(identity([1, 2, 3]));
 console.log(identity('45678'.split('')));
 ```
+
+---
+
+### 4.2 检查对象上的键是否存在
+
+```泛型约束```的另一个```常见的使用场景```就是```检查对象上的键是否存在```。
+
+不过在看具体示例之前，我们得来了解一下 ```keyof``` 操作符:
+
+- keyof 操作符:
+  - 在 TypeScript 2.1 版本引入
+  - 可以用于```获取某种类型的所有键```，其```返回类型```是```联合类型```。
+
+"耳听为虚，眼见为实"，我们来举个 keyof 的使用示例：
+
+```ts
+interface Person {
+    name: string;
+    age: number;
+    location: string;
+}
+
+type K1 = keyof Person; // name | age | location
+type K2 = keyof Person[]; // number | length | push | concat | ... 
+type K3 = keyof { [key: string]: Person }; // string | number -> number 类型会被隐式类型转换成 string 类型，故可以传 number 类型。
+
+const K1_Obj: K1 = "age";
+const K2_Obj: K2 = 'length';
+const K3_Obj: K3 = 19;
+```
+
+通过 keyof 操作符，我们就可以```获取指定类型的所有键```，之后我们就可以```结合```前面介绍的 ```extends 约束```，即限制```输入的属性名```包含在 ```keyof 返回的联合类型```中。
+
+具体的使用方式如下：
+
+```ts
+function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
+    return obj[key];
+}
+```
+
+在以上的 ```getProperty``` 函数中，我们通过 ```K extends keyof T``` 确保参数 ```key 一定是对象中含有的键```，这样就不会发生运行时错误。
+
+这是一个类型安全的解决方案，与简单调用 ```let value = obj[key];``` 不同。
+
+下面我们来看一下如何使用 ```getProperty``` 函数：
+
+```ts
+enum Difficulty {
+    Easy,
+    Intermediate,
+    Hard
+}
+
+function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
+    return obj[key];
+}
+
+let tsInfo = {
+    name: "Typescript",
+    supersetOf: "JavaScript",
+    difficulty: Difficulty.Intermediate
+}
+
+let difficulty: Difficulty = getProperty(tsInfo, "difficulty"); // OK
+
+let supersetOf: string = getProperty(tsInfo, 'superset_of'); // Error
+```
+
+在以上示例中，对于 ```getProperty(tsInfo, 'superset_of')``` 这个表达式，TypeScript 编译器会提示以下错误信息：
+
+```shell
+Argument of type '"superset_of"' is not assignable to parameter of type 
+'"difficulty" | "name" | "supersetOf"'.(2345)
+```
+
+很明显通过使用```泛型约束```，在```编译阶段```我们就可以```提前发现错误```，大大提高了程序的健壮性和稳定性。
+
+接下来，我们来介绍一下```泛型参数默认类型```。
+
+### 五、泛型参数默认类型
+
+...
