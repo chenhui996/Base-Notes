@@ -403,11 +403,11 @@ Argument of type '"superset_of"' is not assignable to parameter of type
 
 ### 五、泛型参数默认类型
 
-在 TypeScript 2.3 以后，我们可以为**泛型中的类型参数**指定**默认类型**。
+在 TypeScript 2.3 以后，我们可以为```泛型中的类型参数```指定```默认类型```。
 
-**使用泛型**没有在代码中直接**指定类型参数**，**实际值参数**中也**无法推断**出类型时，这个**默认类型就会起作用**。
+```使用泛型```没有在代码中直接```指定类型参数```，```实际值参数```中也```无法推断```出类型时，这个```默认类型就会起作用```。
 
-**泛型参数默认类型**与**普通函数默认值**类似，对应的语法很简单，即 **<T=Default Type>**，对应的使用示例如下：
+```泛型参数默认类型```与```普通函数默认值```类似，对应的语法很简单，即 ```<T=Default Type>```，对应的使用示例如下：
 
 ```ts
 interface A<T = string> {
@@ -420,6 +420,71 @@ const numB: A<number> = {name: 101}
 
 泛型参数的默认类型遵循以下规则：
 
-- 有**默认类型的类型参数**被认为是**可选的**。
-- **必选的类型参数**不能在**可选的类型参数**后。
-- 如果**类型参数有约束**，类型参数的**默认类型必须满足这个约束**。
+- 有```默认类型的类型参数```被认为是```可选的```。
+- ```必选的类型参数```不能在```可选的类型参数```后。
+- 如果```类型参数有约束```，类型参数的```默认类型必须满足这个约束```。
+- 当指定```类型实参```时，你只需要```指定必选类型参数```的```类型实参```。 ```未指定的类型参数```会被```解析为```它们的```默认类型```。
+- 如果```指定了默认类型```，且类型推断```无法选择一个候选类型```，那么将使用```默认类型```作为```推断结果```。
+- 一个被```现有类```或```接口合并的类```或者```接口的声明```，可以为现有类型参数引入默认类型。
+- 一个被```现有类```或```接口合并的类```或者```接口的声明```可以引入新的类型参数，只要它指定了默认类型。
+
+---
+
+### 六、泛型条件类型
+
+在 TypeScript 2.8 中引入了**条件类型**，使得我们可以**根据某些条件得到不同的类型**，这里所说的条件是**类型兼容性约束**。
+
+尽管以上代码中使用了 **extends** 关键字，也**不一定要强制满足继承关系**，而是检查是否满足**结构兼容性**。
+
+条件类型会以一个条件表达式进行类型关系检测，从而在两种类型中选择其一：
+
+```ts
+<T extends U ? X : Y>
+```
+
+以上表达式的意思是：若 **T** 能够赋值给 **U**，那么类型是 **X**，否则为 **Y**。
+
+在**条件类型表达式**中，我们通常还会结合 **infer** 关键字，实现**类型抽取**：
+
+```ts
+interface Dictionary<T = any> {
+    [key: string]: T;
+}
+
+type StrDict = Dictionary<string>
+
+type DictMember<T> = T extends Dictionary<infer V> ? V : never
+
+type StrDictMember = DictMember<StrDict> // string
+```
+
+在上面示例中，当类型 **T** 满足 **T extends Dictionary** 约束时：
+
+我们会使用 **infer** 关键字**声明一个类型变量 V**，并返回该类型，否则返回 **never** 类型。
+
+> 在 TypeScript **中，never** 类型表示的是那些永不存在的值的类型。
+> > 例如， never 类型是那些**总是会抛出异常**或**根本就不会有返回值**的**函数表达式**或**箭头函数表达式**的**返回值类型**。
+> 另外，需要注意的是，没有类型是 **never** 的子类型或可以赋值给 **never** 类型（除了 **never** 本身之外）。 即使 **any** 也不可以赋值给 **never**。
+
+除了上述的应用外，利用**条件类型**和 **infer 关键字**，我们还可以方便地实现**获取 Promise 对象的返回值类型**，比如：
+
+```ts
+async function stringPromise() {
+    return 'Hello, Semlinker!';
+}
+
+interface Person {
+    name: string;
+    age: number;
+}
+
+async function personPromise() {
+    return { name: "Semlinker", age: 30 } as Person;
+}
+
+type PromiseType<T> = (args: any[]) => Promise<T>;
+type UnPromisify<T> = T extends PromiseType<infer U> ? U : T;
+
+type extractStringPromise = UnPromisify<typeof stringPromise>; // string
+type extractPersonPromise = UnPromisify<typeof personPromise>; // Person
+```
