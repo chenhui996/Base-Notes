@@ -1,15 +1,21 @@
 const express = require('express');
 const app = express();
 const articles = [{ title: 'Example' }, { name: 'Cain' }];
+const bodyParser = require('body-parser');
 
 app.set('port', process.env.PORT || 3000);
+
+app.use(bodyParser.json()); // 支持编码为 JSON 的请求消息体
+app.use(bodyParser.urlencoded({ extended: true })); // 支持编码为表单的请求消息体
 
 app.get('/articles', (req, res, next) => { // 获取所有文章
     res.send(articles)
 })
 
 app.post('/articles', (req, res, next) => { // 创建一篇文章
-    res.send('OK');
+    const article = { title: req.body.title };
+    articles.push(article);
+    res.send(article);
 })
 
 app.get('/articles/:id', (req, res, next) => { // 获取指定文章
