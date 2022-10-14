@@ -11,6 +11,6 @@
   "license": "ISC",
   "dependencies": {
     "htmlparser": "^1.7.7",
-    "request": "^2.60.0"
+    "request": "^2.88.2"
   }
 }
