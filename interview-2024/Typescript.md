@@ -139,7 +139,7 @@ let output = identity<string>('hello');
 
 - **枚举**:
   - Enum
-  - 用于定义 **一组命名** 的常量。
+  - 一个常量，用于定义 **一组命名**。
   - 枚举类型可以为一组数值赋予 **友好的名字**。
   - 例如，定义一个 **颜色枚举**：
 
@@ -729,8 +729,11 @@ console.log(dict["name"]); // 输出: Alice
 ### 协变（Covariance）
 
 - **协变**是指：
-  - 具体的类型 (**子类型**) 的 **参数类型** -> 可以 **当作是** 更一般的类型（**父类型**）来使用。
-  - 例如，定义一个 **协变** 的 **接口**：
+  - **区别**：协变意味着 **子类型** 可以 **赋值** 给 **父类型**。
+  - **应用场景**：数组类型是协变的，因此可以将 **子类型的数组** 赋值给 **父类型的数组**。
+
+> 协变表示类型T的子类型可以赋值给类型U，当且仅当T是U的子类型。
+> 在TypeScript中，数组是协变的，这意味着可以将子类型的数组赋值给父类型的数组。
 
 ```ts
 // 1. 假设我们有这样一个Animal类型，它很简单，只有一个name属性：
@@ -750,14 +753,175 @@ let animals: Animal[] = dogs; // 这里发生了协变，Dog[] 被当作 Animal[
 // 这就是协变在TypeScript中的实际应用
 ```
 
-- 区别：协变意味着 **子类型** 可以 **赋值** 给 **父类型**。
-- 应用场景：数组类型是协变的，因此可以将 **子类型的数组** 赋值给 **父类型的数组**。
+### 逆变（Contravariance）
 
+- **逆变**是指：
+  - **区别**：逆变意味着 -> 一个 **接受子类型参数的函数** 可以被当作 **接受超类型（或父类型）参数的函数**来使用。
+  - **应用场景**：函数参数类型是逆变的，因此可以将接受 **子类型参数的函数** 赋值给 **接受超类型参数的函数变量**。
 
+> 逆变表示类型T的超类型可以赋值给类型U，当且仅当T是U的子类型。
+> 在TypeScript中，函数参数是逆变的，这意味着可以将超类型的函数赋值给子类型的函数。
 
+```ts
+type Logger<T> = (arg: T) => void;
+let logNumber: Logger<number> = (x: number) => console.log(x);
+let logAny: Logger<any> = logNumber; // 函数参数是逆变的，这是合法的
 
+// 上面例子，父类型是Logger<any>，子类型是Logger<number>，因为number是any的子类型，所以Logger<number>是Logger<any>的子类型。
+// 这个赋值是合法的，因为logNumber函数能够处理number类型的参数，而any类型的参数可以包含number类型的值。
+```
 
+### 双变（Bivariance）
 
+- **双变**是指：
+  - **区别**：双变意味着 -> 既可以将 **子类型赋值给父类型**，也可以将 **父类型赋值给子类型**。
+  - **应用场景**：双变是 **协变** 和 **逆变** 的结合，可以在 **需要时** 既支持 **协变**，也支持 **逆变**。
+  - strictFunctionTypes 选项：在TypeScript中，可以通过 **strictFunctionTypes** 选项来控制函数类型的 **协变** 和 **逆变** 行为。
 
+> 双变表示类型T和U是彼此的子类型，当且仅当T是U的子类型，U是T的子类型。
+> 在TypeScript中，双变是一种折中的方式，可以同时支持协变和逆变。
+
+```ts
+interface Animal {
+    makeSound(): void;
+}
+
+interface Dog extends Animal {
+    bark(): void;
+}
+
+let animal: Animal;
+let dog: Dog = { makeSound: () => {}, bark: () => {} };
+
+// 双变行为：将子类型的对象赋值给父类型的变量
+animal = dog;
+
+// 尝试双变行为（在严格模式下可能会报错）：将父类型的对象赋值给子类型的变量
+// 注意：这在实际应用中通常是不安全的，因此不建议这样做
+dog = animal; // 这行代码在严格模式下会报错，因为Animal不一定是Dog
+```
+
+### 抗变（Invariance）
+
+- **抗变**是指：
+  - **区别**：抗变意味着 -> 不能将 **子类型赋值给父类型**，也不能将 **父类型赋值给子类型**。
+  - **应用场景**：抗变是 **协变** 和 **逆变** 的 **反向**，通常用于 **不允许类型转换** 的场景。
+
+> 抗变表示类型T和U是彼此的超类型，当且仅当T和U是不相关的类型。
+> 在TypeScript中，抗变是一种不允许类型转换的方式，通常用于不允许类型转换的场景。
+
+#### 抗变的例子
+
+- **元组类型**：
+  - 元组是TypeScript中的一个特性，它允许你表示一个已知元素数量和类型的数组，各元素的类型不必相同。
+  - 在元组类型中，抗变意味着你不能将一个元素类型不同的元组赋值给另一个元组，即使它们包含的元素数量相同。
+
+```ts
+let tuple1: [number, string] = [1, "hello"];
+let tuple2: [string, number];
+
+// 下面的赋值会报错，因为元组的元素类型不匹配
+tuple2 = tuple1; // Error: Type '[number, string]' is not assignable to type '[string, number]'.
+```
+
+- **泛型类型参数（在特定情况下）**:
+  - 当泛型类型参数被用于某些特定的位置时，比如作为函数参数的类型时，它们可能表现出抗变特性。
+  - 这意味着你不能将一个具体类型的函数赋值给一个期望不同具体类型参数的函数变量，即使这两个类型之间存在子类型关系。
+
+```ts
+type Identity<T> = (arg: T) => T;
+
+let identityNumber: Identity<number> = (x: number) => x;
+let identityAny: Identity<any>;
+
+// 下面的赋值在严格模式下会报错，因为Identity<number>不是Identity<any>的子类型（抗变）
+identityAny = identityNumber; // Error in strict mode: Type 'Identity<number>' is not assignable to type 'Identity<any>'.
+```
+
+## TypeScript中的静态类型和动态类型有什么区别
+
+- 静态类型是在 **编译期间** 进行类型检查，可以在 **编辑器** 或 **IDE** 中 发现大部分**类型错误**。
+- 动态类型是在 **运行时** 才确定 **变量的类型**，通常与**动态语言**相**关联**。
+
+### 静态类型（Static Typing）
+
+- **定义**：
+  - 静态类型是指 -> 在**编译阶段** -> 进行 -> 类型检查的类型系统。
+  - 通过**类型注解**或**推断** -> 确定**变量、参数和返回值**的 **类型**。
+- **特点**：
+  - 静态类型能够 -> 在编码阶段 -> 就发现大部分类型错误，提供了更好的代码健壮性和可维护性。
+- **优势**：
+  - 可以在 **编辑器** 或 **IDE** 中实现**代码提示**、**自动补全**和 **类型检查**，帮助开发者减少错误并提高代码质量。
+
+### 动态类型（Dynamic Typing）
+
+- **定义**：
+  - 动态类型是指 -> 在运行时 -> 才确定变量的类型，通常与 **动态语言相关联**，允许 -> **同一个变量** -> 在不同时间 -> **引用** -> **不同类型的值**。
+- **特点**：
+  - 动态类型使得 -> 变量的类型 -> 灵活多变，在运行时 -> 可以根据 -> 上下文或条件 -> **动态地** -> 改变 -> 变量的类型。
+- **优势**：
+  - 动态类型可以带来更大的灵活性，适用于一些需要频繁变化类型的场景。
+
+```ts
+// 动态类型（Dynamic Typing） 
+
+// 例子1
+let x: any = 10; // x 是一个 number 类型
+x = "Hello"; // x 变成了 string 类型
+
+// 例子2
+// 使用 unknown 类型来处理不确定类型的数据
+let unknownValue: unknown = "This could be anything";
+
+// 你不能直接对 unknown 类型的值进行操作
+// console.log(unknownValue.length); // Error: Property 'length' does not exist on type 'unknown'.
+
+// 你需要先检查类型
+if (typeof unknownValue === "string") {
+    console.log(unknownValue.length); // 现在我们知道它是一个字符串，可以安全地访问 length 属性
+}
+
+// 或者使用类型断言
+let stringValue = unknownValue as string;
+console.log(stringValue.length); // 使用类型断言后，TypeScript认为它是一个字符串
+```
+
+### 区别总结
+
+- **时机差异**：
+  - 静态类型在 **编译期间** 进行类型检查。
+  - 而动态类型是在 **运行时** 才确定变量的类型。
+- **代码稳定性**：
+  - 静态类型有助于在编码阶段发现大部分类型错误，提高代码稳定性。
+  - 动态类型对类型的要求较为灵活，但可能增加了代码的不确定性。
+- **使用场景**：
+  - 静态类型适合于大型项目和团队，能够提供更强的类型安全性。
+  - 动态类型适用于快速原型开发和灵活多变的场景，能够更快地迭代和测试代码。（any啥的较多）
+
+## 介绍TypeScript中的可选属性、只读属性和类型断言
+
+- **可选属性**： 使用 ? 来标记一个属性可以存在，也可以不存在。
+- **只读属性**： 使用 readonly 关键字来标记一个属性是只读的。
+- **类型断言**： 允许将一个实体强制指定为特定的类型，使用 <Type> 或 value as Type。
+
+```ts
+// 可选属性
+interface Person {
+  name: string;
+  age?: number; // 可选属性
+}
+
+// 只读属性
+interface Point {
+  readonly x: number;
+  readonly y: number;
+}
+let p1: Point = { x: 10, y: 20 };
+p1.x = 5; // Error: 只读属性无法重新赋值
+
+// 类型断言
+let someValue: any = "hello";
+let strLength: number = (someValue as string).length;
+```
 
 
