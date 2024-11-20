@@ -1066,5 +1066,239 @@ class Car {
 }
 ```
 
+## TypeScript 中 type 和 interface 的区别?
+
+- 相同点：
+  - 都可以描述 **对象** 或者 **函数**。
+  - 都允许 **拓展**（extends）。
+- 不同点：
+  - **type** 可以声明 **基本类型**、**联合类型**、**元组**。interface不行
+  - **type** 可以使用 **typeof** 获取实例的类型进行赋值。interface不行
+  - **多个相同的 interface 声明可以自动合并**。
+- 使用 interface 描述‘数据结构’，使用 type 描述‘类型关系’
+  - 为什么？
+    - **这通常是一个最佳实践的建议，但不是硬性规定。**
+    - interface 更适合定义对象的结构，因为它们更直观且易于理解，特别是在定义类的时候。  
+    - 而 type 则更灵活，可以用于定义复杂的类型关系：
+      - 如**联合类型、交叉类型、映射类型**等
+      - 这些用 interface 来表达可能会比较困难或不够直观。
+
+## TypeScript 中 ?.、??、!、!.、_、** 等符号的含义？
+
+- 一个个来：
+  - **?.**：可选链操作符，用于简化访问可能为 null 或 undefined 的属性的代码。
+  - **??**：空值合并操作符，用于提供默认值，当左侧的操作数为 null 或 undefined 时，返回右侧的操作数。
+    - 例子：`let x = a ?? b; // 如果 a 为 null 或 undefined，则 x = b，否则 x = a`
+  - **!**：非空断言操作符，用于断言一个值不为 null 或 undefined。
+    - 例子：`let x!: number; // 声明 x 为 number 类型，但不赋值`
+  - **!.**：非空断言操作符，用于断言一个值不为 null 或 undefined。
+    - 例子：`let x!: number; // 声明 x 为 number 类型，但不赋值`
+  - **_**：下划线，通常用于表示一个不重要的变量，或者表示一个未使用的参数。
+    - 例子：`function foo(_a: number, b: number) { return b; }`
+  - **\*\***：幂运算符，用于计算一个数的幂。
+    - 例子：`let x = 2 ** 3; // x = 8`
+
+## 简单介绍一下 TypeScript 模块的加载机制？
+
+- 假设有一个导入语句 `import { a } from "moduleA"`;
+ 1. 首先，编译器会 -> 尝试定位 -> 需要 -> 导入的模块文件，通过 **绝对或者相对的路径** 查找方式；
+ 2. 如果上面的解析失败了，没有查找到对应的模块，编译器会 -> 尝试定位 -> 一个外部模块声明（.d.ts）；（逐级向上查找 node_modules 文件夹）
+ 3. 最后，如果编译器还是不能解析这个模块，则会抛出一个错误 error TS2307: Cannot find module 'moduleA'.
+
+## 简单聊聊你对 TypeScript 类型兼容性的理解？
+
+- **ts 类型兼容**：
+  - 当一个类型 Y  -> 可以赋值给另一个 -> 类型 X 时:
+    - 我们就可以说: 
+      - 类型 X 兼容类型 Y
+      - 也就是说两者在结构上是一致的，而不一定非得通过 extends 的方式继承而来。
+  - 也就是所谓的 -> 协变
+
+```ts
+interface X {
+  a: any;
+  b: any;
+}
+
+interface Y {
+  a: any;
+  b: any;
+  c: any;
+}
+
+let x: X = { a: 1, b: 2 };
+let y: Y = { a: 1, b: 2, c: 3 };
+
+x = y; // OK
+```
+
+- **接口的兼容性：**
+  - X = Y 
+    - 只要目标类型 X 中声明的属性变量在源类型 Y 中都存在就是兼容的（ Y 中的类型可以比 X 中的多，但是不能少）
+    - 还是协变概念。
+
+- **函数的兼容性：**
+  - X = Y  
+  - Y 的每个参数必须能在 X 里找到对应类型的参数，参数的名字相同与否无所谓，只看它们的类型
+
+## TypeScript 中同名的 interface 或者同名的 interface 和 class 可以合并吗？
+
+- 同名的interface会自动合并，同名的interface和class会自动聚合。
+
+```ts
+interface A {
+  a: string;
+}
+
+interface A {
+  b: string;
+}
+
+let a: A = { a: "hello", b: "world" };
+
+class B {
+  a: string;
+}
+
+interface B {
+  b: string;
+}
+
+let b: B = { a: "hello", b: "world" };
+```
+
+## 如何使 TypeScript 项目引入并识别编译为 JavaScript 的 npm 库包？
+
+- 选择安装 ts 版本，npm install @types/包名 --save；
+- 对于没有类型的 js 库，需要编写同名的.d.ts文件
+
+## TypeScript 的 tsconfig.json 中有哪些配置项信息？
+
+```json
+{
+  "files": [],
+  "include": [],
+  "exclude": [],
+  "compileOnSave": false,
+  "extends": "",
+  "compilerOptions": { ... }
+}
+```
+
+- **files**: 是一个数组列表，里面包含指定文件的相对或绝对路径，用来指定待编译文件，编译器在编译的时候只会编译包含在files中列出的文件。
+- **include & exclude**: 指定编译某些文件，或者指定排除某些文件。
+- **compileOnSave：true**: 让IDE在保存文件的时候根据tsconfig.json重新生成文件。
+- **extends**: 可以通过指定一个其他的tsconfig.json文件路径，来继承这个配置文件里的配置。
+- **compilerOptions**: 编译配置项，如何对具体的ts文件进行编译
+
+## TypeScript 中如何设置模块导入的路径别名？
+
+- 通过 tsconfig.json 中的 paths 项来配置:
+
+```json
+{ 
+  "compilerOptions": 
+    {
+      "baseUrl": ".", 
+      "paths": { 
+         "@helper/*": ["src/helper/*"], 
+         "@utils/*": ["src/utils/*"], 
+         ... 
+      } 
+   } 
+}
+```
+
+## declare，declare global 是什么？
+
+- declare 是用来定义 **全局变量、全局函数、全局命名空间、js modules、class等**
+- declare global 为 -> 全局对象 window -> 增加新的属性
+  
+```ts
+declare var jQuery: (selector: string) => any;
+declare function jQuery(selector: string): any;
+
+declare namespace jQuery {
+  function ajax(url: string, settings?: any): void;
+}
+
+declare global {
+  interface Window {
+    myVar: string;
+  }
+}
+```
+
+## 对 TypeScript 类中成员的 public、private、protected、readonly 修饰符的理解？
+
+- **public**: 成员都默认为public，被此限定符修饰的成员是 -> 可以被外部访问。
+- **private**: 被此限定符修饰的成员是 -> 只可以被类的内部访问。
+- **protected**: 被此限定符修饰的成员是 -> 只可以被类的内部以及类的子类访问。
+- **readonly**: 关键字将属性设置为只读的。 只读属性 -> 必须在 **声明时** 或 **构造函数里** 被初始化。
+
+## keyof 和 typeof 关键字的作用？
+
+- **keyof**: 用于获取 **对象类型的所有键**（属性名）的联合类型。
+- **typeof**: 用于获取 **实例的类型** 进行赋值。
+
+```ts
+interface Person {
+  name: string;
+  age: number;
+}
+
+type PersonKeys = keyof Person; // "name" | "age"
+
+// -------------------------------------------------
+
+let person: Person = { name: "Alice", age: 30 };
+
+let key: keyof typeof person; // "name" | "age"
+```
+
+## 简述工具类型 Exclude、Omit、Merge、Intersection、Overwrite的作用
+
+#### Exclude<T, U>
+
+- 从 T 中排除出可分配给 U的元素。
+
+#### Omit<T, K>
+- 忽略T中的某些属性。
+
+#### Partial<Type>
+- 构造一个类型，将Type的所有属性设置为 **可选**。
+
+#### Required<Type>
+- 构造一个类型，将Type的所有属性设置为 **必选**。
+
+#### Readonly<Type>
+- 构造一个类型，将Type的所有属性设置为 **只读**。
+  
+#### Record<Keys, Type>
+- 构造一个类型，其属性名的类型为Keys，属性值的类型为Type。
+
+```ts
+      type CatName = "miffy" | "boris" | "mordred";
+      interface CatInfo {
+        age: number;
+        breed: string;
+      }
+ 
+      const cats: Record<CatName, CatInfo> = {
+        miffy: { age: 10, breed: "Persian" },
+        boris: { age: 5, breed: "Maine Coon" },
+        mordred: { age: 16, breed: "British Shorthair" },
+      };
+```
+
+#### Pick<Type, Keys>
+- 从Type中挑选出Keys的属性。
+
+#### Extract<Type, Union>
+- 从Type中提取出可以赋值给Union的类型。
+
+---
+
+> 链接：https://juejin.cn/post/6999985372440559624
 > 链接：https://juejin.cn/post/7321542773076082699
 > 来源：稀土掘金
