@@ -924,4 +924,147 @@ let someValue: any = "hello";
 let strLength: number = (someValue as string).length;
 ```
 
+## TypeScript 中的模块化是如何工作的，举例说明
 
+- TypeScript 中使用 ES6 模块系统，可以使用 import 和 export 关键字来导入和导出模块。
+- 可以通过 export default 导出默认模块，在导入时可以使用 import moduleName from 'modulePath'。
+
+## 如何约束泛型参数的类型范围
+
+- 可以使用泛型约束（**extends关键字**）来限制泛型参数的类型范围，确保 **泛型参数** 符合某种**特定的条件**。
+
+```ts
+interface Lengthwise {
+  length: number;
+}
+function loggingIdentity<T extends Lengthwise>(arg: T): T {
+  console.log(arg.length);
+  return arg;
+}
+loggingIdentity({length: 10, value: 3});  // 参数满足 Lengthwise 接口要求，可以正常调用
+```
+
+## 什么是泛型约束中的 keyof 关键字，举例说明其用法
+
+- keyof 是 TypeScript 中用来 -> 获取对象类型 -> 所有键（属性名）-> 的操作符。
+- 可以使用 keyof 来定义泛型约束，限制泛型参数为某个对象的键。
+
+```ts
+function getProperty<T, K extends keyof T>(obj: T, key: K) {
+  return obj[key];
+}
+let x = { a: 1, b: 2, c: 3 };
+getProperty(x, "a"); // 正确
+getProperty(x, "d"); // 错误：Argument of type '"d"' is not assignable to parameter of type '"a" | "b" | "c"'
+```
+
+## 什么是条件类型（conditional types），能够举例说明其使用场景吗
+
+- 条件类型是 TypeScript 中的高级类型操作符，可以根据一个 **类型关系** 判断 **结果类型**。
+- 例如，可以使用 **条件类型** 实现一个 **类型过滤器**，根据**输入**类型**输出**不同的**结果**类型。
+
+```ts
+type NonNullable<T> = T extends null | undefined ? never : T;
+type T0 = NonNullable<string | null>;  // string
+type T1 = NonNullable<string | null | undefined>;  // string
+type T2 = NonNullable<string | number | null>;  // string | number
+```
+
+## 什么是装饰器，有什么作用，如何在TypeScript中使用类装饰器
+
+- 装饰器是 -> 一种**特殊类型**的**声明**，可以附加到**类、方法、访问符、属性或参数上**，以修改其行为。
+- 在 TypeScript 中，装饰器提供了一种在 -> 声明时 -> 定义 -> 如何处理类的方法、属性或参数的机制。
+
+如何在 TypeScript 中使用类装饰器：
+
+```ts
+type ConstructorType = new (...args: any[]) => {};
+
+function classDecorator<T extends ConstructorType>(constructor: T) {
+  return class extends constructor {
+    newProperty = "new property";
+    hello = "override";
+  };
+}
+
+@classDecorator
+class Greeter {
+  property = "property";
+  hello: string;
+  constructor(m: string) {
+    this.hello = m;
+  }
+}
+console.log(new Greeter("world")); // 输出 { property: 'property', hello: 'override', newProperty: 'new property' }
+```
+
+## 类装饰器 和 方法装饰器 的执行顺序是怎样的
+
+- 当有多个装饰器应用于同一个声明时（比如一个类中的方法），它们将按照 **自下而上** 的顺序应用。
+  - 例子：
+
+```ts
+// 多个装饰器应用于同一个类
+
+function firstClassDecorator(target: any) {
+  console.log("firstClassDecorator called");
+}
+
+function secondClassDecorator(target: any) {
+  console.log("secondClassDecorator called");
+}
+
+@firstClassDecorator
+@secondClassDecorator
+class Example {}
+
+// 输出：
+// secondClassDecorator called
+// firstClassDecorator called
+```
+
+- 对于方法装饰器，它们将按照 **从下到上** 的顺序被依次调用。
+  - 例子：
+
+```ts
+// 方法装饰器
+
+function firstMethodDecorator(target: any, key: string, descriptor: PropertyDescriptor) {
+  console.log("firstMethodDecorator called");
+}
+
+function secondMethodDecorator(target: any, key: string, descriptor: PropertyDescriptor) {
+  console.log("secondMethodDecorator called");
+}
+
+class Example {
+  @firstMethodDecorator
+  @secondMethodDecorator
+  method() {}
+}
+
+// 输出：
+// secondMethodDecorator called
+// firstMethodDecorator called
+```
+
+## 装饰器工厂是什么，请给出一个装饰器工厂的使用示例
+
+- 装饰器工厂是 -> 一个返回装饰器 -> 的**函数**。它可以接受参数，并根据参数动态生成装饰器。
+- 以下是一个简单的装饰器工厂示例：
+
+```ts
+function color(value: string) {
+  return function (target: any, propertyKey: string) {
+    // ... 在此处使用 value 和其他参数来操作装饰目标
+  };
+}
+
+class Car {
+  @color('red')
+  brand: string;
+}
+```
+
+> 链接：https://juejin.cn/post/7321542773076082699
+> 来源：稀土掘金
