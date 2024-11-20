@@ -1263,42 +1263,186 @@ let key: keyof typeof person; // "name" | "age"
 - 从 T 中排除出可分配给 U的元素。
 
 #### Omit<T, K>
+
 - 忽略T中的某些属性。
 
 #### Partial<Type>
+
 - 构造一个类型，将Type的所有属性设置为 **可选**。
 
 #### Required<Type>
+
 - 构造一个类型，将Type的所有属性设置为 **必选**。
 
 #### Readonly<Type>
+
 - 构造一个类型，将Type的所有属性设置为 **只读**。
   
 #### Record<Keys, Type>
+
 - 构造一个类型，其属性名的类型为Keys，属性值的类型为Type。
 
 ```ts
-      type CatName = "miffy" | "boris" | "mordred";
-      interface CatInfo {
-        age: number;
-        breed: string;
-      }
- 
-      const cats: Record<CatName, CatInfo> = {
-        miffy: { age: 10, breed: "Persian" },
-        boris: { age: 5, breed: "Maine Coon" },
-        mordred: { age: 16, breed: "British Shorthair" },
-      };
+type CatName = "miffy" | "boris" | "mordred";
+
+interface CatInfo {
+  age: number;
+  breed: string;
+}
+
+const cats: Record<CatName, CatInfo> = {
+  miffy: { age: 10, breed: "Persian" },
+  boris: { age: 5, breed: "Maine" },
+  mordred: { age: 16, breed: "British Shorthair" }
+};
 ```
 
 #### Pick<Type, Keys>
+
 - 从Type中挑选出Keys的属性。
 
 #### Extract<Type, Union>
+
 - 从Type中提取出可以赋值给Union的类型。
+
+```ts
+type T0 = Extract<"a" | "b" | "c", "a" | "f">;  // "a"
+```
+
+#### NonNullable<Type>
+
+- 从Type中排除null和undefined。
+
+```ts
+type T0 = NonNullable<string | null | undefined>;  // string
+```
+
+#### Parameters<Type>
+
+- 获取 **函数类型** 的 **参数类型** 的 **元组**。
+
+```ts
+type T0 = Parameters<() => string>;  // []
+type T1 = Parameters<(s: string) => void>;  // [string]
+type T2 = Parameters<<T>(arg: T) => T>;  // [unknown]
+
+function f1(arg1: string, arg2: number): void {}
+type T3 = Parameters<typeof f1>;  // [string, number]
+```
+
+#### ConstructorParameters<Type>
+
+- 获取 **构造函数类型** 的 **参数类型** 的 **元组**。
+
+```ts
+type T0 = ConstructorParameters<ErrorConstructor>;  // [string]
+type T1 = ConstructorParameters<FunctionConstructor>;  // string[]
+type T2 = ConstructorParameters<RegExpConstructor>;  // [string, "g" | "i" | "m" | undefined]
+```
+
+#### ReturnType<Type>
+
+- 获取 **函数类型** 的 **返回类型**。
+
+```ts
+type T0 = ReturnType<() => string>;  // string
+type T1 = ReturnType<(s: string) => void>;  // void
+type T2 = ReturnType<<T>() => T>;  // unknown
+type T3 = ReturnType<<T extends U, U extends number[]>() => T>;  // number[]
+
+function f1(): void {}
+type T4 = ReturnType<typeof f1>;  // void
+```
+
+#### InstanceType<Type>
+
+- 获取 **构造函数类型** 的 **实例类型**。
+
+```ts
+class C {
+  x = 0;
+  y = 0;
+}
+
+type T0 = InstanceType<typeof C>;  // C
+```
+
+#### NoInfer<Type>
+
+- 从Type中排除 **不可推断** 的类型。
+
+```ts
+type T0 = NoInfer<string>;  // string
+type T1 = NoInfer<number>;  // number
+type T2 = NoInfer<undefined>;  // undefined
+type T3 = NoInfer<null>;  // null
+type T4 = NoInfer<unknown>;  // unknown
+type T5 = NoInfer<any>;  // any
+type T6 = NoInfer<never>;  // never
+type T7 = NoInfer<void>;  // void
+type T8 = NoInfer<{}>;  // {}
+type T9 = NoInfer<Function>;  // Function
+type T10 = NoInfer<() => void>;  // () => void
+type T11 = NoInfer<Promise<string>>;  // Promise<string>
+type T12 = NoInfer<RegExp>;  // RegExp
+```
+
+#### ThisParameterType<Type>
+
+- 获取函数类型的 this 参数类型。
+
+```ts
+type T0 = ThisParameterType<(this: Date, x: number, y: number) => void>;  // Date
+```
+
+#### OmitThisParameter<Type>
+
+- 从函数类型中排除 this 参数。
+
+```ts
+type T0 = OmitThisParameter<(this: Date, x: number, y: number) => void>;  // (x: number, y: number) => void
+```
+
+#### ThisType<Type>
+
+- 用于指定 this 的类型。
+
+```ts
+type ObjectDescriptor<D, M> = {
+  data?: D;
+  methods?: M & ThisType<D & M>;  // Type of 'this' in methods is D & M
+};
+
+function makeObject<D, M>(desc: ObjectDescriptor<D, M>): D & M {
+  let data: object = desc.data || {};
+  let methods: object = desc.methods || {};
+  return { ...data, ...methods } as D & M;
+}
+
+let obj = makeObject({
+  data: { x: 0, y: 0 },
+  methods: {
+    moveBy(dx: number, dy: number) {
+      this.x += dx;  // Strongly typed this
+      this.y += dy;  // Strongly typed this
+    }
+  }
+});
+```
+
+#### Intrinsic String Manipulation Types
+
+- TypeScript 4.1 引入了一组新的 **内置字符串操作类型**，用于处理字符串类型。
+
+```ts
+type T0 = Uppercase<"hello">;  // "HELLO"
+type T1 = Lowercase<"HELLO">;  // "hello"
+type T2 = Capitalize<"hello">;  // "Hello"
+type T3 = Uncapitalize<"Hello">;  // "hello"
+```
 
 ---
 
-> 链接：https://juejin.cn/post/6999985372440559624
-> 链接：https://juejin.cn/post/7321542773076082699
-> 来源：稀土掘金
+> 参考链接：https://juejin.cn/post/6999985372440559624
+> 参考链接：https://juejin.cn/post/6999985372440559624
+> 参考链接：https://www.typescriptlang.org/docs/handbook/utility-types.html
