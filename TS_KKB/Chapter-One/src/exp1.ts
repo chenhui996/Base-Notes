@@ -1,1 +1,0 @@
-const tar: string = "hello world";
