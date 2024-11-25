@@ -62,8 +62,8 @@
 
 ### 说说你对闭包的理解
 
-- 闭包是指有权访问另一个函数作用域中的变量的函数。
-- 创建闭包的常见方式，就是在一个函数内部创建另一个函数。
+- 闭包是指 -> 有权访问 -> 另一个函数作用域 -> 中的变量 -> 的函数。
+- 创建闭包的常见方式，就是 **在一个函数内部创建另一个函数**。
 - 闭包的特性：
   - 函数内再嵌套函数
   - 内部函数可以引用外层的参数和变量
@@ -91,6 +91,7 @@
   - 闭包常常用来封装变量，隐藏细节，只提供接口，如工厂函数。
   - 闭包常常用来实现数据的封装，即只提供接口，不提供数据。
   - 闭包常常用来实现模块化，即将一些功能封装在闭包中，只暴露一些接口给外部使用。
+    - 举例：在react中，使用useEffect的闭包特性，可以在useEffect中访问到外部的变量。
 
 ### 你在前端工作中，如何处理压力和面对挑战？
 
@@ -239,101 +240,124 @@ console.log(flatten(tree));
 
 ### 懒汉式
 
-懒汉式在第一次调用时实例化对象，不是线程安全的，如果在多线程环境下需要额外的同步机制。
+在JavaScript中，懒汉式单例模式可以通过在第一次调用时创建对象来实现。
 
-```java
-public class SingletonLazy {
-    private static SingletonLazy instance;
-
-    private SingletonLazy() {
-        // 私有构造方法
+```js
+class SingletonLazy {
+    constructor(){
+      if(SingletonLazy.instance){
+        return SingleLazy.instance;
+      }
+      this.value = Math.random(); // 示例属性
+      SingletonLazy.instance = this;
+      return this;
     }
 
-    public static SingletonLazy getInstance() {
-        if (instance == null) {
-            instance = new SingletonLazy();
-        }
-        return instance;
+    static getInstance(){
+      if(!SingletonLazy.instance){
+        SingletonLazy.instance = new SingletonLazy();
+      }
+
+      return SingletonLazy.instance;
     }
 }
+
+// 使用
+const instance1 = SingletonLazy.getInstance();
+const instance2 = SingletonLazy.getInstance();
+console.log(instance1 === instance2); // true
 ```
 
 ### 饿汉式
 
-饿汉式在类加载时就实例化对象，线程安全，但是如果类加载后未使用该实例，会造成资源浪费。
+饿汉式在类加载（或脚本执行）时就实例化对象。
 
-```java
-public class SingletonEager {
-    private static final SingletonEager instance = new SingletonEager();
-
-    private SingletonEager() {
-        // 私有构造方法
+```js
+class SingletonEager{
+  constructor(){
+    if(SingletonEager.instance){
+      return SingletonEager.instance;
     }
 
-    public static SingletonEager getInstance() {
-        return instance;
-    }
+    this.value = Math.random(); // 示例属性
+    SingletonEager.instance = this;
+  }
 }
+
+SingletonEager.instance = new SingletonEager();
+
+Object.defineProperty(SingletonEager, 'getInstance', {
+  value: function(){
+    return SingletonEager.instance;
+    },
+  }
+)
+
+// 使用
+const eagerInstance1 = SingletonEager.getInstance();
+const eagerInstance2 = SingletonEager.getInstance();
+console.log(eagerInstance1 === eagerInstance2); // true
 ```
 
-### 双重检查锁
+### 使用闭包（模块模式）
 
-双重检查锁在懒汉式的基础上加上同步锁和二次检查，保证线程安全且性能较高。
+在JavaScript中，可以利用闭包（或模块模式）来创建一个私有的实例，并提供一个全局的访问点。
 
-```java
-public class SingletonDoubleCheckedLocking {
-    private static volatile SingletonDoubleCheckedLocking instance;
+```js
+const SingletonModule = (function() {
+    let instance;
 
-    private SingletonDoubleCheckedLocking() {
-        // 私有构造方法
+    function createInstance() {
+        const object = new Object('I am the instance');
+        return object;
     }
 
-    public static SingletonDoubleCheckedLocking getInstance() {
-        if (instance == null) {
-            synchronized (SingletonDoubleCheckedLocking.class) {
-                if (instance == null) {
-                    instance = new SingletonDoubleCheckedLocking();
-                }
+    return {
+        getInstance: function() {
+            if (!instance) {
+                instance = createInstance();
             }
+            return instance;
         }
-        return instance;
-    }
-}
+    };
+})();
+
+// 使用
+const moduleInstance1 = SingletonModule.getInstance();
+const moduleInstance2 = SingletonModule.getInstance();
+console.log(moduleInstance1 === moduleInstance2); // true
 ```
 
-### 静态内部类
+### 使用ES6 Symbol和私有字段
 
-静态内部类利用类加载机制实现延迟加载和线程安全。
+在ES6中，可以使用Symbol和类的私有字段来实现单例模式。
 
-```java
-public class SingletonHolder {
-    private SingletonHolder() {
-        // 私有构造方法
+```js
+const SingletonSymbol = (function() {
+    const instance = Symbol('instance');
+
+    class Singleton {
+        constructor(value) {
+            if (Singleton[instance]) {
+                return Singleton[instance];
+            }
+            this.value = value || Math.random();
+            Singleton[instance] = this;
+        }
+
+        static getInstance(value) {
+            if (!Singleton[instance]) {
+                new Singleton(value);
+            }
+            return Singleton[instance];
+        }
     }
 
-    private static class Holder {
-        private static final SingletonHolder INSTANCE = new SingletonHolder();
-    }
+    return Singleton;
+})();
 
-    public static SingletonHolder getInstance() {
-        return Holder.INSTANCE;
-    }
-}
+// 使用
+const symbolInstance1 = SingletonSymbol.getInstance();
+const symbolInstance2 = SingletonSymbol.getInstance();
+console.log(symbolInstance1 === symbolInstance2); // true
 ```
-
-### 枚举
-
-枚举类型的单例模式是最简单且最安全的方式，天生保证线程安全且防止反序列化、反射攻击。
-
-```java
-public enum SingletonEnum {
-    INSTANCE;
-
-    // 可以添加其他方法和字段
-    public void doSomething() {
-        // ...
-    }
-}
-```
-
-以上是单例模式的五种常见实现方式，每种方式都有其特点和适用场景。在实际开发中，可以根据具体需求选择合适的实现方式。
