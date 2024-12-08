@@ -1,0 +1,2500 @@
+# next note
+
+## 使用官方文档中的介绍就是
+
+- Size：导航到该路由时下载的资源大小，每个路由的大小只包括它自己的依赖项
+- First Load JS：加载该页面时下载的资源大小
+- First load JS shared by all：所有路由共享的 JS 大小会被单独列出来
+
+## 更改端口
+
+- npx next dev -p 4000
+- npx next start -p 4000
+
+## 更改主机名
+
+- npx next dev -H 192.168.1.2
+
+## 指定检查的目录
+
+- npx next lint --dir utils
+
+## next 中的路由
+
+- 路由（Router）是 Next.js 应用的重要组成部分。
+- 在 Next.js 中，路由决定了:
+
+  - **一个页面** -> **如何渲染**
+  - **一个请求** -> **如何返回**
+
+- Next.js 有两套路由解决方案:
+  - **之前** 的方案称之为 **“Pages Router”**
+  - **目前** 的方案称之为 **“App Router”**
+- 两套方案目前是兼容的，都可以在 Next.js 中使用。
+
+> 从 v13.4 起，App Router 已成为默认的路由方案，新的 Next.js 项目建议使用 App Router。
+
+## 文件系统（file-system）
+
+- Next.js 的路由基于的是 **文件系统**。
+- 也就是说，一个文件 -> 就可以是一个路由。
+- 举个例子，你在 pages 目录下创建一个 index.js 文件，它会直接映射到 / 路由地址:
+
+```js
+// pages/index.js
+import React from 'react'
+export default () => <h1>Hello world</h1>
+```
+
+- 在 pages 目录下创建一个 about.js 文件，它会直接映射到 /about 路由地址：
+
+```js
+// pages/about.js
+import React from 'react'
+export default () => <h1>About us</h1>
+```
+
+## 从 Pages Router 到 App Router
+
+- 现在你打开使用 create-next-app 创建的项目，你会发现 **默认并没有 pages 这个目录**。
+- 查看 packages.json 中的 Next.js 版本，如果版本号大于 13.4，那就对了！
+
+- Next.js 从 v13 起就使用了新的路由模式 —— App Router。
+- 之前的路由模式我们称之为“Pages Router”，为保持渐进式更新，依然存在。
+- 从 v13.4 起，App Router 正式进入稳定化阶段:
+
+  - App Router 功能更强、性能更好、代码组织更灵活，以后就让我们使用新的路由模式吧！
+
+- 可是这俩到底有啥区别呢？
+- Next.js 又为什么升级到 App Router 呢？
+- 知其然知其所以然，让我们简单追溯一下。
+  - 以前我们声明一个路由，只用在 pages 目录下创建一个文件就可以了，以前的目录结构类似于：
+
+```js
+└── pages
+    ├── index.js
+    ├── about.js
+    └── more.js
+```
+
+- 这种方式有一个弊端，那就是:
+  - pages 目录的 **所有 js 文件** 都会被 -> **当成路由文件**，这就导致比如:
+    - 组件不能写在 pages 目录下，这就不符合开发者的使用习惯。
+    - 当然 Pages Router 还有很多其他的问题，只不过目前我们介绍的内容还太少，为了不增加大家的理解成本，就不多说了
+- 升级为新的 App Router 后，现在的目录结构类似于：
+
+```js
+src/
+└── app
+    ├── page.js
+    ├── layout.js
+    ├── template.js
+    ├── loading.js
+    ├── error.js
+    └── not-found.js
+    ├── about
+    │   └── page.js
+    └── more
+        └── page.js
+
+```
+
+- 使用新的模式后，你会发现 app 下多了很多文件。
+- 这些文件的名字并不是我乱起的，而是 **Next.js 约定的一些特殊文件**。
+- 从这些文件的名称中, 你也可以了解文件实现的功能，比如:
+  - **布局（layout.js）**
+  - **模板（template.js）**
+  - **加载状态（loading.js）**
+  - **错误处理（error.js）**
+  - **404（not-found.js）**
+- 等。
+
+- 简单的来说，App Router **制定了更加完善的规范，使代码更好被组织和管理**。
+- 至于这些文件 **具体的功能和介绍**，不要着急，本篇我们会慢慢展开。
+
+## 使用 Pages Router
+
+- 当然你也可以继续使用 Pages Router。
+- 如果你想使用 Pages Router，可选方式为：
+  1. 在 src 目录下创建一个 pages 文件夹。
+  2. 在根目录下创建一个 pages 文件夹。
+- 其中的 JS 文件会被视为 Pages Router 进行处理。
+
+> 但是要注意，虽然两者可以共存，但 App Router 的优先级要高于 Pages Router。
+> 而且如果两者解析为同一个 URL，会导致**构建错误**。
+
+### 定义路由（Routes）
+
+现在让我们开始正式的学习 App Router 吧。
+
+- 首先是定义路由，**文件夹** 被用来定义路由。
+- 每个 **文件夹** 都代表 -> **一个对应到 URL 片段 的 路由片段**。
+- 创建**嵌套的路由**，只需要创建 **嵌套的文件夹**。
+- 举个例子: app/dashboard/settings 目录对应的 **路由地址** 就是 /dashboard/settings:
+  - app -> /
+  - dashboard -> dashboard
+  - settings -> settings
+
+### 定义页面（Pages）
+
+- 那 **如何保证** 这个 **路由可以被访问** 呢？
+- 你需要创建一个 -> 特殊的名为 page.js 的文件。
+- 至于为什么叫 page.js 呢？
+  - 除了 page 有“页面”这个含义之外，你可以理解为这是一种 **约定或者规范**。
+
+> 如果你是 Next.js 的开发者，你也可以约定为 index.js 甚至 yayu.js!
+
+#### analytics 目录
+
+- analytics 目录下因为没有 page.js 文件，所以没有对应的路由。
+- 这个文件可以被用于存放 **组件、样式表、图片或者其他文件**。
+
+> 当然不止 .js 文件，Next.js 默认是支持 React、TypeScript 的，所以 .js、.jsx、.tsx 都是可以的。
+
+那 page.js 的代码该如何写呢？最常见的是展示 UI，比如：
+
+```js
+// app/page.js
+export default function Page() {
+  return <h1>Hello, Next.js!</h1>
+}
+```
+
+### 定义布局（Layouts）
+
+- 布局是指多个页面 **共享的 UI**。
+- 在导航的时候，布局会:
+  - **保留状态**
+  - **保持可交互性**
+  - **并且不会重新渲染**
+- 比如用来实现 **后台管理系统** 的 **侧边导航栏**。
+
+- 定义一个布局，你需要新建一个名为 layout.js 的文件。
+- 该文件默认导出一个 React 组件：
+  - 该组件应接收一个 children prop
+  - chidren 表示子布局（如果有的话）或者子页面：
+    - 例如：
+
+```js
+// app/dashboard/layout.js
+export default function DashboardLayout({
+  children,
+}) {
+  return (
+    <section>
+      <nav>nav</nav>
+      {children}
+    </section>
+  )
+}
+
+// app/dashboard/page.js
+export default function Page() {
+  return <h1>Hello, Dashboard!</h1>
+}
+```
+
+- 其中，nav 来自于 app/dashboard/layout.js，
+- Hello, Dashboard! 来自于 app/dashboard/page.js
+
+> 你可以发现：同一文件夹下如果有 layout.js 和 page.js，page 会作为 children 参数传入 layout。
+> 换句话说，layout 会包裹同层级的 page。
+> UI = layout(page) -> 同层级
+
+- 例如，再创建一个 app/dashboard/settings/page.js 代码如下：
+
+```js
+// app/dashboard/settings/page.js
+export default function Page() {
+  return <h1>Hello, Settings!</h1>
+}
+```
+
+- 当访问 /dashboard/settings 的时候，效果如下：
+  - nav
+  - Hello,Settings!
+- 其中，nav 来自于 app/dashboard/layout.js
+- Hello, Settings! 来自于 app/dashboard/settings/page.js
+
+- 你可以发现：布局是支持嵌套的:
+  - app/dashboard/settings/page.js 会使用 app/layout.js 和 app/dashboard/layout.js 两个布局中的内容。
+  - 不过因为我们没有在 app/layout.js 写入可以展示的内容，所以没有体现出来。
+
+#### 根布局（Root Layout）
+
+- 布局支持嵌套，最顶层的布局我们称之为根布局（Root Layout），也就是 app/layout.js。
+- 它会应用于所有的路由。除此之外，**这个布局还有点特殊**。
+- 使用 create-next-app 默认创建的 layout.js 代码如下：
+
+```js
+// app/layout.js
+import './globals.css'
+import { Inter } from 'next/font/google'
+
+const inter = Inter({ subsets: ['latin'] })
+
+export const metadata = {
+  title: 'Create Next App',
+  description: 'Generated by create next app'
+}
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang='en'>
+      <body className={inter.className}>{children}</body>
+    </html>
+  )
+}
+```
+
+- 其中：
+  - app 目录必须包含根布局，也就是 app/layout.js **这个文件是必需的**。
+  - 根布局**必须包含 html 和 body 标签**，**其他布局不能包含**这些标签。
+    - 如果你要更改这些标签，不推荐直接修改，参考《Metadata 篇》。
+  - 你可以使用 **路由组** 创建 **多个根布局。**
+  - 默认**根布局**是 **服务端组件**，且 **不能设置为客户端组件**。
+
+### 定义模板（Templates）
+
+- 模板类似于 **布局**，它也会传入 **每个子布局或者页面**。
+- 但不会像 -> **布局** -> 那样维持状态。
+
+- 模板 -> 在路由切换时 -> 会为每一个 children 创建一个实例。
+- 这就意味着:
+
+  - 当用户在 -> 共享一个模板的 -> 路由间 -> 跳转的时候，将会 **重新挂载组件实例**，重新创建 DOM 元素，不保留状态。
+  - 这听起来有点抽象，没有关系，我们先看看模板的写法，再写个 demo 你就明白了。
+
+- 定义一个模板，你需要新建一个名为 template.js 的文件:
+  - 该文件默认导出一个 React 组件:
+    - 该组件接收一个 children prop。我们写个示例代码。
+- 在 app 目录下 -> 新建一个 template.js 文件：
+
+```js
+// app/template.js
+export default function Template({ children }) {
+  return <div>{children}</div>
+}
+```
+
+- 你会发现，这用法跟布局一模一样。
+- 它们最大的区别就是 **状态的保持**。
+- 如果同一目录下既有 template.js 也有 layout.js，最后的输出效果如下：
+
+```js
+<Layout>
+  {/* 模板需要给一个唯一的 key */}
+  <Template key={routeParam}>{children}</Template>
+</Layout>
+```
+
+> 也就是说 layout 会包裹 template，template 又会包裹 page。
+> layout -> template -> page
+
+- 某些情况下，模板会比布局更适合：
+  - 依赖于 useEffect 和 useState 的功能，比如:
+    - 记录页面访问数（维持状态就不会在路由切换时记录访问数了）
+    - 用户反馈表单（每次重新填写）等
+  - 更改 **框架的默认行为**，举个例子:
+    - 布局内的 Suspense 只会在 **布局加载的时候** 展示一次 fallback UI，当 **切换页面的时候** 不会展示。
+    - 但是使用模板，fallback 会在每次路由切换的时候展示。
+
+> 注：关于模板的适用场景，可以参考《Next.js v14 的模板（template.js）到底有啥用？》，对这两种情况都做了举例说明
+
+#### 布局 VS 模板
+
+- 为了帮助大家更好的理解布局和模板，我们写一个 demo，展示下两者的特性。
+- 项目目录如下：
+
+```js
+app
+└─ dashboard
+   ├─ layout.js
+   ├─ page.js
+   ├─ template.js
+   ├─ about
+   │  └─ page.js
+   └─ settings
+      └─ page.js
+```
+
+- 其中 dashboard/layout.js 代码如下：
+
+```js
+'use client'
+
+import { useState } from 'react'
+import Link from 'next/link'
+
+export default function Layout({ children }) {
+  const [count, setCount] = useState(0)
+  return (
+    <>
+      <div>
+        <Link href='/dashboard/about'>About</Link>
+        <br />
+        <Link href='/dashboard/settings'>Settings</Link>
+      </div>
+      <h1>Layout {count}</h1>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+      {children}
+    </>
+  )
+}
+```
+
+- dashboard/template.js 代码如下：
+
+```js
+'use client'
+
+import { useState } from 'react'
+
+export default function Template({ children }) {
+  const [count, setCount] = useState(0)
+  return (
+    <>
+      <h1>Template {count}</h1>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+      {children}
+    </>
+  )
+}
+```
+
+- dashboard/page.js 代码如下：
+
+```js
+export default function Page() {
+  return <h1>Hello, Dashboard!</h1>
+}
+```
+
+- dashboard/about/page.js 代码如下：
+
+```js
+export default function Page() {
+  return <h1>Hello, About!</h1>
+}
+```
+
+- dashboard/settings/page.js 代码如下：
+
+```js
+export default function Page() {
+  return <h1>Hello, Settings!</h1>
+}
+```
+
+- 最终展示效果如下:
+
+  - about -> router to -> /dashboard/about
+  - settings -> router to -> /dashboard/settings
+  - layout -> /dashboard/layout.js
+  - template -> /dashboard/template.js
+  - hello, dashboard -> /dashboard/page.js
+
+- 现在点击两个 Increment 按钮，会开始计数。
+- 随便点击下数字，然后再点击 About 或者 Settings 切换路由，你会发现:
+  - Layout 后的数字没有发生变化
+  - Template 后的数字重置为 0
+- **这就是所谓的状态保持**
+
+### 定义加载界面（Loading UI）
+
+- 现在我们已经了解了 page.js、layout.js、template.js 的功能，然而特殊文件还不止这些。
+- App Router 提供了用于展示加载界面的 loading.js。
+
+- 这个功能的实现借助了 React 的 Suspense API。
+- 关于 Suspense 的用法，可以查看 《React 之 Suspense》。
+- 它实现的效果就是:
+  - 当发生路由变化的时候，立刻展示 fallback UI，等加载完成后，展示数据。(loading state)
+
+```js
+// 在 ProfilePage 组件处于加载阶段时显示 Spinner
+<Suspense fallback={<Spinner />}>
+  <ProfilePage />
+</Suspense>
+```
+
+- 初次接触 Suspense 这个概念的时候，往往会有一个疑惑，那就是——“在哪里控制关闭 fallback UI 的呢？”
+
+- 哪怕在 React 官网中，对背后的实现逻辑并无过多提及。
+- 但其实实现的逻辑很简单，简单的来说:
+  1. ProfilePage 会 throw 一个数据加载的 promise，
+  2. Suspense 会捕获这个 promise，追加一个 then 函数，then 函数中实现替换 fallback UI。
+  3. 当数据加载完毕，promise 进入 resolve 状态，then 函数执行，于是更新替换 fallback UI。
+- 总结：Suspense 通过 promise 的状态来控制 fallback UI 的展示。
+
+- 现在我们来看看 Next.js 中的 loading.js 是如何实现的。
+- 首先，我们在 app 目录下新建一个 loading.js 文件。
+
+```js
+// app/dashboard/loading.js
+export default function DashboardLoading() {
+  return <>Loading dashboard...</>
+}
+```
+
+- 然后我们在 dashboard 目录下新建一个 page.js 文件。（同级别）
+
+```js
+// app/dashboard/page.js
+async function getData() {
+  await new Promise(resolve => setTimeout(resolve, 3000))
+  return {
+    message: 'Hello, Dashboard!'
+  }
+}
+
+export default async function DashboardPage(props) {
+  const { message } = await getData()
+  return <h1>{message}</h1>
+}
+```
+
+- 不再需要其他的代码，loading 的效果就实现了。
+- 就是这么简单。其关键在于 page.js 导出了一个 async 函数。
+- loading.js 的实现原理是将 page.js 和下面的 children 用 <Suspense> 包裹。
+- 因为 page.js 导出一个 async 函数，Suspense **得以捕获数据加载的 promise**，借此实现了 loading 组件的关闭。
+
+#### React 的 use 函数实现 loading
+
+- 当然实现 loading 效果，不一定非导出一个 async 函数。
+- 也可以借助 React 的 use 函数。
+- 现在我们在 dashboard 下新建一个 about 目录，在其中新建 page.js 文件。
+
+- /dashboard/about/page.js 代码如下：
+
+```js
+// /dashboard/about/page.js
+import { use } from 'react'
+
+async function getData() {
+  await new Promise(resolve => setTimeout(resolve, 5000))
+  return {
+    message: 'Hello, About!'
+  }
+}
+
+export default function Page() {
+  const { message } = use(getData())
+  return <h1>{message}</h1>
+}
+```
+
+- React 的 use：
+  - use 函数是 React 的一个新特性，它可以让你在函数组件中使用 React 的特性。
+  - 效果是：use 函数会返回一个对象，对象中包含了你需要的数据。
+  - 若传给 use 的是一个延迟执行的函数，use 会等待函数执行完毕，然后返回数据。
+
+---
+
+- 如果你想针对 /dashboard/about 单独实现一个 loading 效果，那就在 about 目录下再写一个 loading.js 即可。
+- 如果同一文件夹既有 layout.js 又有 template.js 又有 loading.js ，那它们的 **层级关系** 是怎样呢？
+
+```jsx
+// 1. layout -> 2. template -> 3. loading -> 4. page
+<Layout>
+  <Template>
+    <ErrorBoundary fallback={<Error />}>
+      <Suspense fallback={<Loading />}>
+        <ErrorBoundary fallback={<NotFound />}>
+          <Page />
+        </ErrorBoundary>
+      </Suspense>
+    </ErrorBoundary>
+  </Template>
+</Layout>
+```
+
+### 定义错误界面（Error UI）
+
+- 再讲讲特殊文件 error.js。顾名思义，用来创建发生错误时的展示 UI。
+- 其实现借助了 React 的 Error Boundary 功能。
+- 简单来说，就是给 page.js 和 children 包了一层 ErrorBoundary。
+
+- 我们写一个 demo 演示一下 error.js 的效果。dashboard 目录下新建一个 error.js，目录效果如下：
+
+```js
+app
+  ├── layout.js
+  ├── dashboard
+    ├── page.js
+    ├── layout.js
+    ├── error.js
+```
+
+- dashboard/error.js 代码如下：
+
+```js
+'use client' // 错误组件必须是客户端组件
+// dashboard/error.js
+import { useEffect } from 'react'
+
+export default function Error({ error, reset }) {
+  useEffect(() => {
+    console.error(error)
+  }, [error])
+
+  return (
+    <div>
+      <h2>Something went wrong!</h2>
+      <button
+        onClick={
+          // 尝试恢复
+          () => reset()
+        }
+      >
+        Try again
+      </button>
+    </div>
+  )
+}
+```
+
+- 为触发 Error 错误，同级 page.js 的代码如下：
+
+```js
+'use client'
+// dashboard/page.js
+import React from 'react'
+
+export default function Page() {
+  const [error, setError] = React.useState(false)
+
+  const handleGetError = () => {
+    setError(true)
+  }
+
+  return (
+    <>{error ? Error() : <button onClick={handleGetError}>Get Error</button>}</>
+  )
+}
+```
+
+- 有时错误是暂时的，只需要重试就可以解决问题。
+- 所以 Next.js 会在 error.js 导出的组件中，传入 reset 函数，帮助尝试从错误中恢复。
+- 该函数会 -> 触发重新渲染错误边界 -> 里的内容。
+
+  - 如果成功，会替换展示重新渲染的内容。
+
+- 还记得上节讲过的层级问题吗？让我们回顾一下：
+
+```jsx
+// 1. layout -> 2. template -> 3. loading -> 4. page
+<Layout>
+  <Template>
+    <ErrorBoundary fallback={<Error />}>
+      <Suspense fallback={<Loading />}>
+        <ErrorBoundary fallback={<NotFound />}>
+          <Page />
+        </ErrorBoundary>
+      </Suspense>
+    </ErrorBoundary>
+  </Template>
+</Layout>
+```
+
+- 从这张图里你会发现一个问题：
+  - 因为 Layout 和 Template 在 ErrorBoundary 外面，这说明:
+    - 错误边界 -> 不能捕获 -> **同级的** -> layout.js 或者 template.js 中的错误。
+    - 如果你想捕获 **特定布局** 或者 **模板中的错误**，那就需要在 **父级的 error.js 里进行捕获**。
+- 那问题来了，如果已经到了顶层，就比如根布局中的错误如何捕获呢？
+- 为了解决这个问题，Next.js 提供了 global-error.js 文件，使用它时，需要将其放在 app 目录下。
+  - global-error.js 会包裹整个应用，而且当它触发的时候，它会替换掉根布局的内容。
+  - 所以，global-error.js 中也要定义 <html> 和 <body> 标签。
+  - global-error.js 示例代码如下：
+
+```js
+'use client'
+// app/global-error.js
+export default function GlobalError({ error, reset }) {
+  return (
+    <html>
+      <body>
+        <h2>Something went wrong!</h2>
+        <button onClick={() => reset()}>Try again</button>
+      </body>
+    </html>
+  )
+}
+```
+
+> 注：global-error.js 用来处理根布局和根模板中的错误，app/error.js 建议还是要写的，因为它可以处理局部错误。
+
+### 4.7. 定义 404 页面
+
+- 最后再讲一个特殊文件 —— not-found.js。顾名思义，当该路由不存在的时候展示的内容。
+- Next.js 项目默认的 not-found 效果如下：
+  - 404 ｜ This page could not be found.
+- 如果你要替换这个效果，只需要在 app 目录下新建一个 not-found.js，代码示例如下：
+
+```js
+import Link from 'next/link'
+
+export default function NotFound() {
+  return (
+    <div>
+      <h2>Not Found</h2>
+      <p>Could not find requested resource</p>
+      <Link href='/'>Return Home</Link>
+    </div>
+  )
+}
+```
+
+- 于 app/not-found.js 一定要说明一点的是，它只能由**两种情况**触发：
+
+  - 当组件 抛出了 notFound 函数的时候
+  - 当路由 地址不匹配的时候
+
+- 所以 app/not-found.js 可以修改默认 404 页面的样式。
+- 但是，如果 not-found.js 放到了任何子文件夹下，它只能由 notFound 函数手动触发。
+  - 比如这样：
+
+```js
+// /dashboard/blog/page.js
+import { notFound } from 'next/navigation'
+
+export default function Page() {
+  notFound()
+  return <></>
+}
+```
+
+- 执行 notFound 函数时，会由最近的 not-found.js 来处理。
+- 但如果直接访问不存在的路由，则都是由 app/not-found.js 来处理。
+
+- 对应到实际开发:
+  - 当我们请求一个用户的数据时或是请求一篇文章的数据时:
+    - 如果该数据不存在，就可以直接丢出 notFound 函数，渲染自定义的 not-found.js 界面。
+    - 示例代码如下：
+
+```js
+// app/dashboard/blog/[id]/page.js
+import { notFound } from 'next/navigation'
+
+async function fetchUser(id) {
+  const res = await fetch('https://...')
+  if (!res.ok) return undefined
+  return res.json()
+}
+
+export default async function Profile({ params }) {
+  const user = await fetchUser(params.id)
+
+  if (!user) {
+    notFound()
+  }
+
+  // ...
+}
+```
+
+> 注：后面我们还会讲到“路由组”这个概念，当 app/not-found.js 和路由组一起使用的时候，可能会出现问题。
+> 具体参考 《Next.js v14 如何为多个根布局自定义不同的 404 页面？竟然还有些麻烦！欢迎探讨》
+
+### 小结
+
+- 恭喜你，完成了本节内容的学习！
+
+- 这一节我们重点讲解了 Next.js 基于 **文件系统**的 **路由解决方案** App Router，介绍了用于：
+  - 定义页面的 page.js、
+  - 定义布局的 layout.js、
+  - 定义模板的 template.js、
+  - 定义加载界面的 loading.js、
+  - 定义错误处理的 error.js、
+  - 定义 404 页面的 not-found.js。
+- 现在你再看 App Router 的这个目录结构：
+
+```js
+src/
+└── app
+    ├── page.js
+    ├── layout.js
+    ├── template.js
+    ├── loading.js
+    ├── error.js
+    └── not-found.js
+    ├── about
+    │   └── page.js
+    └── more
+        └── page.js
+```
+
+> 简单的来说，App Router 制定了更加完善的规范，使代码更好被组织和管理。
+
+## Next.js 中实现链接和导航
+
+- 所谓“导航”，指的是使用 JavaScript 进行页面切换，通常会 **比** 浏览器默认的 **重新加载更快**。
+- 因为在 **导航** 的时候 -> 只会更新必要的组件，而不会重新加载整个页面。
+- 在 Next.js 中，有 4 种方式可以实现路由导航：
+  - 使用 <Link> 组件
+  - 使用 useRouter Hook（客户端组件）
+  - 使用 redirect 函数（服务端组件）
+  - 使用浏览器原生 History API
+
+### 使用 <Link> 组件
+
+- Next.js 的<Link>组件是:
+  - 一个拓展了原生 HTML <a> 标签的内置组件，用来实现**预获取**（prefetching） 和 **客户端路由导航**。
+  - 这是 Next.js 中 **路由导航** 的 **主要** 和 **推荐方式**。
+
+#### 基础使用
+
+```js
+import Link from 'next/link'
+
+export default function Page() {
+  return <Link href='/dashboard'>Dashboard</Link>
+}
+```
+
+#### 支持动态渲染
+
+- 支持路由链接动态渲染：
+
+```js
+import Link from 'next/link'
+
+export default function PostList({ posts }) {
+  return (
+    <ul>
+      {posts.map(post => (
+        <li key={post.id}>
+          <Link href={`/blog/${post.slug}`}>{post.title}</Link>
+        </li>
+      ))}
+    </ul>
+  )
+}
+```
+
+#### 获取当前路径名 usePathname()
+
+- 如果你想 **获取当前路径名**，可以使用 usePathname() 函数。
+
+```js
+'use client'
+
+import { usePathname } from 'next/navigation'
+import Link from 'next/link'
+
+export function Navigation({ navLinks }) {
+  const pathname = usePathname()
+
+  return (
+    <>
+      {navLinks.map(link => {
+        const isActive = pathname === link.href
+
+        return (
+          <Link
+            className={isActive ? 'text-blue' : 'text-black'}
+            href={link.href}
+            key={link.name}
+          >
+            {link.name}
+          </Link>
+        )
+      })}
+    </>
+  )
+}
+```
+
+#### 跳转行为设置
+
+- App Router 的 **默认行为** 是 滚动到 **新路由的顶部**，或者 **在前进后退导航时** 维持 **之前的滚动距离**。
+- 如果你想要禁用这个行为，你可以：
+  - 给 <Link> 组件传递一个 scroll={false}属性。
+  - 或者在使用 router.push 和 router.replace 的时候，设置 scroll: false：
+
+```js
+// next/link
+;<Link href='/dashboard' scroll={false}>
+  Dashboard
+</Link>
+
+// useRouter
+import { useRouter } from 'next/navigation'
+
+const router = useRouter()
+
+router.push('/dashboard', { scroll: false })
+```
+
+### 预获取（Prefetching）
+
+- <Link> 组件支持预获取（prefetching）。
+- 预获取是指在用户 **悬停** 或 **聚焦** 时，浏览器会 **提前加载** 下一个页面的资源。
+- 这样可以 **加速** 下一个页面的加载，提升用户体验。
+- 你可以通过在 <Link> 组件上设置 prefetch 属性来启用预获取：
+
+```js
+<Link href='/dashboard' prefetch>
+  Dashboard
+</Link>
+```
+
+- 你也可以通过在 <Link> 组件上设置 prefetch 属性来禁用预获取：
+
+```js
+<Link href='/dashboard' prefetch={false}>
+  Dashboard
+</Link>
+```
+
+### 使用 useRouter Hook
+
+- 如果你想在函数组件中使用路由导航，可以使用 useRouter Hook。
+- useRouter Hook 是 Next.js 提供的一个 Hook，用于获取路由信息。（用于更改路由的 hook）
+
+```js
+'use client'
+import { useRouter } from 'next/navigation'
+
+export default function Page() {
+  const router = useRouter()
+
+  return <button onClick={() => router.push('/dashboard')}>Dashboard</button>
+}
+```
+
+> 注意使用该 hook 需要在客户端组件中。（顶层的 'use client' 就是声明这是客户端组件）
+
+### redirect 函数
+
+- **客户端组件**使用 useRouter hook，**服务端组件**则可以直接使用 redirect 函数。
+  - 这也是 Next.js 提供的 API，使用示例代码如下：
+
+```js
+import { redirect } from 'next/navigation'
+
+async function fetchTeam(id) {
+  const res = await fetch('https://...')
+  if (!res.ok) return undefined
+  return res.json()
+}
+
+export default async function Profile({ params }) {
+  const team = await fetchTeam(params.id)
+  if (!team) {
+    redirect('/login')
+  }
+
+  // ...
+}
+```
+
+### History API
+
+- 也可以使用浏览器原生的 window.history.pushState 和 window.history.replaceState 方法更新浏览器的历史记录堆栈。
+- 通常与 usePathname（获取路径名的 hook） 和 useSearchParams（获取页面参数的 hook） 一起使用。
+
+- 比如用 pushState 对列表进行排序：
+
+```js
+'use client'
+
+import { useSearchParams } from 'next/navigation'
+
+export default function SortProducts() {
+  const searchParams = useSearchParams()
+
+  function updateSorting(sortOrder) {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('sort', sortOrder)
+    window.history.pushState(null, '', `?${params.toString()}`)
+  }
+
+  return (
+    <>
+      <button onClick={() => updateSorting('asc')}>Sort Ascending</button>
+      <button onClick={() => updateSorting('desc')}>Sort Descending</button>
+    </>
+  )
+}
+```
+
+- replaceState 会替换浏览器历史堆栈的当前条目，替换后用户无法后退，比如切换应用的地域设置（国际化）：
+
+```js
+'use client'
+
+import { usePathname } from 'next/navigation'
+
+export default function LocaleSwitcher() {
+  const pathname = usePathname()
+
+  function switchLocale(locale) {
+    // e.g. '/en/about' or '/fr/contact'
+    const newPath = `/${locale}${pathname}`
+    window.history.replaceState(null, '', newPath)
+  }
+
+  return (
+    <>
+      <button onClick={() => switchLocale('en')}>English</button>
+      <button onClick={() => switchLocale('fr')}>French</button>
+    </>
+  )
+}
+```
+
+### 小结
+
+- 本篇我们介绍了 4 种实现导航的方式，但所涉及的具体概念如:
+  - 服务端组件
+  - 客户端组件
+  - 各种 hooks
+  - 函数方法等都未展开讲解，我们会在后续的文章中讲述。
+- 本篇可以作为概览，主要是为了方便大家写 Demo 的时候用到导航相关的内容。
+
+---
+
+## 动态路由（Dynamic Routes）
+
+- 本篇我们来讲解 Next.js 中的动态路由。
+- 有的时候，你并不能提前知道路由的地址，就比如：
+  - 根据 URL 中的 id 参数展示该 id 对应的文章内容，文章那么多，我们不可能一一定义路由，这个时候就需要用到 **动态路由**。
+- **动态路由** 是指 **路由地址中的一部分** 是 **动态的**，比如：
+  - /blog/1
+  - /blog/2
+  - /blog/3
+- 这里的 1、2、3 是动态的，我们可以通过这个值来获取不同的数据。
+- 动态路由的实现方式有两种：
+  - 使用文件系统
+  - 使用路由组
+
+### 使用文件系统
+
+#### [folderName]
+
+- 使用文件系统的方式，你可以在 pages 目录下创建一个动态路由文件，**文件名使用方括号（[]）包裹**动态参数。
+
+  - 比如 [id]、[slug]。
+  - 这个路由的名字会作为 params prop 传给 **布局**、 **页面**、 **路由处理程序** 以及 **generateMetadata 函数**。
+
+- 举个例子，我们在 app/blog 目录下新建一个名为 [slug] 的文件夹，在该文件夹新建一个 page.js 文件，代码如下：
+
+```js
+// app/blog/[slug]/page.js
+export default function Page({ params }) {
+  return <div>My Post: {params.slug}</div>
+}
+```
+
+- 效果
+  - 路由地址：/blog/hello-world
+  - 页面内容：My Post: hello-world
+- 当你访问 /blog/a 的时候，params 的值为 { slug: 'a' }。
+- 当你访问 /blog/yayu 的时候，params 的值为 { slug: 'yayu' }。
+- 以此类推。
+
+#### [...folderName]
+
+- 在命名文件夹的时候，如果你在方括号内添加省略号，比如 [...folderName]，这表示 -> 捕获所有后面 **所有的路由片段**。
+
+- 也就是说:
+
+  - app/shop/[...slug]/page.js
+    - 会匹配 /shop/clothes
+    - 也会匹配 /shop/clothes/tops、/shop/clothes/tops/t-shirts 等等。
+
+- 举个例子，app/shop/[...slug]/page.js 的代码如下：
+
+```js
+// app/shop/[...slug]/page.js
+export default function Page({ params }) {
+  return <div>My Shop: {JSON.stringify(params)}</div>
+}
+```
+
+- 效果如下：
+  - 路由地址：/shop/clothes/tops/t-shirts
+  - 页面内容：My Shop: { "slug": ["clothes", "tops", "t-shirts"] }
+- 当你访问 /shop/a 的时候，params 的值为 { slug: ['a'] }
+- 当你访问 /shop/a/b 的时候，params 的值为 { slug: ['a', 'b'] }
+- 当你访问 /shop/a/b/c 的时候，params 的值为 { slug: ['a', 'b', 'c'] }
+- 以此类推。
+
+#### [[...folderName]]
+
+- 如果你想要匹配所有的路由片段，包括根路径，可以使用双方括号，比如 [[...folderName]]。
+- 也就是说:
+  - app/shop/[[...slug]]/page.js
+    - 会匹配 /shop，
+    - 也会匹配 /shop/clothes、 /shop/clothes/tops、/shop/clothes/tops/t-shirts 等等。
+- 它与上一种的区别就在于，不带参数的路由也会被匹配（就比如 /shop）
+
+- 举个例子，app/shop/[[...slug]]/page.js 的代码如下：
+
+```js
+// app/shop/[[...slug]]/page.js
+export default function Page({ params }) {
+  return <div>My Shop: {JSON.stringify(params)}</div>
+}
+```
+
+- 效果如下：
+  - 路由地址：/shop/clothes/tops/t-shirts
+  - 页面内容：My Shop: { "slug": ["clothes", "tops", "t-shirts"] }
+- 当你访问 /shop 的时候，params 的值为 {}。
+- 当你访问 /shop/a 的时候，params 的值为 { slug: ['a'] }。
+- 当你访问 /shop/a/b 的时候，params 的值为 { slug: ['a', 'b'] }。
+- 当你访问 /shop/a/b/c 的时候，params 的值为 { slug: ['a', 'b', 'c'] }
+- 以此类推。
+
+### 路由组（Route groups）
+
+- 除了使用 **文件系统** 的方式，你还可以使用 **路由组的方式** 来 **实现动态路由**。
+- 在 app 目录下，**文件夹名称** 通常会被映射到 **URL 中**。
+
+  - 但你可以将 **文件夹** 标记为 **路由组**，**阻止** -> 文件夹名称 -> 被映射到 URL 中。
+
+- 使用路由组，你可以将 **路由**和 **项目文件** 按照 **逻辑进行分组**，但不会影响 URL 路径结构。
+  - 路由组可用于比如：
+    - 按站点、意图、团队等将路由分组
+    - 在同一层级中创建多个布局，甚至是创建多个根布局
+- 那么该如何标记呢？把文件夹用括号括住就可以了，就比如 (dashboard)。
+- 举些例子：
+
+#### 按逻辑分组
+
+- 将路由按逻辑分组，但不影响 URL 路径：
+
+```js
+app
+├─ (dashboard)
+│  ├─ settings
+│  │  └─ page.js
+│  └─ about
+│     └─ page.js
+└─ (blog)
+   └─ [slug]
+      └─ page.js
+```
+
+- 这样，dashboard 和 blog 就是路由组，不会被映射到 URL 中。
+  - 你可以通过 (dashboard) 和 (blog) 访问这两个路由组。
+    - 路由 1: /dashboard/settings -> /settings
+    - 路由 2: /dashboard/about -> /about
+    - 路由 4: /blog/hello-world -> /hello-world
+
+> 你会发现，最终的 URL 中省略了带括号的文件夹（上面中的(dashboard)和(blog)）
+
+#### 创建不同布局
+
+- 借助路由组，即便在同一层级，也可以创建不同的布局：
+
+```js
+app
+├─ lauout.js
+├─ (shop)
+│  ├─ layout.js
+│  ├─ account
+│  │  └─ page.js
+│  └─ cart
+│     └─ page.js
+└─ checkout
+    └─ page.js
+```
+
+- 在这个例子中，/account 、/cart、/checkout 都在同一层级。
+- 但是:
+  - /account 和 /cart 使用的是:
+    - /app/(shop)/layout.js 布局和 app/layout.js 布局，
+  - /checkout 使用的是:
+    - app/layout.js
+
+#### 创建多个根布局
+
+- 有时候，你可能需要为不同的页面创建不同的根布局。
+- 你可以使用路由组来实现这一点：
+
+```js
+app
+├─ (dashboard)
+│  └─ layout.js
+│  ├─ settings
+│  │  └─ page.js
+└─ (blog)
+   └─ layout.js
+   └─ [slug]
+      └─ page.js
+```
+
+- 创建多个根布局，你需要删除掉 app/layout.js 文件，然后在每组都创建一个 layout.js 文件。
+- 创建的时候要注意，因为是根布局，所以要有 <html> 和 <body> 标签。
+
+- 这个功能很实用，比如:
+
+  - 你将 **前台购买页面** 和 **后台管理页面** 都放在一个项目里。
+  - 一个 C 端，一个 B 端，两个项目的布局肯定不一样。
+  - 借助路由组，就可以轻松实现区分。
+
+- 再多说几点：
+  1. 路由组的命名：
+     - 除了 **用于组织** 之外并无特殊意义。它们不会影响 URL 路径。
+  2. 注意**不要解析为相同的 URL 路径**。
+     - 举个例子，因为路由组不影响 URL 路径，所以：
+       - (marketing)/about/page.js 和 (shop)/about/page.js 都会解析为 /about，这会导致报错。
+  3. 创建 **多个根布局** 的时候，因为删除了顶层的 app/layout.js 文件，访问 /会报错，所以：
+     - **app/page.js 需要定义在其中一个路由组中**。
+  4. **跨根布局导航** -> 会导致 -> **页面完全重新加载**，就比如:
+     - app/(shop)/layout.js 根布局下的 /cart 跳转到 app/(marketing)/layout.js 根布局下的 /blog 会导致:
+       - **页面重新加载（full page load）。**
+
+> 注：当定义多个根布局的时候，使用 app/not-found.js 会出现问题。因为 not-found.js 是定义在 app 目录下的，所以会被所有的根布局共享。
+
+## 平行路由（Parallel Routes）
+
+- 有时候，你可能需要在同一层级下创建多个路由，但这些路由并不是嵌套关系。
+- 这种情况下，你可以使用平行路由。
+- 平行路由可以使你在 **同一个布局中** -> **同时或者有条件的渲染** 一个或者多个页面（类似于 Vue 的插槽功能）。
+
+### 用途 1：条件渲染
+
+- 举个例子，在后台管理页面，需要同时展示 **团队（team）**和 **数据分析（analytics）**页面：
+  - 但是，这两个页面并不是嵌套关系，而是平行关系。
+  - 这时候，你可以使用平行路由来实现。
+- 平行路由的使用方式是将文件夹以 @作为开头进行命名：
+  - 让我们定义两个插槽 @team 和 @analytics。
+
+```js
+app
+├─ layout.js
+├─ page.js
+├─ @team
+│  └─ page.js
+└─ @analytics
+   └─ page.js
+```
+
+- 插槽会作为 props 传给共享的父布局。
+- 在上图中，app/layout.js 从 props 中获取了 @team 和 @analytics 两个插槽的内容，并将其与 children 并行渲染：
+
+```js
+// app/layout.js
+export default function Layout({ children, team, analytics }) {
+  return (
+    <html>
+      <body>
+        <div>
+          {/* 这里渲染平行路由的内容 */}
+          {children} {/* children 用来渲染嵌套的子页面 */}
+        </div>
+        <div>
+          <h2>Team</h2>
+          {team} {/* 这里是平行路由的 Team 页面 */}
+        </div>
+        <div>
+          <h2>Analytics</h2>
+          {analytics} {/* 这里是平行路由的 Analytics 页面 */}
+        </div>
+      </body>
+    </html>
+  )
+}
+```
+
+> 注：从这张图也可以看出，children prop 其实就是一个隐式的插槽，/app/page.js 相当于 app/@children/page.js。
+
+- 除了让它们同时展示，你也可以根据条件判断展示：
+  - 比如，当用户是管理员时，展示 @team 页面，否则展示 @analytics 页面。
+  - 登陆状态也可以作为条件，比如：
+    - 当用户未登录时，展示登录页面，登录后展示主页。
+
+### 用途 2：独立路由处理
+
+- 平行路由可以让你为每个路由定义独立的错误处理和加载界面：
+  - 比如，你可以为 @team 和 @analytics 页面定义独立的 loading.js 和 error.js 文件。
+
+```js
+app
+├─ layout.js
+├─ page.js
+├─ loading.js
+├─ error.js
+├─ @team
+│  ├─ page.js
+│  ├─ loading.js
+│  └─ error.js
+└─ @analytics
+   ├─ page.jsa s d s
+   ├─ loading.js
+   └─ error.js
+```
+
+### 总结
+
+- 最后，让我们总结一下使用平行路由的优势：
+  - 使用平行路由可以将单个布局拆分为多个插槽，使代码更易于管理，尤其适用于团队协作的时候。
+  - 每个插槽都可以定义自己的加载界面和错误状态:
+    - 比如某个插槽加载速度比较慢，那就可以加一个加载效果，加载期间，也不会影响其他插槽的渲染和交互。
+    - 当出现错误的时候，也只会在具体的插槽上出现错误提示，而不会影响页面其他部分，有效改善用户体验。
+  - 每个插槽都可以有自己 **独立的导航** 和 **状态管理**，这使得插槽的功能更加丰富，比如:
+    - 在 @analytics 插槽下又建了:
+      - 查看页面 PV 的 /page-views
+      - 查看访客的 /visitors
+    - 使得同一个插槽区域可以根据路由显示不同的内容
+- 那你可能要问了，我就不使用平行路由，我就完全使用拆分组件的形式，加载状态和错误状态全都自己处理，子路由也统统自己处理，可不可以？
+  - 当然是可以的，只要不嫌麻烦的话……
+
+> 注意：使用平行路由的时候，热加载有可能会出现错误。
+> 如果出现了让你匪夷所思的情况，重新运行 npm run dev 或者构建生产版本查看效果。
+
+## 拦截路由（Intercepting Routes）
+
+- 本篇我们来讲解 Next.js 中的拦截路由。
+- 有的时候，你可能需要在路由**跳转之前**或者**之后**执行一些操作，比如：
+  - 记录用户的访问日志
+  - 检查用户的登录状态
+  - 重定向用户到其他页面
+- 这时候，你可以使用拦截路由来实现。
+
+### 实现方式
+
+- 那么这个效果该如何实现呢？在 Next.js 中，实现拦截路由需要你在命名文件夹的时候以 (..) 开头，其中：
+  - (.) 表示匹配同一层级
+  - (..) 表示匹配上一层级
+  - (..)(..) 表示匹配上上层级。
+  - (...) 表示匹配根目录
+- 但是要注意的是：
+  - 这个匹配的是 -> 路由的层级 -> 而不是 -> 文件夹路径的层级。
+  - 就比如 **路由组**、**平行路由** 这些不会影响 URL 的文件夹 -> 就不会被计算层级。
+- 看个例子：
+  - /feed/(..)photo 对应的路由是 /feed/photo，要拦截的路由是 /photo，两者只差了一个层级，所以使用 (..)
+
+### 小结
+
+- 这一节我们介绍了：
+  - 动态路由 -> [] -> 动态数据
+  - 路由组 -> () -> 组织代码
+  - 平行路由 -> (.) -> 同时渲染
+  - 拦截路由 -> (@) -> 拦截路由
+- 它们的共同特点就需要对文件名进行修饰。
+- 其中：
+  - **动态路由** 用来 **处理动态的链接**
+  - **路由组** 用来 **组织代码**
+  - **平行路由** 和 **拦截路由** 则是处理 -> 实际开发中会遇到的场景问题。
+    - **平行路由** 和 **拦截路由** 初次理解的时候可能会有些难度。
+
+## 路由处理程序
+
+- 路由处理程序是指:
+  - 使用 Web Request 和 Response API 对于 -> **给定的路由** -> **自定义处理逻辑**。
+- 简单的来说，前后端分离架构中，客户端与服务端之间通过 API 接口来交互。
+- 这个“API 接口”在 Next.js 中有个更为正式的称呼，就是**路由处理程序**。
+  - 也就是说，路由处理程序就是一个 API 接口，用于处理客户端请求。
+
+## 定义路由处理程序
+
+- 写路由处理程序，你需要定义一个名为 route.js 的特殊文件。（注意是 route 不是 router）
+- 该文件必须在 app 目录下，可以在 app 嵌套的文件夹下
+- 但是要注意: **page.js 和 route.js 不能在同一层级同时存在**。
+
+- 想想也能理解，page.js 和 route.js 本质上都是对路由的响应。
+  - page.js 主要负责渲染 UI
+  - route.js 主要负责处理请求。
+- 如果同时存在，Next.js 就不知道用谁的逻辑了。
+
+### GET 请求
+
+- 让我们从写 GET 请求开始，比如写一个获取文章列表的接口。
+
+- 新建 app/api/posts/route.js 文件，代码如下：
+
+```js
+import { NextResponse } from 'next/server'
+
+export async function GET() {
+  const res = await fetch('https://jsonplaceholder.typicode.com/posts')
+  const data = await res.json()
+
+  return NextResponse.json({ data })
+}
+```
+
+- 浏览器访问 <http://localhost:3000/api/posts，即可查看接口返回的数据。>
+- 我们使用 next/server 的 NextResponse 对象用于设置响应内容。
+  - 但这里不一定非要用 NextResponse，直接使用 Response 也是可以的。
+- 但在实际开发中，推荐使用 NextResponse。
+  - 因为它是 Next.js 基于 Response 的封装
+  - 它对 TypeScript 更加友好
+  - 同时提供了更为方便的用法
+  - 比如获取 Cookie 等。
+
+### 支持方法
+
+- Next.js 支持 GET、POST、PUT、PATCH、DELETE、HEAD 和 OPTIONS 这些 HTTP 请求方法。
+- 如果传入了不支持的请求方法，Next.js 会返回 405 Method Not Allowed。
+
+### 传入参数
+
+- 现在让我们具体看下请求方法。
+- 每个请求方法的 -> 处理函数 -> 会被传入两个参数:
+  - 一个 request
+  - 一个 context
+  - 两个参数都是可选的：
+
+```js
+export async function GET(request, context) {}
+```
+
+#### request (optional)
+
+- request 对象是一个 NextRequest 对象，它是基于 Web Request API 的扩展。
+- 使用 request ，你可以 **快捷读取 cookies 和处理 URL**。
+
+- 我们这里讲讲如何获取 URL 参数：
+
+```js
+export async function GET(request, context) {
+  //  访问 /home, pathname 的值为 /home
+  const pathname = request.nextUrl.pathname
+
+  // 访问 /home?name=lee, searchParams 的值为 { 'name': 'lee' }
+  const searchParams = request.nextUrl.searchParams
+}
+```
+
+- 其中 nextUrl 是基于 Web URL API 的扩展（如果你想获取其他值，参考 URL API），同样提供了一些方便使用的方法。
+
+#### context (optional)
+
+- 目前 context 只有一个值就是 params，它是一个 **包含 当前 动态路由 参数的对象**。举个例子：
+
+```js
+// app/dashboard/[team]/route.js
+export async function GET(request, { params }) {
+  const team = params.team
+}
+```
+
+- 当访问 /dashboard/1 时，params 的值为 { team: '1' }。其他情况还有：
+  - **app/dashboard/[team]/route.js:**
+    - url: /dashboard/1
+    - params: { team: '1' }
+  - **app/shop/[tag]/[item]/route.js**
+    - url: /shop/clothes/tops
+    - params: { tag: 'clothes', item: 'tops' }
+  - **app/blog/[...slug]/route.js**
+    - url: /blog/hello-world
+    - params: { slug: ['hello-world'] }
+
+> 注意第二行：此时 params 返回了 -> 当前链接 -> 所有的动态路由参数。
+
+### 缓存行为
+
+#### 默认缓存
+
+- 默认情况下，使用 Response 对象（NextResponse 也是一样的）的 GET 请求会被缓存。
+
+- 让我们举个例子，新建 app/api/time/route.js，代码如下：
+
+```js
+export async function GET() {
+  console.log('GET /api/time')
+  return Response.json({ data: new Date().toLocaleTimeString() })
+}
+```
+
+> 注意：在 **开发模式(dev)** 下，并不会被缓存，每次刷新时间都会改变.
+
+- 部署 **生产版本(prod)**，运行 npm run build && npm run start：
+  - 时间会被缓存，刷新页面时间 **不会改变**。
+  - 可是为什么呢？Next.js 是怎么实现的呢？
+  - 让我们看下构建（npm run build）时的命令行输出：
+    - 根据输出的结果，你会发现 **/api/time 是静态的**，也就是被预渲染为静态的内容.
+    - 换言之，/api/time 的返回结果:
+      - 在 **构建的时候** 就已经确定了
+      - 而不是在 **第一次请求的时候** 才确定。
+
+#### 手动设置缓存
+
+- export const dynamic = 'force-dynamic'，这样就会强制缓存。
+- export const revalidate = 10，这样就会设置缓存时间为 10 秒。
+  - 这句代码的效果：
+    - 并不是设置服务器每 10s 会自动更新一次 /api/time。
+    - 而是最少 10s 后才重新验证。
+- next: { revalidate: 5 }，这样就会设置缓存时间为 5 秒。
+  - 如果你使用生产版本，虽然在构建的时候，/api/image 显示的是静态渲染，但是数据会更新。
+
+---
+
+## 写接口常见问题
+
+### 如何获取网址参数？
+
+```js
+// app/api/search/route.js
+// 访问 /api/search?query=hello
+export function GET(request) {
+  const searchParams = request.nextUrl.searchParams
+  const query = searchParams.get('query') // query
+}
+```
+
+### 如何处理 Cookie？
+
+- 第一种方法是通过 NextRequest 对象：
+
+```js
+// app/api/route.js
+// 其中，request 是一个 NextRequest 对象
+export async function GET(request) {
+  const token = request.cookies.get('token')
+  request.cookies.set(`token2`, 123)
+}
+```
+
+- NextRequest 相比 Request 提供了更为便捷的用法，这就是一个例子。
+
+- 此外，虽然我们使用 set 设置了 cookie。
+  - 但设置的是 **请求的 cookie**。
+  - 并没有设置 **响应的 cookie**。
+
+---
+
+- 第二种方法是通过 **next/headers 包** -> 提供的 cookies 方法。
+- 因为 cookies 实例只读，如果你要设置 Cookie，你需要:
+  返回一个 **使用 Set-Cookie header 的 Response 实例**。示例代码如下：
+
+```js
+// app/api/route.js
+import { cookies } from 'next/headers'
+ 
+export async function GET(request) {
+  const cookieStore = cookies()
+  const token = cookieStore.get('token')
+ 
+  return new Response('Hello, Next.js!', {
+    status: 200,
+    headers: { 'Set-Cookie': `token=${token}` },
+  })
+}
+```
+
+### 如何处理 Headers ？
+
+- 第一种方法是通过 NextRequest对象：
+
+```js
+// app/api/route.js
+import { cookies } from 'next/headers'
+ 
+export async function GET(request) {
+  const headersList = new Headers(request.headers)
+  const referer = headersList.get('referer')
+}
+```
+
+---
+
+- 第二种方法是next/headers包提供的 headers 方法。
+- 因为 headers 实例只读，如果你要设置 headers，你需要返回一个使用了新 header 的 Response 实例。
+  - 使用示例如下：
+
+```js
+// app/api/route.js
+import { headers } from 'next/headers'
+ 
+export async function GET(request) {
+  const headersList = headers()
+  const referer = headersList.get('referer')
+ 
+  return new Response('Hello, Next.js!', {
+    status: 200,
+    headers: { referer: referer },
+  })
+}
+```
+
+### 如何设置 CORS ？
+
+```js
+// app/api/route.ts
+export async function GET(request) {
+  return new Response('Hello, Next.js!', {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
+}
+```
+
+### Streaming
+
+- 直接使用底层的 Web API 实现 Streaming：
+
+```js
+// app/api/route.js
+// https://developer.mozilla.org/docs/Web/API/ReadableStream#convert_async_iterator_to_stream
+function iteratorToStream(iterator) {
+  return new ReadableStream({
+    async pull(controller) {
+      const { value, done } = await iterator.next()
+ 
+      if (done) {
+        controller.close()
+      } else {
+        controller.enqueue(value)
+      }
+    },
+  })
+}
+ 
+function sleep(time) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, time)
+  })
+}
+ 
+const encoder = new TextEncoder()
+ 
+async function* makeIterator() {
+  yield encoder.encode('<p>One</p>')
+  await sleep(200)
+  yield encoder.encode('<p>Two</p>')
+  await sleep(200)
+  yield encoder.encode('<p>Three</p>')
+}
+ 
+export async function GET() {
+  const iterator = makeIterator()
+  const stream = iteratorToStream(iterator)
+ 
+  return new Response(stream)
+}
+```
+
+- 客户端调用：
+
+```js
+// 客户端代码，假设API路由的URL是'/api/route'
+async function fetchStream() {
+  const response = await fetch('/api/route');
+  
+  // 检查响应是否成功
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  // 获取流的读取器
+  const reader = response.body.getReader();
+
+  // 异步读取流中的数据
+  async function readStream() {
+    let done = false;
+    while (!done) {
+      const { value, done: streamDone } = await reader.read();
+      if (streamDone) {
+        done = true;
+        console.log('Stream closed.');
+      } else {
+        // 处理读取到的数据块，这里假设数据是Uint8Array类型
+        const textDecoder = new TextDecoder();
+        const text = textDecoder.decode(value);
+        console.log(text); // 输出: <p>One</p>，然后<p>Two</p>，最后<p>Three</p>
+      }
+    }
+  }
+
+  // 开始读取流
+  readStream();
+}
+
+// 调用函数来发起请求并处理响应
+fetchStream();
+```
+
+> 核心：获取流的读取器 -> const reader = response.body.getReader();
+
+### 小结（初识路由 route.js）
+
+- 新的约定文件 route.js
+  - 切记 route.js 不能跟同级的 page.js 一起使用。
+
+---
+
+## 中间件（Middleware）
+
+- 使用中间件，你可以拦截并控制应用里的所有请求和响应。
+- 比如你可以 **基于传入的请求**：
+  - 重写
+  - 重定向
+  - 修改请求
+  - 响应头
+  - 响应内容
+- 一个比较常见的应用就是 **鉴权**，在打开页面渲染具体的内容前，先判断用户是否登录，如果未登录，则跳转到登录页面。
+
+### 定义
+
+```js
+// middleware.js
+import { NextResponse } from 'next/server'
+ 
+// 中间件可以是 async 函数，如果使用了 await
+export function middleware(request) {
+  return NextResponse.redirect(new URL('/home', request.url))
+}
+
+// 设置匹配路径
+export const config = {
+  matcher: '/about/:path*',
+}
+```
+
+> 注意：这里说的项目根目录指的是和 pages 或 app 同级。但如果项目用了 src目录，则放在 src下。
+
+#### path-to-regexp
+
+- 初次接触的同学可能会对 :path* 这样的用法感到奇怪，这个用法来自于 path-to-regexp 这个库。
+- 它的作用就是将 /user/:name这样的路径字符串转换为正则表达式。
+- Next.js 背后用的正是 path-to-regexp 解析地址。
+- 作为一个有着十年历史的开源库，path-to-regexp 还被 express、react-router、vue-router 等多个知名库引用。
+
+> 所以不妨让我们多多了解一下。
+
+- path-to-regexp 通过在 **参数名前** 加一个冒号来 -> 定义命名参数（Named Parameters）。
+  - matcher 支持命名参数，比如：
+    - /about/:path
+      - 匹配 /about/a 和 /about/b
+      - 但是不匹配 /about/a/c
+
+> 注：实际测试的时候，/about/:path 并不能匹配 /about/xxx，只能匹配 /about，如果要匹配 /about/xxx，需要写成 /about/:path/
+
+- 命名参数的默认匹配逻辑是:
+  - [^/]+
+  - 但你也可以在命名参数后加一个括号，在其中自定义命名参数的匹配逻辑，比如:
+    - /about/icon-:foo(\\d+).png 匹配 /about/icon-1.png，但不匹配 /about/icon-a.png。
+- 命名参数可以使用修饰符，其中:
+  - '*' 表示 0 个或 1 个或多个
+  - '?' 表示 0 个或 1 个
+  - '+' 表示 1 个或多个
+  - 比如:
+    - /about/:path* 匹配 /about、/about/xxx、/about/xxx/xxx
+    - /about/:path? 匹配 /about、/about/xxx
+    - /about/:path+ 匹配 /about/xxx、/about/xxx/xxx
+- 也可以在圆括号中使用标准的正则表达式，比如:
+  - /about/(.*) 等同于 /about/:path*
+  - /(about|settings) 匹配 /about 和 /settings，不匹配其他的地址
+  - /user-(ya|yu)匹配 /user-ya和 /user-yu
+  
+- 一个较为复杂和常用的例子是：
+
+```js
+export const config = {
+  matcher: [
+    /*
+     * 匹配所有的路径除了以这些作为开头的：
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+  ],
+}
+```
+
+- 除此之外，还要注意，路径必须以 / 开头。
+- matcher 的值必须是常量，这样可以在构建的时候被 **静态分析**。
+- 使用变量之类的动态值会被忽略。
+
+---
+
+- matcher 的强大可远不止正则表达式，matcher 还可以 **判断查询参数**、**cookies**、**headers**：
+
+```js
+export const config = {
+  matcher: [
+    {
+      source: '/api/*',
+      has: [
+        { type: 'header', key: 'Authorization', value: 'Bearer Token' },
+        { type: 'query', key: 'userId', value: '123' },
+      ],
+      missing: [{ type: 'cookie', key: 'session', value: 'active' }],
+    },
+  ],
+}
+```
+
+- 在这个例子中:
+  - 匹配了路由地址
+  - 要求 header 的 Authorization 必须是 Bearer Token
+  - 查询参数的 userId 为 123
+  - cookie 里的 session 值不是 active
+
+#### 条件语句
+
+- 第二种方法是使用条件语句:
+
+```js
+import { NextResponse } from 'next/server'
+ 
+export function middleware(request) {
+  if (request.nextUrl.pathname.startsWith('/about')) {
+    return NextResponse.rewrite(new URL('/about-2', request.url))
+  }
+ 
+  if (request.nextUrl.pathname.startsWith('/dashboard')) {
+    return NextResponse.rewrite(new URL('/dashboard/user', request.url))
+  }
+}
+```
+
+> matcher 很强大，可有的时候不会写真的让人头疼，那就在具体的逻辑里写！
+
+### 中间件逻辑
+
+- 接下来我们看看中间件具体该怎么写：
+
+```js
+export function middleware(request) {
+  // 如何 读取和设置 cookies ？
+  // 如何 读取 headers ？
+  // 如何 直接响应?
+}
+```
+
+#### 如何 读取和设置 cookies？
+
+- 用法跟路由处理程序一致，使用 NextRequest 和 NextResponse -> **快捷读取和设置 cookies**。
+
+- 对于传入的请求，NextRequest 提供了:
+  - get
+  - getAll
+  - set
+  - delete
+- 方法处理 cookies。
+- 你也可以用：
+  - has 检查 cookie
+  - clear 删除所有的 cookies。
+
+- 对于返回的响应，NextResponse 同样提供了：
+  - get
+  - getAll
+  - set
+  - delete
+- 方法处理 cookies。示例代码如下：
+
+```js
+import { NextResponse } from 'next/server'
+ 
+export function middleware(request) {
+  // 假设传入的请求 header 里 "Cookie:nextjs=fast"
+  let cookie = request.cookies.get('nextjs')
+  console.log(cookie) // => { name: 'nextjs', value: 'fast', Path: '/' }
+  const allCookies = request.cookies.getAll()
+  console.log(allCookies) // => [{ name: 'nextjs', value: 'fast' }]
+ 
+  request.cookies.has('nextjs') // => true
+  request.cookies.delete('nextjs')
+  request.cookies.has('nextjs') // => false
+ 
+  // 设置 cookies
+  const response = NextResponse.next()
+  response.cookies.set('vercel', 'fast')
+  response.cookies.set({
+    name: 'vercel',
+    value: 'fast',
+    path: '/',
+  })
+  cookie = response.cookies.get('vercel')
+  console.log(cookie) // => { name: 'vercel', value: 'fast', Path: '/' }
+  
+  // 响应 header 为 `Set-Cookie:vercel=fast;path=/test`
+  return response
+}
+```
+
+- 在这个例子中，我们调用了 NextResponse.next() 这个方法。
+- 这个方法专门用在 middleware 中，毕竟我们写的是中间件：
+  - 中间件进行一层处理后，返回的结果还要在下一个逻辑中继续使用，此时就需要返回 NextResponse.next()。
+  - 当然如果不需要再走下一个逻辑了，可以直接返回一个 Response 实例。
+
+#### 如何读取和设置 headers？
+
+- 用法跟路由处理程序一致，使用 NextRequest 和 NextResponse 快捷读取和设置 headers。示例代码如下：
+  
+```js
+// middleware.js 
+import { NextResponse } from 'next/server'
+ 
+export function middleware(request) {
+  //  clone 请求标头
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-hello-from-middleware1', 'hello')
+ 
+  // 你也可以在 NextResponse.rewrite 中设置请求标头
+  const response = NextResponse.next({
+    request: {
+      // 设置新请求标头
+      headers: requestHeaders,
+    },
+  })
+ 
+  // 设置新响应标头 `x-hello-from-middleware2`
+  response.headers.set('x-hello-from-middleware2', 'hello')
+  return response
+}
+```
+
+#### CORS
+
+- 这是一个在实际开发中会用到的设置 CORS 的例子：
+
+```js
+import { NextResponse } from 'next/server'
+ 
+const allowedOrigins = ['https://acme.com', 'https://my-app.org']
+ 
+const corsOptions = {
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+ 
+export function middleware(request) {
+  // Check the origin from the request
+  const origin = request.headers.get('origin') ?? ''
+  const isAllowedOrigin = allowedOrigins.includes(origin)
+ 
+  // Handle preflighted requests
+  const isPreflight = request.method === 'OPTIONS'
+ 
+  if (isPreflight) {
+    const preflightHeaders = {
+      ...(isAllowedOrigin && { 'Access-Control-Allow-Origin': origin }),
+      ...corsOptions,
+    }
+    return NextResponse.json({}, { headers: preflightHeaders })
+  }
+ 
+  // Handle simple requests
+  const response = NextResponse.next()
+ 
+  if (isAllowedOrigin) {
+    response.headers.set('Access-Control-Allow-Origin', origin)
+  }
+ 
+  Object.entries(corsOptions).forEach(([key, value]) => {
+    response.headers.set(key, value)
+  })
+ 
+  return response
+}
+ 
+export const config = {
+  matcher: '/api/:path*',
+}
+```
+
+#### 如何直接响应?
+
+- 用法跟路由处理程序一致，使用 NextResponse 设置返回的 Response。示例代码如下：
+
+```js
+import { NextResponse } from 'next/server'
+import { isAuthenticated } from '@lib/auth'
+
+export const config = {
+  matcher: '/api/:function*',
+}
+ 
+export function middleware(request) {
+  // 鉴权判断
+  if (!isAuthenticated(request)) {
+    // 返回错误信息
+    return new NextResponse(
+      JSON.stringify({ success: false, message: 'authentication failed' }),
+      { status: 401, headers: { 'content-type': 'application/json' } }
+    )
+  }
+}
+```
+
+### 小结（中间件）
+
+- 中间件是 Next.js 中的一个重要概念，它可以拦截并控制应用里的所有请求和响应。
+- 中间件的定义方式是在 app 目录下创建一个名为 middleware.js 的文件。
+- 中间件的配置是通过 config 对象来实现的，其中 matcher 是必须的。
+- matcher 可以是字符串、正则表达式、数组、对象等多种形式。
+- matcher 的值必须是常量，这样可以在构建的时候被静态分析。
+- 中间件的逻辑是一个函数，它接收一个 request 对象，返回一个 NextResponse 对象。
+- 中间件的逻辑可以是异步函数，如果使用了 await，那么返回值也必须是一个 Promise 对象。
+- 中间件的逻辑可以读取和设置 cookies、headers，也可以直接响应。
+- 中间件的逻辑可以是条件语句，根据不同的条件返回不同的结果。
+- 中间件的逻辑可以是一个函数，也可以是一个对象，对象中包含了 matcher 和 middleware 两个属性。
+
+### 执行顺序
+
+- 在 Next.js 中，有很多地方都可以 **设置路由的响应**，比如:
+  - next.config.js 中
+  - 中间件中
+  - 具体的路由中
+- 所以要注意它们的执行顺序：
+  1. headers（next.config.js）
+  2. redirects（next.config.js）
+  3. 中间件 (rewrites, redirects 等)
+  4. beforeFiles (next.config.js中的rewrites)
+  5. 基于文件系统的路由 (public/, _next/static/, pages/, app/ 等)
+  6. afterFiles (next.config.js中的rewrites)
+  7. 动态路由 (/blog/[slug])
+  8. fallback 中的 (next.config.js中的rewrites)
+- 注：
+  - beforeFiles：基于 **文件系统的路由** 之前。
+  - afterFiles：基于 **文件系统的路由** 之后。
+  - fallback：**垫底执行**。
+
+> tips: 路由重定向是逐级捕捉，且链路是传递的，所以在中间件中设置的重定向会被后续的路由处理程序覆盖。若是想后面捕捉到前面，后一个重定向的捕获路径，应为前一个捕获的 **重定向路径**。
+
+#### 面试题：解释一下 Next.js 中 beforeFiles、afterFiles 和 fallback 的区别，以及为什么有时会跳到 fallback 而不是匹配成功？
+
+- 首先要知道：在 Next.js 中，beforeFiles、afterFiles 和 fallback 是用于路径重写的三个机制。它们的顺序执行如下：
+  1. beforeFiles
+  2. 基于文件系统的路由
+  3. afterFiles
+  4. 动态路由
+  5. fallback
+- 而规则是：
+  1. beforeFiles 优先匹配，匹配成功会 **重写路径**。
+  2. 如果路径未匹配，接着会匹配 afterFiles。
+  3. 如果所有匹配规则都失败，最终会进入 fallback。
+- 我遇到一个常见陷阱：
+  - 如果在 beforeFiles 中进行了路径重写，比如把 /custom 重写成了 /not-match。
+  - 如果后续的 afterFiles 想匹配路径 /custom，但实际路径已被重写为 /not-match，匹配失败。
+  - 导致 Next.js 直接跳转到 fallback。
+- 如何解决这个问题？
+  - 我们需要确保 afterFiles 匹配的是实际重写后的路径，而不是原路径
+  - 比如在 beforeFiles 中重写了 /custom 为 /not-match，那么在 afterFiles 中应该匹配 /not-match，而不是 /custom。
+
+#### 优化建议
+
+- 如果希望控制终止匹配，推荐使用 Middleware。
+  - 适合处理更复杂的匹配逻辑。
+- 如果依赖纯 rewrites，则要显式控制 beforeFiles 和 afterFiles 的匹配优先级，且自行终止链条逻辑。否则会被向下传递。
+
+### 运行时
+
+- 使用 Middleware 的时候还要注意一点，那就是目前 Middleware 只支持 Edge runtime，并不支持 Node.js runtime。
+  - 这意味着写 Middleware 的时候，尽可能使用 Web API，避免使用 Node.js API。
+
+### 中间件的代码维护
+
+- 如果项目比较简单，中间件的代码通常不会写很多，将所有代码写在一起倒也不是什么太大问题。
+- 可当项目复杂了，比如在中间件里 **又要鉴权、又要控制请求、又要国际化** 等等，各种逻辑写在一起，中间件 很快就变得 **难以维护**。
+- 如果我们要在 中间件 里实现 **多个需求**，该怎么合理的拆分代码呢？
+- 一种简单的方式是：
+
+```js
+import { NextResponse } from 'next/server'
+
+async function middleware1(request) {
+  console.log(request.url)
+  return NextResponse.next()
+}
+
+async function middleware2(request) {
+  console.log(request.url)
+  return NextResponse.next()
+}
+
+export async function middleware(request) {
+  await middleware1(request)
+  await middleware2(request)
+}
+
+export const config = {
+  matcher: '/api/:path*',
+}
+```
+
+- 一种更为优雅的方式是借助高阶函数：
+
+```js
+import { NextResponse } from 'next/server'
+
+function withMiddleware1(middleware) {
+  return async (request) => {
+    console.log('middleware1 ' + request.url)
+    return middleware(request)
+  }
+}
+
+function withMiddleware2(middleware) {
+  return async (request) => {
+    console.log('middleware2 ' + request.url)
+    return middleware(request)
+  }
+}
+
+async function middleware(request) {
+  console.log('middleware ' + request.url)
+  return NextResponse.next()
+}
+
+export default withMiddleware2(withMiddleware1(middleware))
+
+export const config = {
+  matcher: '/api/:path*',
+}
+```
+
+- 请问此时的执行顺序是什么？试着打印一下吧。是不是感觉回到了学 redux 的时候？
+- 但这样写起来还是有点麻烦，让我们写一个工具函数帮助我们：
+
+```js
+import { NextResponse } from 'next/server'
+
+function chain(functions, index = 0) {
+  const current = functions[index];
+  if (current) {
+    const next = chain(functions, index + 1);
+    return current(next);
+  }
+  return () => NextResponse.next();
+}
+
+function withMiddleware1(middleware) {
+  return async (request) => {
+    console.log('middleware1 ' + request.url)
+    return middleware(request)
+  }
+}
+
+function withMiddleware2(middleware) {
+  return async (request) => {
+    console.log('middleware2 ' + request.url)
+    return middleware(request)
+  }
+}
+
+export default chain([withMiddleware1, withMiddleware2]) // chain(withMiddleware1(withMiddleware2(() => NextResponse.next()())))
+
+export const config = {
+  matcher: '/api/:path*',
+}
+```
+
+---
+
+## 渲染
+
+- 以前学习 Next.js 可能是听说了 Next.js 一个框架就可以实现：
+  - CSR
+  - SSR
+  - SSG
+  - ISR
+- 这些功能。
+- 但在 Next.js v13 之后，Next.js 的渲染方式变得更加灵活，不再是一种渲染方式，而是多种渲染方式的组合。
+  - 也就是基于 React Server Components 的 App Router。
+- SSR、SSG 等名词在最新的文档中已经不再提及，取而代之的是：
+  - **Server Components**
+  - **App Router**
+  - **API Routes**
+  - **Middleware**
+- 少有提及（这些功能当然还在的）。
+- 但理解这些 名词 背后的 **原理和区别**，依然有助于我们理解和使用 Next.js。
+
+### CSR
+
+#### 1.1 概念介绍
+
+- 我们先从传统的 CSR 开始说起。
+- CSR，英文全称“Client-side Rendering”，中文翻译“客户端渲染”。
+  - 顾名思义，渲染工作主要在客户端执行。
+- **像我们传统使用 React 的方式，就是客户端渲染**。
+  - 浏览器会先 -> **下载一个非常小的 HTML 文件** 和 **所需的 JavaScript 文件**。
+  - 在 JavaScript 中 -> 执行:
+    - 发送请求
+    - 获取数据
+    - 更新 DOM
+    - 渲染页面
+  - 等操作。
+- 这样做最大的问题就是不够快。（SEO 问题是其次，现在的爬虫已经普遍能够支持 CSR 渲染的页面）
+- 在 **下载、解析、执行 JavaScript** 和 **请求数据** 没有返回前，页面不会完全呈现。
+
+#### 1.2 Next.js 实现 CSR
+
+- Next.js 支持 CSR，在 Next.js Pages Router 下有 **两种方式** 实现 **客户端渲染**。
+- 一种是在页面中使用 React useEffect hook。
+  - 而不是 **服务端的渲染方法**（比如 **getStaticProps** 和 **getServerSideProps**，这两个方法后面会讲到），举个例子：
+
+```js
+// pages/csr.js
+import React, { useState, useEffect } from 'react'
+ 
+export default function Page() {
+  const [data, setData] = useState(null)
+ 
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await fetch('https://jsonplaceholder.typicode.com/todos/1')
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const result = await response.json()
+      setData(result)
+    }
+ 
+    fetchData().catch((e) => {
+      console.error('An error occurred while fetching the data: ', e)
+    })
+  }, [])
+ 
+  return <p>{data ? `Your data: ${JSON.stringify(data)}` : 'Loading...'}</p>
+}
+```
+
+- 可以看到，请求由客户端发出，同时页面显示 loading 状态。
+  - 等数据返回后，主要内容在客户端进行渲染。
+
+- 第二种方法是：
+  - 在客户端使用数据获取的库比如 SWR（也是 Next.js 团队开发的）或 TanStack Query，举个例子：
+
+```js
+// pages/csr2.js
+import useSWR from 'swr'
+const fetcher = (...args) => fetch(...args).then((res) => res.json())
+
+export default function Page() {
+  const { data, error, isLoading } = useSWR(
+    'https://jsonplaceholder.typicode.com/todos/1',
+    fetcher
+  )
+ 
+  if (error) return <p>Failed to load.</p>
+  if (isLoading) return <p>Loading...</p>
+ 
+  return <p>Your Data: {data.title}</p>
+}
+```
+
+> 效果同上，只是使用了 SWR 这个库。
+
+### SSR
+
+#### 2.1. 概念介绍
+
+- SSR，英文全称“Server-side Rendering”，中文翻译“服务端渲染”。
+  - 顾名思义，渲染工作主要在服务端执行。
+- 比如打开一篇博客文章页面，没有必要 **每次都让客户端请求**，万一客户端网速不好呢？
+- 那干脆由 服务端直接 -> 请求接口、获取数据，然后渲染成 -> **静态的 HTML 文件** -> 返回给用户。
+- 虽然同样是 **发送请求**，但通常 **服务端的环境**（网络环境、设备性能）要 **好于客户端**，所以最终的渲染速度（首屏加载时间）也会更快。
+
+- 虽然总体速度是更快的，但因为 CSR 响应时，只用返回一个很小的 HTML。
+- 而 SSR 响应还要：
+  - 请求接口
+  - 渲染 HTML
+- 所以其 **响应时间 会更长**，对应到性能指标 TTFB (Time To First Byte)，SSR 更长。
+
+#### 2.2. Next.js 实现 SSR
+
+- Next.js 支持 SSR，我们使用 Pages Router 写个 demo：
+
+```js
+// pages/ssr.js
+export default function Page({ data }) {··········
+  return <p>{JSON.stringify(data)}</p>
+}
+ 
+export async function getServerSideProps() {
+  const res = await fetch(`https://jsonplaceholder.typicode.com/todos`)
+  const data = await res.json()
+ 
+  return { props: { data } }
+}
+```
+
+- 使用 SSR，你需要导出一个名为 getServerSideProps 的 async 函数。
+- 这个函数会在:
+  - 每次请求的时候被调用。
+  - 返回的数据会通过组件的 props 属性 **传递给组件**。
+  - 数据格式是 { props: { data } }。
+    - data的格式是 { data: 'xxx' }。
+    - value 可以是任意类型。
+
+- 你也可以在 getServerSideProps 中返回更多的数据，比如：
+  
+```js
+  export async function getServerSideProps() {
+    const res = await fetch(`https://jsonplaceholder.typicode.com/todos`)
+    const data = await res.json()
+  
+    return {
+      props: {
+        data,
+        time: new Date().toLocaleTimeString(),
+      },
+    }
+  }
+```
+
+### SSG
+
+#### 3.1. 概念介绍
+
+- SSG，英文全称“Static Site Generation”，中文翻译“静态站点生成”。
+- SSG 会在构建阶段，就将页面编译为静态的 HTML 文件。
+
+- 比如：
+  - 打开一篇博客文章页面，既然所有人看到的内容都是一样的，没有必要在用户请求页面的时候，服务端再请求接口。
+  - 干脆 **先获取数据，提前编译成 HTML 文件**。
+  - 等 **用户访问的时候**，直接返回 HTML 文件。这样速度会更快。再配上 CDN 缓存，速度就更快了。
+
+- 所以能用 SSG 就用 SSG。“在 **用户访问** 之前是否能 **预渲染** 出来？”如果能，就用 SSG。
+
+#### 3.2. Next.js 实现 SSG
+
+- Next.js 支持 SSG。当不获取数据时，默认使用的就是 SSG。
+- 我们使用 Pages Router 写个 demo：
+
+```js
+// pages/ssg1.js
+function About() {
+  return <div>About</div>
+}
+ 
+export default About
+```
+
+- 像这种 **没有数据请求的页面**，Next.js 会在 **构建** 的时候，**生成** 一个单独的 HTML 文件。
+- 不过 Next.js 默认没有导出该文件。如果你想看到构建生成的 HTML 文件，修改 next.config.js 文件：
+
+```js
+const nextConfig = {
+  output: 'export'
+}
+ 
+module.exports = nextConfig
+```
+
+- 再执行 npm run build，你就会在根目录下看到生成的 out 文件夹，里面存放了构建生成的 HTML 文件。
+
+---
+
+- 那如果要获取数据呢？这分两种情况。
+  - 第一种情况：**页面内容** 需要 获取数据。
+  - 第二种情况：**页面路径** 需要 获取数据。
+
+- **第一种情况，页面内容 需要获取数据**：
+  - 就比如博客的文章内容需要调用 API 获取。
+  - Next.js 提供了 getStaticProps。
+  - 写个 demo：
+
+```js
+// pages/ssg2.js
+export default function Blog({ posts }) {
+  return (
+    <ul>
+      {posts.map((post) => (
+        <li key={post.id}>{post.title}</li>
+      ))}
+    </ul>
+  )
+}
+
+export async function getStaticProps() {
+  const res = await fetch('https://jsonplaceholder.typicode.com/posts')
+  const posts = await res.json()
+  return {
+    props: {
+      posts,
+    },
+  }
+}
+```
+
+- getStaticProps 会在 **构建的时候** 被调用，并将数据通过 props 属性传递给页面。
+- 还记得 getServerSideProps 吗？
+  - 两者在用法上类似。
+  - 不过：
+    - getServerSideProps 是在 **每次请求** 的时候被调用。
+    - getStaticProps     是在 **每次构建** 的时候被调用。
+
+- **第二种情况，是页面路径需要获取数据**：
+  - 这是什么意思呢？
+  - 就比如数据库里有 100 篇文章
+  - 我肯定不可能自己手动定义 100 个路由，然后预渲染 100 个 HTML 吧。
+  - Next.js 提供了 **getStaticPaths** 用于 **定义预渲染的路径**。
+  - 它需要搭配 **动态路由** 使用。
+  - 写个 demo：
+  - 新建 /pages/post/[id].js，代码如下：
+
+```js
+// /pages/post/[id].js
+export default function Blog({ post }) {
+  return (
+    <>
+      <header>{post.title}</header>
+      <main>{post.body}</main>
+    </>
+  )
+}
+
+export async function getStaticPaths() {
+  const res = await fetch('https://jsonplaceholder.typicode.com/posts')
+  const posts = await res.json()
+ 
+  const paths = posts.map((post) => ({
+    params: { id: String(post.id) },
+  }))
+
+  // { fallback: false } 意味着当访问其他路由的时候返回 404
+  return { paths, fallback: false }
+}
+
+export async function getStaticProps({ params }) {
+  // 如果路由地址为 /posts/1, params.id 为 1
+  const res = await fetch(`https://jsonplaceholder.typicode.com/posts/${params.id}`)
+  const post = await res.json()
+ 
+  return { props: { post } }
+}
+```
+
+- 其中，getStaticPaths 和 getStaticProps 都会在构建的时候被调用。
+- getStaticPaths 定义了，**哪些路径被预渲染**。
+- getStaticProps 获取路径参数，请求数据传给页面。
+- 当你执行 npm run build的时候，就会看到 post 文件下生成了一堆 HTML 文件：
+  - 1.html
+  - 2.html
+  - 3.html
+  - ...
+
+> 切记：
+> getStaticPaths 需要写在动态路由文件中，比如 /pages/post/[id].js。
+> 若是有多个动态路由，需要在每个动态路由文件中写 getStaticPaths。
+
+### ISR
+
+#### 4.1. 概念介绍
+
+- ISR，英文全称“Incremental Static Regeneration”，中文翻译“增量静态再生”。
+- 还是打开一篇博客文章页面，博客的主体内容也许是不变的，但像比如：**点赞**、**收藏** 这些数据总是在变化的吧。
+- 使用 SSG 编译成 HTML 文件后，这些数据就无法准确获取了！
+  - 那你可能就退而求其次改为 SSR 或者 CSR 了。
+
+- 考虑到这种情况，Next.js 提出了 ISR。
+- 当用户访问了这个页面，第一次依然是老的 HTML 内容。
+  - 但是 Next.js 同时 **静态编译** 成新的 HTML 文件。
+  - 当你 **第二次访问** 或者 **其他用户访问** 的时候，就会变成新的 HTML 内容了。
+
+#### 4.2. Next.js 实现 ISR
+
+- Next.js 支持 ISR，并且使用的方式很简单。
+- 你只用在 getStaticProps 中添加一个 revalidate 即可。我们基于 SSG 的示例代码上进行修改：
+
+```js
+// pages/post/[id].js
+// 保持不变
+export default function Blog({ post }) {
+  return (
+    <>
+      <header>{post.title}</header>
+      <main>{post.body}</main>
+    </>
+  )
+}
+
+// fallback 的模式改为 'blocking'
+export async function getStaticPaths() {
+  const res = await fetch('https://jsonplaceholder.typicode.com/posts')
+  const posts = await res.json()
+ 
+  const paths = posts.slice(0, 10).map((post) => ({
+    params: { id: String(post.id) },
+  }))
+ 
+  return { paths, fallback: 'blocking' }
+}
+
+// 使用这种随机的方式模拟数据改变
+function getRandomInt(max) {
+  return Math.floor(Math.random() * max);
+}
+
+// 多返回了 revalidata 属性
+export async function getStaticProps({ params }) {
+  const res = await fetch(`https://jsonplaceholder.typicode.com/posts/${getRandomInt(100)}`)
+  const post = await res.json()
+ 
+  return { 
+    props: { post }, 
+    revalidate: 10
+  }
+}
+```
+
+- **revalidate** 表示：当发生请求的时候，至少间隔多少秒才更新页面。
+- 这听起来有些抽象，以 revalidate: 10 为例:
+  1. 在 **初始请求后** 和 **接下来的 10 秒内**，页面都会使用之前构建的 HTML。
+  2. 10s 后第一个请求发生的时候，依然使用之前编译的 HTML。
+  3. 但 Next.js 会开始构建更新 HTML，从下个请求起就会使用新的 HTML。（如果构建失败了，就还是用之前的，等下次再触发更新）
+- 当你在本地使用 next dev运行的时候，getStaticProps会在每次请求的时候被调用。
+- 所以如果你要测试 ISR 功能，需要先构建出生产版本，再运行生产服务。
+  - 也就是说，测试 ISR 效果，用这俩命令：
+
+```shell
+next build // 或 npm run build
+next start // 或 npm run start
+```
+
+- 注意这次 getStaticPaths 函数的返回为return { paths, fallback: 'blocking' }。
+- 它表示:
+  - 在构建时：只为getStaticPaths中明确列出的路径生成静态页面。
+  - 在运行时：
+    - 如果有人请求了一个没有在构建时生成的路径，Next.js 将不会立即返回404页面。
+    - 相反，它会尝试在服务器上“回退”（fallback）到动态渲染该页面。
+    - 这意味着Next.js会在服务器上运行页面的 **getServerSideProps**（如果定义了的话）或 **页面的组件逻辑** 来动态生成该页面的内容，并将其作为响应返回给客户端。
+- 在上节 SSG 的例子中，我们设置 fallback为 false，它表示如果请求其他的路径，就会返回 404 错误。
+- 所以在这个 ISR demo 中，如果请求了尚未生成的路径:
+  - Next.js 会 **在第一次请求的时候** 就 **执行服务端渲染**，编译出 HTML 文件，再请求时就从缓存里返回该 HTML 文件。**SSG 优雅降级到 SSR**。
+
+### 支持混合使用
+
+- 在写 demo 的时候，想必你已经发现了，其实每个页面你并没有 -> 专门声明 使用 哪种 渲染模式，next.js 是 **根据你导出的函数名** 来判断的。
+- Next.js 支持多种渲染模式，包括服务端渲染（SSR）、静态站点生成（SSG）、静态增量生成（ISR）和客户端渲染（CSR）。它根据你在页面组件中导出的函数来判断应该使用哪种渲染模式。
+  - **客户端渲染（CSR）：**
+    - 当页面组件既没有导出 getServerSideProps 函数也没有导出 getStaticProps 函数时，Next.js 会使用客户端渲染模式。
+    - 在这种情况下，Next.js 仍然会提供一个初始的 HTML 文件，但该文件可能只包含一些基本的布局和脚本标签。
+    - 实际的页面内容会在客户端通过 JavaScript 动态渲染出来。
+  - **服务端渲染（SSR）：**
+    - 当页面组件导出了 getServerSideProps 函数时，Next.js 会使用服务端渲染模式。
+    - 在每次页面请求时，Next.js 都会在服务器上执行 getServerSideProps 函数来获取最新数据，并将数据传递给页面组件进行渲染。渲染后的 HTML 会直接发送给客户端。
+  - **静态站点生成（SSG）：**
+    - 当页面组件导出了 getStaticProps 函数但没有导出getServerSideProps函数时，Next.js 会使用静态站点生成模式。
+    - 在构建时（即运行next build时），Next.js 会执行 getStaticProps 函数来预取页面所需的数据，并使用这些数据生成静态的 HTML 文件。
+    - 在运行时，这些静态 HTML 文件会直接发送给客户端，无需在服务器上执行任何渲染逻辑。
+  - **静态增量生成（ISR）：**
+    - ISR 是 SSG 的一种扩展，它允许在构建后 **根据需要** 重新生成静态页面。
+    - 要使用 ISR，你需要在 getStaticProps 函数中 **添加 revalidate 选项** 来指定页面内容的 **重新验证时间间隔**。
+
+#### 注意事项
+
+- 即便在 CSR 模式下，Next.js 提供的初始 HTML 文件也包含了页面的基本结构和一些静态资源（如 CSS 和 JavaScript 文件）。
+  - 这有助于改善首屏加载速度和 SEO。
+- 在选择渲染模式时，你需要考虑：
+  - 页面内容的更新频率
+  - 性能要求
+  - SEO 需求
+  - 服务器的负载能力
+- Next.js 的渲染模式非常灵活，你可以根据需要 **在不同的页面组件中** 使用不同的渲染模式。
+
+### 小结(Pages Router 渲染相关)
+
+- 这一篇我们简单回顾了 **Pages Router** 下的的 4 种渲染模式：
+  - CSR
+  - SSR
+  - SSG
+  - ISR
+- 但是在 **App Router** 下，因为改为使用 React Server Component，所以弱化了这些概念，转而使用“服务端组件、客户端组件”等概念。
+- 那这些 **渲染模式** 跟所谓 “服务端组件、客户端组件” 又有什么联系和区别呢？欢迎继续学习。
