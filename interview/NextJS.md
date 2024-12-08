@@ -1853,5 +1853,648 @@ export function middleware(request) {
 - 这是一个在实际开发中会用到的设置 CORS 的例子：
 
 ```js
-
+import { NextResponse } from 'next/server'
+ 
+const allowedOrigins = ['https://acme.com', 'https://my-app.org']
+ 
+const corsOptions = {
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+ 
+export function middleware(request) {
+  // Check the origin from the request
+  const origin = request.headers.get('origin') ?? ''
+  const isAllowedOrigin = allowedOrigins.includes(origin)
+ 
+  // Handle preflighted requests
+  const isPreflight = request.method === 'OPTIONS'
+ 
+  if (isPreflight) {
+    const preflightHeaders = {
+      ...(isAllowedOrigin && { 'Access-Control-Allow-Origin': origin }),
+      ...corsOptions,
+    }
+    return NextResponse.json({}, { headers: preflightHeaders })
+  }
+ 
+  // Handle simple requests
+  const response = NextResponse.next()
+ 
+  if (isAllowedOrigin) {
+    response.headers.set('Access-Control-Allow-Origin', origin)
+  }
+ 
+  Object.entries(corsOptions).forEach(([key, value]) => {
+    response.headers.set(key, value)
+  })
+ 
+  return response
+}
+ 
+export const config = {
+  matcher: '/api/:path*',
+}
 ```
+
+#### 如何直接响应?
+
+- 用法跟路由处理程序一致，使用 NextResponse 设置返回的 Response。示例代码如下：
+
+```js
+import { NextResponse } from 'next/server'
+import { isAuthenticated } from '@lib/auth'
+
+export const config = {
+  matcher: '/api/:function*',
+}
+ 
+export function middleware(request) {
+  // 鉴权判断
+  if (!isAuthenticated(request)) {
+    // 返回错误信息
+    return new NextResponse(
+      JSON.stringify({ success: false, message: 'authentication failed' }),
+      { status: 401, headers: { 'content-type': 'application/json' } }
+    )
+  }
+}
+```
+
+### 小结（中间件）
+
+- 中间件是 Next.js 中的一个重要概念，它可以拦截并控制应用里的所有请求和响应。
+- 中间件的定义方式是在 app 目录下创建一个名为 middleware.js 的文件。
+- 中间件的配置是通过 config 对象来实现的，其中 matcher 是必须的。
+- matcher 可以是字符串、正则表达式、数组、对象等多种形式。
+- matcher 的值必须是常量，这样可以在构建的时候被静态分析。
+- 中间件的逻辑是一个函数，它接收一个 request 对象，返回一个 NextResponse 对象。
+- 中间件的逻辑可以是异步函数，如果使用了 await，那么返回值也必须是一个 Promise 对象。
+- 中间件的逻辑可以读取和设置 cookies、headers，也可以直接响应。
+- 中间件的逻辑可以是条件语句，根据不同的条件返回不同的结果。
+- 中间件的逻辑可以是一个函数，也可以是一个对象，对象中包含了 matcher 和 middleware 两个属性。
+
+### 执行顺序
+
+- 在 Next.js 中，有很多地方都可以 **设置路由的响应**，比如:
+  - next.config.js 中
+  - 中间件中
+  - 具体的路由中
+- 所以要注意它们的执行顺序：
+  1. headers（next.config.js）
+  2. redirects（next.config.js）
+  3. 中间件 (rewrites, redirects 等)
+  4. beforeFiles (next.config.js中的rewrites)
+  5. 基于文件系统的路由 (public/, _next/static/, pages/, app/ 等)
+  6. afterFiles (next.config.js中的rewrites)
+  7. 动态路由 (/blog/[slug])
+  8. fallback 中的 (next.config.js中的rewrites)
+- 注：
+  - beforeFiles：基于 **文件系统的路由** 之前。
+  - afterFiles：基于 **文件系统的路由** 之后。
+  - fallback：**垫底执行**。
+
+> tips: 路由重定向是逐级捕捉，且链路是传递的，所以在中间件中设置的重定向会被后续的路由处理程序覆盖。若是想后面捕捉到前面，后一个重定向的捕获路径，应为前一个捕获的 **重定向路径**。
+
+#### 面试题：解释一下 Next.js 中 beforeFiles、afterFiles 和 fallback 的区别，以及为什么有时会跳到 fallback 而不是匹配成功？
+
+- 首先要知道：在 Next.js 中，beforeFiles、afterFiles 和 fallback 是用于路径重写的三个机制。它们的顺序执行如下：
+  1. beforeFiles
+  2. 基于文件系统的路由
+  3. afterFiles
+  4. 动态路由
+  5. fallback
+- 而规则是：
+  1. beforeFiles 优先匹配，匹配成功会 **重写路径**。
+  2. 如果路径未匹配，接着会匹配 afterFiles。
+  3. 如果所有匹配规则都失败，最终会进入 fallback。
+- 我遇到一个常见陷阱：
+  - 如果在 beforeFiles 中进行了路径重写，比如把 /custom 重写成了 /not-match。
+  - 如果后续的 afterFiles 想匹配路径 /custom，但实际路径已被重写为 /not-match，匹配失败。
+  - 导致 Next.js 直接跳转到 fallback。
+- 如何解决这个问题？
+  - 我们需要确保 afterFiles 匹配的是实际重写后的路径，而不是原路径
+  - 比如在 beforeFiles 中重写了 /custom 为 /not-match，那么在 afterFiles 中应该匹配 /not-match，而不是 /custom。
+
+#### 优化建议
+
+- 如果希望控制终止匹配，推荐使用 Middleware。
+  - 适合处理更复杂的匹配逻辑。
+- 如果依赖纯 rewrites，则要显式控制 beforeFiles 和 afterFiles 的匹配优先级，且自行终止链条逻辑。否则会被向下传递。
+
+### 运行时
+
+- 使用 Middleware 的时候还要注意一点，那就是目前 Middleware 只支持 Edge runtime，并不支持 Node.js runtime。
+  - 这意味着写 Middleware 的时候，尽可能使用 Web API，避免使用 Node.js API。
+
+### 中间件的代码维护
+
+- 如果项目比较简单，中间件的代码通常不会写很多，将所有代码写在一起倒也不是什么太大问题。
+- 可当项目复杂了，比如在中间件里 **又要鉴权、又要控制请求、又要国际化** 等等，各种逻辑写在一起，中间件 很快就变得 **难以维护**。
+- 如果我们要在 中间件 里实现 **多个需求**，该怎么合理的拆分代码呢？
+- 一种简单的方式是：
+
+```js
+import { NextResponse } from 'next/server'
+
+async function middleware1(request) {
+  console.log(request.url)
+  return NextResponse.next()
+}
+
+async function middleware2(request) {
+  console.log(request.url)
+  return NextResponse.next()
+}
+
+export async function middleware(request) {
+  await middleware1(request)
+  await middleware2(request)
+}
+
+export const config = {
+  matcher: '/api/:path*',
+}
+```
+
+- 一种更为优雅的方式是借助高阶函数：
+
+```js
+import { NextResponse } from 'next/server'
+
+function withMiddleware1(middleware) {
+  return async (request) => {
+    console.log('middleware1 ' + request.url)
+    return middleware(request)
+  }
+}
+
+function withMiddleware2(middleware) {
+  return async (request) => {
+    console.log('middleware2 ' + request.url)
+    return middleware(request)
+  }
+}
+
+async function middleware(request) {
+  console.log('middleware ' + request.url)
+  return NextResponse.next()
+}
+
+export default withMiddleware2(withMiddleware1(middleware))
+
+export const config = {
+  matcher: '/api/:path*',
+}
+```
+
+- 请问此时的执行顺序是什么？试着打印一下吧。是不是感觉回到了学 redux 的时候？
+- 但这样写起来还是有点麻烦，让我们写一个工具函数帮助我们：
+
+```js
+import { NextResponse } from 'next/server'
+
+function chain(functions, index = 0) {
+  const current = functions[index];
+  if (current) {
+    const next = chain(functions, index + 1);
+    return current(next);
+  }
+  return () => NextResponse.next();
+}
+
+function withMiddleware1(middleware) {
+  return async (request) => {
+    console.log('middleware1 ' + request.url)
+    return middleware(request)
+  }
+}
+
+function withMiddleware2(middleware) {
+  return async (request) => {
+    console.log('middleware2 ' + request.url)
+    return middleware(request)
+  }
+}
+
+export default chain([withMiddleware1, withMiddleware2]) // chain(withMiddleware1(withMiddleware2(() => NextResponse.next()())))
+
+export const config = {
+  matcher: '/api/:path*',
+}
+```
+
+---
+
+## 渲染
+
+- 以前学习 Next.js 可能是听说了 Next.js 一个框架就可以实现：
+  - CSR
+  - SSR
+  - SSG
+  - ISR
+- 这些功能。
+- 但在 Next.js v13 之后，Next.js 的渲染方式变得更加灵活，不再是一种渲染方式，而是多种渲染方式的组合。
+  - 也就是基于 React Server Components 的 App Router。
+- SSR、SSG 等名词在最新的文档中已经不再提及，取而代之的是：
+  - **Server Components**
+  - **App Router**
+  - **API Routes**
+  - **Middleware**
+- 少有提及（这些功能当然还在的）。
+- 但理解这些 名词 背后的 **原理和区别**，依然有助于我们理解和使用 Next.js。
+
+### CSR
+
+#### 1.1 概念介绍
+
+- 我们先从传统的 CSR 开始说起。
+- CSR，英文全称“Client-side Rendering”，中文翻译“客户端渲染”。
+  - 顾名思义，渲染工作主要在客户端执行。
+- **像我们传统使用 React 的方式，就是客户端渲染**。
+  - 浏览器会先 -> **下载一个非常小的 HTML 文件** 和 **所需的 JavaScript 文件**。
+  - 在 JavaScript 中 -> 执行:
+    - 发送请求
+    - 获取数据
+    - 更新 DOM
+    - 渲染页面
+  - 等操作。
+- 这样做最大的问题就是不够快。（SEO 问题是其次，现在的爬虫已经普遍能够支持 CSR 渲染的页面）
+- 在 **下载、解析、执行 JavaScript** 和 **请求数据** 没有返回前，页面不会完全呈现。
+
+#### 1.2 Next.js 实现 CSR
+
+- Next.js 支持 CSR，在 Next.js Pages Router 下有 **两种方式** 实现 **客户端渲染**。
+- 一种是在页面中使用 React useEffect hook。
+  - 而不是 **服务端的渲染方法**（比如 **getStaticProps** 和 **getServerSideProps**，这两个方法后面会讲到），举个例子：
+
+```js
+// pages/csr.js
+import React, { useState, useEffect } from 'react'
+ 
+export default function Page() {
+  const [data, setData] = useState(null)
+ 
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await fetch('https://jsonplaceholder.typicode.com/todos/1')
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const result = await response.json()
+      setData(result)
+    }
+ 
+    fetchData().catch((e) => {
+      console.error('An error occurred while fetching the data: ', e)
+    })
+  }, [])
+ 
+  return <p>{data ? `Your data: ${JSON.stringify(data)}` : 'Loading...'}</p>
+}
+```
+
+- 可以看到，请求由客户端发出，同时页面显示 loading 状态。
+  - 等数据返回后，主要内容在客户端进行渲染。
+
+- 第二种方法是：
+  - 在客户端使用数据获取的库比如 SWR（也是 Next.js 团队开发的）或 TanStack Query，举个例子：
+
+```js
+// pages/csr2.js
+import useSWR from 'swr'
+const fetcher = (...args) => fetch(...args).then((res) => res.json())
+
+export default function Page() {
+  const { data, error, isLoading } = useSWR(
+    'https://jsonplaceholder.typicode.com/todos/1',
+    fetcher
+  )
+ 
+  if (error) return <p>Failed to load.</p>
+  if (isLoading) return <p>Loading...</p>
+ 
+  return <p>Your Data: {data.title}</p>
+}
+```
+
+> 效果同上，只是使用了 SWR 这个库。
+
+### SSR
+
+#### 2.1. 概念介绍
+
+- SSR，英文全称“Server-side Rendering”，中文翻译“服务端渲染”。
+  - 顾名思义，渲染工作主要在服务端执行。
+- 比如打开一篇博客文章页面，没有必要 **每次都让客户端请求**，万一客户端网速不好呢？
+- 那干脆由 服务端直接 -> 请求接口、获取数据，然后渲染成 -> **静态的 HTML 文件** -> 返回给用户。
+- 虽然同样是 **发送请求**，但通常 **服务端的环境**（网络环境、设备性能）要 **好于客户端**，所以最终的渲染速度（首屏加载时间）也会更快。
+
+- 虽然总体速度是更快的，但因为 CSR 响应时，只用返回一个很小的 HTML。
+- 而 SSR 响应还要：
+  - 请求接口
+  - 渲染 HTML
+- 所以其 **响应时间 会更长**，对应到性能指标 TTFB (Time To First Byte)，SSR 更长。
+
+#### 2.2. Next.js 实现 SSR
+
+- Next.js 支持 SSR，我们使用 Pages Router 写个 demo：
+
+```js
+// pages/ssr.js
+export default function Page({ data }) {··········
+  return <p>{JSON.stringify(data)}</p>
+}
+ 
+export async function getServerSideProps() {
+  const res = await fetch(`https://jsonplaceholder.typicode.com/todos`)
+  const data = await res.json()
+ 
+  return { props: { data } }
+}
+```
+
+- 使用 SSR，你需要导出一个名为 getServerSideProps 的 async 函数。
+- 这个函数会在:
+  - 每次请求的时候被调用。
+  - 返回的数据会通过组件的 props 属性 **传递给组件**。
+  - 数据格式是 { props: { data } }。
+    - data的格式是 { data: 'xxx' }。
+    - value 可以是任意类型。
+
+- 你也可以在 getServerSideProps 中返回更多的数据，比如：
+  
+```js
+  export async function getServerSideProps() {
+    const res = await fetch(`https://jsonplaceholder.typicode.com/todos`)
+    const data = await res.json()
+  
+    return {
+      props: {
+        data,
+        time: new Date().toLocaleTimeString(),
+      },
+    }
+  }
+```
+
+### SSG
+
+#### 3.1. 概念介绍
+
+- SSG，英文全称“Static Site Generation”，中文翻译“静态站点生成”。
+- SSG 会在构建阶段，就将页面编译为静态的 HTML 文件。
+
+- 比如：
+  - 打开一篇博客文章页面，既然所有人看到的内容都是一样的，没有必要在用户请求页面的时候，服务端再请求接口。
+  - 干脆 **先获取数据，提前编译成 HTML 文件**。
+  - 等 **用户访问的时候**，直接返回 HTML 文件。这样速度会更快。再配上 CDN 缓存，速度就更快了。
+
+- 所以能用 SSG 就用 SSG。“在 **用户访问** 之前是否能 **预渲染** 出来？”如果能，就用 SSG。
+
+#### 3.2. Next.js 实现 SSG
+
+- Next.js 支持 SSG。当不获取数据时，默认使用的就是 SSG。
+- 我们使用 Pages Router 写个 demo：
+
+```js
+// pages/ssg1.js
+function About() {
+  return <div>About</div>
+}
+ 
+export default About
+```
+
+- 像这种 **没有数据请求的页面**，Next.js 会在 **构建** 的时候，**生成** 一个单独的 HTML 文件。
+- 不过 Next.js 默认没有导出该文件。如果你想看到构建生成的 HTML 文件，修改 next.config.js 文件：
+
+```js
+const nextConfig = {
+  output: 'export'
+}
+ 
+module.exports = nextConfig
+```
+
+- 再执行 npm run build，你就会在根目录下看到生成的 out 文件夹，里面存放了构建生成的 HTML 文件。
+
+---
+
+- 那如果要获取数据呢？这分两种情况。
+  - 第一种情况：**页面内容** 需要 获取数据。
+  - 第二种情况：**页面路径** 需要 获取数据。
+
+- **第一种情况，页面内容 需要获取数据**：
+  - 就比如博客的文章内容需要调用 API 获取。
+  - Next.js 提供了 getStaticProps。
+  - 写个 demo：
+
+```js
+// pages/ssg2.js
+export default function Blog({ posts }) {
+  return (
+    <ul>
+      {posts.map((post) => (
+        <li key={post.id}>{post.title}</li>
+      ))}
+    </ul>
+  )
+}
+
+export async function getStaticProps() {
+  const res = await fetch('https://jsonplaceholder.typicode.com/posts')
+  const posts = await res.json()
+  return {
+    props: {
+      posts,
+    },
+  }
+}
+```
+
+- getStaticProps 会在 **构建的时候** 被调用，并将数据通过 props 属性传递给页面。
+- 还记得 getServerSideProps 吗？
+  - 两者在用法上类似。
+  - 不过：
+    - getServerSideProps 是在 **每次请求** 的时候被调用。
+    - getStaticProps     是在 **每次构建** 的时候被调用。
+
+- **第二种情况，是页面路径需要获取数据**：
+  - 这是什么意思呢？
+  - 就比如数据库里有 100 篇文章
+  - 我肯定不可能自己手动定义 100 个路由，然后预渲染 100 个 HTML 吧。
+  - Next.js 提供了 **getStaticPaths** 用于 **定义预渲染的路径**。
+  - 它需要搭配 **动态路由** 使用。
+  - 写个 demo：
+  - 新建 /pages/post/[id].js，代码如下：
+
+```js
+// /pages/post/[id].js
+export default function Blog({ post }) {
+  return (
+    <>
+      <header>{post.title}</header>
+      <main>{post.body}</main>
+    </>
+  )
+}
+
+export async function getStaticPaths() {
+  const res = await fetch('https://jsonplaceholder.typicode.com/posts')
+  const posts = await res.json()
+ 
+  const paths = posts.map((post) => ({
+    params: { id: String(post.id) },
+  }))
+
+  // { fallback: false } 意味着当访问其他路由的时候返回 404
+  return { paths, fallback: false }
+}
+
+export async function getStaticProps({ params }) {
+  // 如果路由地址为 /posts/1, params.id 为 1
+  const res = await fetch(`https://jsonplaceholder.typicode.com/posts/${params.id}`)
+  const post = await res.json()
+ 
+  return { props: { post } }
+}
+```
+
+- 其中，getStaticPaths 和 getStaticProps 都会在构建的时候被调用。
+- getStaticPaths 定义了，**哪些路径被预渲染**。
+- getStaticProps 获取路径参数，请求数据传给页面。
+- 当你执行 npm run build的时候，就会看到 post 文件下生成了一堆 HTML 文件：
+  - 1.html
+  - 2.html
+  - 3.html
+  - ...
+
+> 切记：
+> getStaticPaths 需要写在动态路由文件中，比如 /pages/post/[id].js。
+> 若是有多个动态路由，需要在每个动态路由文件中写 getStaticPaths。
+
+### ISR
+
+#### 4.1. 概念介绍
+
+- ISR，英文全称“Incremental Static Regeneration”，中文翻译“增量静态再生”。
+- 还是打开一篇博客文章页面，博客的主体内容也许是不变的，但像比如：**点赞**、**收藏** 这些数据总是在变化的吧。
+- 使用 SSG 编译成 HTML 文件后，这些数据就无法准确获取了！
+  - 那你可能就退而求其次改为 SSR 或者 CSR 了。
+
+- 考虑到这种情况，Next.js 提出了 ISR。
+- 当用户访问了这个页面，第一次依然是老的 HTML 内容。
+  - 但是 Next.js 同时 **静态编译** 成新的 HTML 文件。
+  - 当你 **第二次访问** 或者 **其他用户访问** 的时候，就会变成新的 HTML 内容了。
+
+#### 4.2. Next.js 实现 ISR
+
+- Next.js 支持 ISR，并且使用的方式很简单。
+- 你只用在 getStaticProps 中添加一个 revalidate 即可。我们基于 SSG 的示例代码上进行修改：
+
+```js
+// pages/post/[id].js
+// 保持不变
+export default function Blog({ post }) {
+  return (
+    <>
+      <header>{post.title}</header>
+      <main>{post.body}</main>
+    </>
+  )
+}
+
+// fallback 的模式改为 'blocking'
+export async function getStaticPaths() {
+  const res = await fetch('https://jsonplaceholder.typicode.com/posts')
+  const posts = await res.json()
+ 
+  const paths = posts.slice(0, 10).map((post) => ({
+    params: { id: String(post.id) },
+  }))
+ 
+  return { paths, fallback: 'blocking' }
+}
+
+// 使用这种随机的方式模拟数据改变
+function getRandomInt(max) {
+  return Math.floor(Math.random() * max);
+}
+
+// 多返回了 revalidata 属性
+export async function getStaticProps({ params }) {
+  const res = await fetch(`https://jsonplaceholder.typicode.com/posts/${getRandomInt(100)}`)
+  const post = await res.json()
+ 
+  return { 
+    props: { post }, 
+    revalidate: 10
+  }
+}
+```
+
+- **revalidate** 表示：当发生请求的时候，至少间隔多少秒才更新页面。
+- 这听起来有些抽象，以 revalidate: 10 为例:
+  1. 在 **初始请求后** 和 **接下来的 10 秒内**，页面都会使用之前构建的 HTML。
+  2. 10s 后第一个请求发生的时候，依然使用之前编译的 HTML。
+  3. 但 Next.js 会开始构建更新 HTML，从下个请求起就会使用新的 HTML。（如果构建失败了，就还是用之前的，等下次再触发更新）
+- 当你在本地使用 next dev运行的时候，getStaticProps会在每次请求的时候被调用。
+- 所以如果你要测试 ISR 功能，需要先构建出生产版本，再运行生产服务。
+  - 也就是说，测试 ISR 效果，用这俩命令：
+
+```shell
+next build // 或 npm run build
+next start // 或 npm run start
+```
+
+- 注意这次 getStaticPaths 函数的返回为return { paths, fallback: 'blocking' }。
+- 它表示:
+  - 在构建时：只为getStaticPaths中明确列出的路径生成静态页面。
+  - 在运行时：
+    - 如果有人请求了一个没有在构建时生成的路径，Next.js 将不会立即返回404页面。
+    - 相反，它会尝试在服务器上“回退”（fallback）到动态渲染该页面。
+    - 这意味着Next.js会在服务器上运行页面的 **getServerSideProps**（如果定义了的话）或 **页面的组件逻辑** 来动态生成该页面的内容，并将其作为响应返回给客户端。
+- 在上节 SSG 的例子中，我们设置 fallback为 false，它表示如果请求其他的路径，就会返回 404 错误。
+- 所以在这个 ISR demo 中，如果请求了尚未生成的路径:
+  - Next.js 会 **在第一次请求的时候** 就 **执行服务端渲染**，编译出 HTML 文件，再请求时就从缓存里返回该 HTML 文件。**SSG 优雅降级到 SSR**。
+
+### 支持混合使用
+
+- 在写 demo 的时候，想必你已经发现了，其实每个页面你并没有 -> 专门声明 使用 哪种 渲染模式，next.js 是 **根据你导出的函数名** 来判断的。
+- Next.js 支持多种渲染模式，包括服务端渲染（SSR）、静态站点生成（SSG）、静态增量生成（ISR）和客户端渲染（CSR）。它根据你在页面组件中导出的函数来判断应该使用哪种渲染模式。
+  - **客户端渲染（CSR）：**
+    - 当页面组件既没有导出 getServerSideProps 函数也没有导出 getStaticProps 函数时，Next.js 会使用客户端渲染模式。
+    - 在这种情况下，Next.js 仍然会提供一个初始的 HTML 文件，但该文件可能只包含一些基本的布局和脚本标签。
+    - 实际的页面内容会在客户端通过 JavaScript 动态渲染出来。
+  - **服务端渲染（SSR）：**
+    - 当页面组件导出了 getServerSideProps 函数时，Next.js 会使用服务端渲染模式。
+    - 在每次页面请求时，Next.js 都会在服务器上执行 getServerSideProps 函数来获取最新数据，并将数据传递给页面组件进行渲染。渲染后的 HTML 会直接发送给客户端。
+  - **静态站点生成（SSG）：**
+    - 当页面组件导出了 getStaticProps 函数但没有导出getServerSideProps函数时，Next.js 会使用静态站点生成模式。
+    - 在构建时（即运行next build时），Next.js 会执行 getStaticProps 函数来预取页面所需的数据，并使用这些数据生成静态的 HTML 文件。
+    - 在运行时，这些静态 HTML 文件会直接发送给客户端，无需在服务器上执行任何渲染逻辑。
+  - **静态增量生成（ISR）：**
+    - ISR 是 SSG 的一种扩展，它允许在构建后 **根据需要** 重新生成静态页面。
+    - 要使用 ISR，你需要在 getStaticProps 函数中 **添加 revalidate 选项** 来指定页面内容的 **重新验证时间间隔**。
+
+#### 注意事项
+
+- 即便在 CSR 模式下，Next.js 提供的初始 HTML 文件也包含了页面的基本结构和一些静态资源（如 CSS 和 JavaScript 文件）。
+  - 这有助于改善首屏加载速度和 SEO。
+- 在选择渲染模式时，你需要考虑：
+  - 页面内容的更新频率
+  - 性能要求
+  - SEO 需求
+  - 服务器的负载能力
+- Next.js 的渲染模式非常灵活，你可以根据需要 **在不同的页面组件中** 使用不同的渲染模式。
+
+### 小结(Pages Router 渲染相关)
+
+- 这一篇我们简单回顾了 **Pages Router** 下的的 4 种渲染模式：
+  - CSR
+  - SSR
+  - SSG
+  - ISR
+- 但是在 **App Router** 下，因为改为使用 React Server Component，所以弱化了这些概念，转而使用“服务端组件、客户端组件”等概念。
+- 那这些 **渲染模式** 跟所谓 “服务端组件、客户端组件” 又有什么联系和区别呢？欢迎继续学习。
