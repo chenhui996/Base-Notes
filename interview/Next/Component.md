@@ -137,19 +137,19 @@ export default function Page() {
 ### 1. 如何选择使用？
 
 - 服务端组件和客户端组件各有优势，如何选择使用呢？
-  - 服务端组件：
+  - **服务端组件**：
     - 获取数据
     - 访问后台资源（直接）
     - 在服务端上保留敏感信息（访问令牌、API 密钥等）
     - 在服务端使用依赖包，从而减少客户端JS的大小
-  - 客户端组件：
+  - **客户端组件**：
     - 添加 **交互** 和 **事件侦听器**（onClick、 onChange 等）
     - 使用 **状态** 和 **生命周期**（useState、useReducer、useEffect 等）
     - 使用 **浏览器 API**（localStorage、fetch 等）
     - 使用 依赖于：
       - **状态**（MobX 或 Zustand 等状态管理库）
       - **效果**（使用 react-query 来管理数据获取、缓存、同步和更新，它基于 React 的 hook 构建）
-      - **浏览器 API 的库或 hook**（自定义的 useWindowDimensions hook，它使用window.innerWidth和window.innerHeight来获取窗口尺寸，并在窗口大小变化时更新这些尺寸）
+      - **浏览器 API 的库或 hook**（自定义的 **useWindowDimensions** hook，它使用window.innerWidth和window.innerHeight来获取窗口尺寸，并在窗口大小变化时更新这些尺寸）
     - 使用 React 类组件。
 
 ### 2. 渲染环境
@@ -286,7 +286,7 @@ export default function Page() {
 
 #### 1. 在服务端渲染（SSR）阶段
 
-- Next.js 使用 React API 来组织组件的渲染工作。根据路由和 `Suspense`，渲染过程会被拆分成多个块（chunks），以实现按需加载。
+- Next.js 使用 React API 来组织组件的渲染工作。根据 **路由** 和 **Suspense**，渲染过程会被拆分成多个块（chunks），以实现按需加载。
 - 每个渲染块分为两步：
   1. **渲染服务端组件**：React 将服务端组件渲染成一种特殊的数据格式，称为 **React Server Component Payload（RSC Payload）**。
   2. **生成 HTML**：Next.js 使用 RSC Payload 和客户端组件的 JavaScript 代码在服务端渲染 HTML，生成最终的页面结构。
@@ -316,7 +316,7 @@ export default function Page() {
 
 ### 总结
 
-- 服务端组件和客户端组件的分离使得页面加载更加高效，避免了不必要的 JavaScript 加载。
+- 服务端组件和客户端组件的 **分离** 使得页面加载更加高效，避免了不必要的 JavaScript 加载。
 - 通过 Suspense 和 Streaming，React 可以实现按需加载组件并高效水合，提升页面的性能和交互性。
 - 具体来说，生成 HTML 的流程：
   - **服务端渲染阶段**：Next.js 会先渲染服务端组件（Server Components），生成 RSC Payload。
@@ -324,3 +324,239 @@ export default function Page() {
     - 接下来，Next.js 会把 RSC Payload 和 客户端组件所需要的 JavaScript 代码 一起返回。
     - 这些客户端组件的 JavaScript 代码不会直接影响服务端渲染的 HTML 输出，但是它们会被注入到页面的 `script` 标签中。(比如通过 useState、useEffect、事件处理等方式控制客户端行为的代码。)
     - 这样，浏览器就能在接收到 HTML 后，加载并执行这些 JavaScript 代码来激活客户端组件，实现页面的交互性。
+
+### 最佳实践：使用服务端组件
+
+#### 1. 共享数据
+
+- 当在 **服务端获取数据** 的时候，有可能出现 **多个组件共用一个数据** 的情况。
+- 面对这种情况，你不需要使用 React Context（当然服务端也用不了），也不需要通过 props 传递数据，直接 **在需要的组件中请求数据** 即可。
+- 这是因为 React 拓展了 fetch 的功能，添加了记忆缓存功能，相同的请求和参数，返回的数据会做缓存。
+
+```js
+async function getItem() {
+  const res = await fetch('https://.../item/1')
+  return res.json()
+}
+ 
+// 函数被调用了两次，但只有第一次才执行
+const item = await getItem() // cache MISS
+ 
+// 第二次使用了缓存
+const item = await getItem() // cache HIT
+```
+
+- 当然这个缓存也是有一定条件限制的，比如只能在 GET 请求中，具体的限制和原理在缓存篇中具体讲解。
+
+#### 2. 组件只在服务端使用
+
+- 由于 JavaScript 模块可以在 服务器 和 客户端 组件模块之间 **共享**，所以如果你希望一个模块 **只用于服务端**，就比如这段代码：
+
+```js
+export async function getData() {
+  const res = await fetch('https://external-service.com/data', {
+    headers: {
+      authorization: process.env.API_KEY,
+    },
+  })
+ 
+  return res.json()
+}
+```
+
+- 这个函数使用了 API_KEY，所以它应该是只用在服务端的。
+- 如果用在客户端，为了防止泄露，Next.js 会将 **私有环境变量** 替换为空字符串，所以这段代码可以在客户端导入并执行，但并不会如期运行。
+
+- 为了防止客户端意外使用服务器代码，我们可以借助 server-only 包，这样在客户端意外使用的时候，会抛出构建错误。
+- 使用 server-only，首先安装该包：
+
+```bash
+npm install server-only
+```
+
+- 其次将该包导入只用在 **服务端的组件** 代码中：
+
+```js
+import 'server-only'
+ 
+export async function getData() {
+  const res = await fetch('https://external-service.com/data', {
+    headers: {
+      authorization: process.env.API_KEY,
+    },
+  })
+ 
+  return res.json()
+}
+```
+
+- 现在，任何导入 getData 的 **客户端组件** 都会在构建的时候抛出错误，以保证 **该模块只能在服务端使用**。
+
+#### 3. 使用三方包
+
+- 毕竟 React Server Component 是一个新特性， React 生态里的很多包可能还没有跟上，这样就可能会导致一些问题。
+  - 比如你使用了一个导出 <Carousel /> 组件的 acme-carousel 包。
+  - 这个组件使用了 useState，但是它并没有 "use client" 声明。
+
+- 当你在客户端组件中使用的时候，它能正常工作：
+  
+```js
+'use client'
+ 
+import { useState } from 'react'
+import { Carousel } from 'acme-carousel'
+ 
+export default function Gallery() {
+  let [isOpen, setIsOpen] = useState(false)
+ 
+  return (
+    <div>
+      <button onClick={() => setIsOpen(true)}>View pictures</button>
+ 
+      {/* Works, since Carousel is used within a Client Component */}
+      {isOpen && <Carousel />}
+    </div>
+  )
+}
+```
+
+- 然而如果你在服务端组件中使用，它会报错：
+
+```js
+import { Carousel } from 'acme-carousel'
+ 
+export default function Page() {
+  return (
+    <div>
+      <p>View pictures</p>
+ 
+      {/* Error: `useState` can not be used within Server Components */}
+      <Carousel />
+    </div>
+  )
+}
+```
+
+- 这是因为 Next.js 并不知道 <Carousel /> 是一个只能用在客户端的组件。
+- 毕竟它是三方的，你也无法修改它的代码，为它添加 "use client" 声明。
+- Next.js 于是就按照服务端组件进行处理，结果它使用了客户端组件的特性 useState，于是便有了报错。
+
+- 为了解决这个问题，你可以自己包一层，将该三方组件 **包在自己的客户端组件中**，比如：
+
+```js
+'use client'
+ 
+import { Carousel } from 'acme-carousel'
+ 
+export default Carousel
+```
+
+- 现在，你就可以在服务端组件中使用 <Carousel /> 了：
+
+```js
+import Carousel from './carousel'
+ 
+export default function Page() {
+  return (
+    <div>
+      <p>View pictures</p>
+      <Carousel />
+    </div>
+  )
+}
+```
+
+> 注：有的时候改为使用客户端组件也不能解决问题，如遇到 document is not defined、window is not defined 这种报错。
+
+#### 4. 使用 Context Provider
+
+- 上下文是一个典型的用于节点的特性，主要是为了共享一些全局状态，就比如当前的主题（实现换肤功能）。
+- 但服务端组件不支持 React context，如果你直接创建会报错：
+
+```js
+import { createContext } from 'react'
+ 
+//  服务端组件并不支持 createContext
+export const ThemeContext = createContext({})
+ 
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        <ThemeContext.Provider value="dark">{children}</ThemeContext.Provider>
+      </body>
+    </html>
+  )
+}
+```
+
+- 为了解决这个问题，你需要在客户端组件中进行创建和渲染：
+  
+```js
+'use client'
+ 
+import { createContext } from 'react'
+ 
+export const ThemeContext = createContext({})
+ 
+export default function ThemeProvider({ children }) {
+  return <ThemeContext.Provider value="dark">{children}</ThemeContext.Provider>
+}
+```
+
+- 然后再在根节点使用：
+
+```js
+import ThemeProvider from './theme-provider'
+ 
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
+    </html>
+  )
+}
+```
+
+- 这样应用里的其他客户端组件就可以使用这个上下文。
+
+### 最佳实践：使用客户端组件
+
+#### 1. 客户端组件尽可能下移
+
+- 为了尽可能减少客户端 JavaScript 包的大小，尽可能将 **客户端组件** 在 **组件树中** 下移。
+- 举个例子:
+  - 当你有 **一个包含一些静态元素** 和 **一个交互式的使用状态的搜索栏** 的布局。
+  - 没有必要让 **整个布局** 都成为 **客户端组件**，将 **交互的逻辑部分** 抽离成一个 **客户端组件**（比如<SearchBar />）。
+  - 让布局成为一个服务端组件：
+
+```js
+// SearchBar 客户端组件
+import SearchBar from './searchbar'
+// Logo 服务端组件
+import Logo from './logo'
+ 
+// Layout 依然作为服务端组件
+export default function Layout({ children }) {
+  return (
+    <>
+      <nav>
+        <Logo />
+        <SearchBar />
+      </nav>
+      <main>{children}</main>
+    </>
+  )
+}
+```
+
+#### 2. 从 服务端组件 到 客户端组件 传递的数据 需要 序列化
+
+- 当你在 **服务端组件** 中获取的数据，需要以 props 的形式向下传给客户端组件，这个数据需要做序列化。
+- 这是因为 React 需要：
+  - 先在 **服务端** 将 **组件树先序列化** 传给 **客户端**。
+  - 再在 **客户端** **反序列化** 构建出 **组件树**。
+  - 如果你传递了不能序列化的数据，这就会导致错误。（比如在服务端获取的数据是一个函数，这个函数是不能序列化的）
+- 如果你不能序列化，那就改为在客户端使用三方包获取数据吧。（如直接用 fetch）
