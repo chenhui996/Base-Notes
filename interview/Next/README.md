@@ -2972,3 +2972,71 @@ export async function GET() {
       - 基于路径（path-based）
     - 两种方法重新验证数据。
     - 适用于需要尽快展示最新数据的场景。
+
+#### 基于时间的重新验证
+
+- 使用基于时间的重新验证，你需要在使用 fetch 的时候设置 next.revalidate 选项（以秒为单位）：
+
+```js
+fetch('https://...', { next: { revalidate: 3600 } })
+```
+
+- 或者通过路由段配置项进行配置，使用这种方法，它会重新验证该路由段所有的 fetch 请求。
+
+```js
+// layout.jsx | page.jsx | route.js
+export const revalidate = 3600
+```
+
+- 注：在一个**静态渲染的路由**中，如果你有多个请求，每个请求设置了不同的重新验证时间，**将会使用最短的时间** 用于 **所有** 的请求。
+- 而对于 **动态渲染的路由**，每一个 fetch 请求都将独立重新验证。
+
+#### 按需重新验证
+
+- 在 Next.js 中，按需重新验证允许你通过 **路径（revalidatePath）** 或 **缓存标签（revalidateTag）** 更新缓存。
+
+- 以下是关于 revalidatePath 的具体说明和使用示例。
+
+##### revalidatePath 使用示例
+
+- 跳转：[revalidatePath 使用示例](./revalidatePath.md)
+
+##### revalidateTag 使用示例
+
+- 跳转：[revalidateTag 使用示例](./revalidateTag.md)
+
+##### 错误处理和重新验证
+
+- 如果在尝试 **重新验证的过程中** 出现错误:
+  - 缓存会 -> 继续提供 -> 上一个重新生成的数据。
+  - 而在下一个后续请求中，Next.js 会 **尝试再次重新验证数据**。
+
+### 1.4. 退出数据缓存
+
+- 当 fetch 请求满足这些条件时都会退出数据缓存：
+  - fetch 请求添加了 cache: 'no-store' 选项
+  - fetch 请求添加了 revalidate: 0 选项
+  - fetch 请求在路由处理程序中并使用了 POST 方法
+  - 使用headers 或 cookies 的方法之后使用 fetch请求
+  - 配置了路由段选项 const dynamic = 'force-dynamic'
+  - 配置了路由段选项 fetchCache ，默认会跳过缓存
+  - fetch 请求使用了 Authorization或者 Cookie请求头，并且在组件树中其上方还有一个未缓存的请求
+- 在具体使用的时候，如果你不想缓存某个单独请求：
+
+```js
+// layout.js | page.js
+fetch('https://...', { cache: 'no-store' })
+```
+
+- 不缓存多个请求，可以借助路由段配置项：
+
+```js
+// layout.js | page.js
+export const dynamic = 'force-dynamic'
+```
+
+> **!!!: Next.js 推荐单独配置每个请求的缓存行为，这可以让你更精细化的控制缓存行为。**
+
+## 2.服务端使用三方请求库
+
+...待续
