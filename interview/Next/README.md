@@ -2821,3 +2821,154 @@ export default function Dashboard() {
 ## 渲染 ｜ 服务端渲染策略
 
 - 跳转：[服务端渲染策略](./SSR-Strategy.md)
+
+> 至此，渲染篇基本介绍完毕，我们开始进入数据获取篇！
+
+## 数据获取 ｜ 数据获取、缓存与重新验证
+
+- 在 Next.js 中如何获取数据呢？
+- Next.js 优先 **推荐使用** 原生的 fetch 方法，因为 Next.js 拓展了原生的 fetch 方法，为其添加了 **缓存** 和 **更新缓存**(重新验证)的 **机制**。
+- 这样做：
+  - 好处在于：
+    - **可以自动复用请求数据，提高性能**。
+  - 坏处在于：
+    - 如果你不熟悉，经常会有一些“莫名奇妙”的状况出现……
+
+> 让我们来看看具体如何使用吧。
+
+## 1. 服务端使用 fetch
+
+### 1.1. 基本用法
+
+- Next.js 拓展了原生的 fetch Web API，可以为服务端的每个请求 **配置缓存（caching）** 和 **重新验证（ revalidating）**行为。
+
+你可以在 **服务端组件**、**路由处理程序**、**Server Actions** 中搭配 async/await 语法使用 fetch。
+
+```js
+// app/page.js
+async function getData() {
+  const res = await fetch('https://jsonplaceholder.typicode.com/todos')
+  if (!res.ok) {
+    // 由最近的 error.js 处理
+    throw new Error('Failed to fetch data')
+  }
+  return res.json()
+}
+
+export default async function Page() {
+  const data = await getData()
+  return <main>{JSON.stringify(data)}</main>
+}
+```
+
+### 1.2. 默认缓存
+
+- 默认情况下，Next.js 会自动缓存服务端 fetch 请求的返回值（背后用的是数据缓存（Data Cache））。这意味着：
+  - 如果两个请求的 URL 和参数相同，Next.js 会 **自动复用** 第一个请求的返回值。
+  - 这样可以 **减少网络请求**，提高性能。
+
+```js
+// fetch 的 cache 选项用于控制该请求的缓存行为
+// 默认就是 'force-cache', 平时写的时候可以省略
+fetch('https://...', { cache: 'force-cache' })
+```
+
+- 但这些情况默认不会自动缓存：
+  1. 在 Server Action 中使用的时候
+  2. 在定义了非 GET 方法的 **路由处理程序中** 使用的时候
+
+> 简单的来说，在 **服务端组件** 和 **只有 GET 方法的路由处理程序** 中使用 fetch，返回结果会 **自动缓存**。
+
+#### 1.2.1. logging 配置项
+
+- 让我们分别举个例子演示下。但在写代码之前，先让我们修改下 next.config.mjs 的配置：
+
+```js
+const nextConfig = {
+  logging: {
+    fetches: {
+      fullUrl: true
+    }
+  }
+};
+
+export default nextConfig;
+```
+
+- 目前 logging 只有这一个配置，用于在开发模式下显示 fetch 请求和缓存日志：
+  - fullUrl: true 表示显示完整的 URL，而不是相对路径。
+- 访问：https://dog.ceo/api/breeds/image/random，我们来看看控制台的输出：
+
+```shell
+GET /api/cache 200 in 385ms
+ | GET https://dog.ceo/api/breeds/image/random 200 in 20ms（cache：HIT）
+```
+
+- 上图日志的意思是：
+  - 访问 /api/cache 路由，其中 GET 请求了 dog.ceo/api/breeds/… 这个接口，接口 20ms 返回，状态码 200，此次请求命中了缓存（HIT）。
+- 这个日志会帮助我们查看缓存情况（实际用的时候有的日志结果不是很准，还有待改进）。
+
+#### 1.2.2. 服务端组件
+
+- 第一种在 **服务端组件** 中使用，修改 app/page.js，代码如下：
+
+```js
+async function getData() {
+  // 接口每次调用都会返回一个随机的猫猫图片数据
+  const res = await fetch('https://api.thecatapi.com/v1/images/search')
+  if (!res.ok) {
+    throw new Error('Failed to fetch data')
+  }
+ 
+  return res.json()
+}
+
+export default async function Page() {
+  const data = await getData()
+  
+  return <img src={data[0].url} width="300" />
+}
+```
+
+- 运行 npm run dev，开启开发模式：
+  - 在开发模式下，为了方便调试，可以使用浏览器的硬刷新（Command + Shift + R）清除缓存:
+    - 此时数据会发生更改（cache: SKIP）。
+    - 普通刷新时因为会命中缓存（cache: HIT），数据会保持不变。
+- 运行 npm run build && npm run start 开启生产版本：
+  - 因为 fetch 请求的返回结果被缓存了，无论是否硬刷新，图片数据都会保持不变。
+
+#### 1.2.3. 路由处理程序 GET 请求
+
+- 第二种在路由处理程序中使用，新建 app/api/cache/route.js，代码如下：
+
+```js
+export async function GET() {
+  const res = await fetch('https://dog.ceo/api/breeds/image/random')
+  
+  const data = await res.json()
+  return Response.json({ data })
+}
+```
+
+- 运行 npm run dev，开启开发模式：
+  - 开发模式下，**浏览器硬刷新** 的时候会 **跳过缓存**，**普通刷新** 的时候则会 **命中缓存**。
+  - 如：
+    - 看到第一次硬刷新的时候，请求接口时间为 912ms。
+    - 后面普通刷新的时候，因为使用缓存中的数据，数据返回时间都是 1ms 左右。
+- 运行 npm run build && npm run start 开启生产版本：
+  - 因为 fetch 请求的返回结果被缓存了，无论是否硬刷新，接口数据都会保持不变。
+
+### 1.3. 重新验证
+
+> 在 Next.js 中，**清除数据缓存** 并 **重新获取最新数据** 的过程 就叫做 **重新验证（Revalidation）**。
+
+- Next.js 提供了两种方式重新验证：
+  - **基于时间的重新验证**（Time-based revalidation）：
+    - 即经过一定时间并有新请求产生后重新验证数据，适用于不经常更改且新鲜度不那么重要的数据。
+  - **按需重新验证**（On-demand revalidation）：
+    - 根据事件手动重新验证数据。
+    - 按需重新验证又可以使用：
+      - 基于标签（tag-based）
+      - 基于路径（path-based）
+    - 两种方法重新验证数据。
+    - 适用于需要尽快展示最新数据的场景。
