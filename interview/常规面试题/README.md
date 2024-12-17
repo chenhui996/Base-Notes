@@ -211,7 +211,7 @@ console.log(flatten(tree));
   - CommonJS是单例模式，ES6模块化是多例模式。
   - CommonJS是同步加载，ES6模块化是异步加载。
 
-## 单例模式的实现
+### 单例模式的实现
 
 - **单例模式**：
   - 单例模式是一种常用的设计模式，保证一个类仅有一个实例，并提供一个访问它的全局访问点。
@@ -238,7 +238,7 @@ console.log(flatten(tree));
 
 当然可以，以下是单例模式的几种实现方式的代码例子：
 
-### 懒汉式
+#### 懒汉式
 
 在JavaScript中，懒汉式单例模式可以通过在第一次调用时创建对象来实现。
 
@@ -268,7 +268,7 @@ const instance2 = SingletonLazy.getInstance();
 console.log(instance1 === instance2); // true
 ```
 
-### 饿汉式
+#### 饿汉式
 
 饿汉式在类加载（或脚本执行）时就实例化对象。
 
@@ -299,7 +299,7 @@ const eagerInstance2 = SingletonEager.getInstance();
 console.log(eagerInstance1 === eagerInstance2); // true
 ```
 
-### 使用闭包（模块模式）
+#### 使用闭包（模块模式）
 
 在JavaScript中，可以利用闭包（或模块模式）来创建一个私有的实例，并提供一个全局的访问点。
 
@@ -328,7 +328,7 @@ const moduleInstance2 = SingletonModule.getInstance();
 console.log(moduleInstance1 === moduleInstance2); // true
 ```
 
-### 使用ES6 Symbol和私有字段
+#### 使用ES6 Symbol和私有字段
 
 在ES6中，可以使用Symbol和类的私有字段来实现单例模式。
 
@@ -361,3 +361,15 @@ const symbolInstance1 = SingletonSymbol.getInstance();
 const symbolInstance2 = SingletonSymbol.getInstance();
 console.log(symbolInstance1 === symbolInstance2); // true
 ```
+
+### 问：new操作符具体干了什么呢？
+
+- 在 JavaScript 中，当你使用 new 操作符来创建一个对象时，会发生几件事情：
+  1. 创建一个新的空对象。
+  2. 设置原型：将这个新对象的 隐式原型（**\__proto\__**）设置为构造函数的显式原型（prototype）属性。
+  3. 改变 this 指向：调用 **构造函数**，并将这个 **新对象** 作为 **构造函数的 this 上下文**（也就是说，在构造函数内部，this 指向这个新对象）。
+  4. 如果 **构造函数** 没有 **显式地返回一个对象**，则默认返回这个新对象。
+     - 详细：
+       - 如果构造函数 **没有显式地返回** 一个对象，JavaScript 引擎就会默认 **返回那个通过 new 操作符创建的新对象**。
+       - 如果构造函数 **显式地返回** 了一个对象，那么返回的 **就是那个显式返回的对象**，而不是新创建的对象。// 如：return {a: 1}, 即返回这个对象，而不是 new 创建的对象。
+       - 如果构造函数 **返回的是非对象类型**（如字符串、数字、布尔值等），那么这些返回值**会被忽略**，仍然 **返回那个通过 new 操作符创建的新对象**。
