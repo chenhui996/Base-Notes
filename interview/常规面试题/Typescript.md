@@ -15,7 +15,7 @@
 - 可选参数
 - 默认参数等
   
-并通过代码示例进行说明，对理解 TypeScript 相关知识及应对面试有帮助。 
+并通过代码示例进行说明，对理解 TypeScript 相关知识及应对面试有帮助。
 
 > 本文整理了一些TypeScript 的面试题，一起来看看吧！
 
@@ -33,7 +33,7 @@
 
 ## 什么是TypeScript
 
-- TypeScript 是: 
+- TypeScript 是:
   - 一种由微软开发的 **开源编程语言**，它是JavaScript的超集。
     - 超集: TypeScript包含了JavaScript的所有功能，并在此基础上添加了一些新的特性。
   - TypeScript通过添加:
@@ -98,7 +98,7 @@ function greet(person: Person) {
   - 可以用来定义 **基本类型**、**联合类型**、**交叉类型** 等。
   - 例如，定义一个 **字符串** 类型的别名：
 
-```ts 
+```ts
 type Name = string;
 let name: Name = 'Alice';
 ```
@@ -311,7 +311,7 @@ declare var $: (selector: string) => any;
   - 可以为 **第三方库** 提供 **类型定义**，提高代码的 **可读性** 和 **可维护性**。
   - 可以在TypeScript中 -> 安全地使用 **JavaScript库** 的功能。
 
-## 什么是命名空间（Namespace）和模块（Module） 
+## 什么是命名空间（Namespace）和模块（Module）
 
 ### 命名空间
 
@@ -420,7 +420,7 @@ console.log(person["name"]); // 输出: Alice
 console.log(person["age"]); // 输出: 30
 ```
 
-### 索引类型的优势:
+### 索引类型的优势
   
 ### 动态属性访问
 
@@ -673,7 +673,7 @@ obj.myMethod(); // 此处必须传入合适的 this 类型
     - **联合类型 union types**: 表示一个值可以是几种类型之一。
     - **交叉类型 intersection types**: 表示一个值同时拥有多种类型的特性。
 
-##  interface可以给Function/Array/Class（Indexable）做声明吗？
+## interface可以给Function/Array/Class（Indexable）做声明吗？
 
 - 在TypeScript中，interface可以用来声明 **函数、数组和类**（具有**索引签名**的**类**）。下面是一些示例代码：
 
@@ -1101,6 +1101,7 @@ class Car {
 ## 简单介绍一下 TypeScript 模块的加载机制？
 
 - 假设有一个导入语句 `import { a } from "moduleA"`;
+
  1. 首先，编译器会 -> 尝试定位 -> 需要 -> 导入的模块文件，通过 **绝对或者相对的路径** 查找方式；
  2. 如果上面的解析失败了，没有查找到对应的模块，编译器会 -> 尝试定位 -> 一个外部模块声明（.d.ts）；（逐级向上查找 node_modules 文件夹）
  3. 最后，如果编译器还是不能解析这个模块，则会抛出一个错误 error TS2307: Cannot find module 'moduleA'.
@@ -1109,7 +1110,7 @@ class Car {
 
 - **ts 类型兼容**：
   - 当一个类型 Y  -> 可以赋值给另一个 -> 类型 X 时:
-    - 我们就可以说: 
+    - 我们就可以说:
       - 类型 X 兼容类型 Y
       - 也就是说两者在结构上是一致的，而不一定非得通过 extends 的方式继承而来。
   - 也就是所谓的 -> 协变
@@ -1133,7 +1134,7 @@ x = y; // OK
 ```
 
 - **接口的兼容性：**
-  - X = Y 
+  - X = Y
     - 只要目标类型 X 中声明的属性变量在源类型 Y 中都存在就是兼容的（ Y 中的类型可以比 X 中的多，但是不能少）
     - 还是协变概念。
 
@@ -1443,6 +1444,6 @@ type T3 = Uncapitalize<"Hello">;  // "hello"
 
 ---
 
-> 参考链接：https://juejin.cn/post/6999985372440559624
-> 参考链接：https://juejin.cn/post/6999985372440559624
-> 参考链接：https://www.typescriptlang.org/docs/handbook/utility-types.html
+> 参考链接：<https://juejin.cn/post/6999985372440559624>
+> 参考链接：<https://juejin.cn/post/6999985372440559624>
+> 参考链接：<https://www.typescriptlang.org/docs/handbook/utility-types.html>
