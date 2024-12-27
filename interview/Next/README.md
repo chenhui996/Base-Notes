@@ -1318,7 +1318,7 @@ export async function GET() {
 }
 ```
 
-- 浏览器访问 <http://localhost:3000/api/posts，即可查看接口返回的数据。>
+- 浏览器访问 <http://localhost:3000/api/posts>，即可查看接口返回的数据。
 - 我们使用 next/server 的 NextResponse 对象用于设置响应内容。
   - 但这里不一定非要用 NextResponse，直接使用 Response 也是可以的。
 - 但在实际开发中，推荐使用 NextResponse。
@@ -1531,90 +1531,7 @@ export async function GET(request) {
 
 ### Streaming
 
-- 直接使用底层的 Web API 实现 Streaming：
-
-```js
-// app/api/route.js
-// https://developer.mozilla.org/docs/Web/API/ReadableStream#convert_async_iterator_to_stream
-function iteratorToStream(iterator) {
-  return new ReadableStream({
-    async pull(controller) {
-      const { value, done } = await iterator.next()
- 
-      if (done) {
-        controller.close()
-      } else {
-        controller.enqueue(value)
-      }
-    },
-  })
-}
- 
-function sleep(time) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, time)
-  })
-}
- 
-const encoder = new TextEncoder()
- 
-async function* makeIterator() {
-  yield encoder.encode('<p>One</p>')
-  await sleep(200)
-  yield encoder.encode('<p>Two</p>')
-  await sleep(200)
-  yield encoder.encode('<p>Three</p>')
-}
- 
-export async function GET() {
-  const iterator = makeIterator()
-  const stream = iteratorToStream(iterator)
- 
-  return new Response(stream)
-}
-```
-
-- 客户端调用：
-
-```js
-// 客户端代码，假设API路由的URL是'/api/route'
-async function fetchStream() {
-  const response = await fetch('/api/route');
-  
-  // 检查响应是否成功
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-
-  // 获取流的读取器
-  const reader = response.body.getReader();
-
-  // 异步读取流中的数据
-  async function readStream() {
-    let done = false;
-    while (!done) {
-      const { value, done: streamDone } = await reader.read();
-      if (streamDone) {
-        done = true;
-        console.log('Stream closed.');
-      } else {
-        // 处理读取到的数据块，这里假设数据是Uint8Array类型
-        const textDecoder = new TextDecoder();
-        const text = textDecoder.decode(value);
-        console.log(text); // 输出: <p>One</p>，然后<p>Two</p>，最后<p>Three</p>
-      }
-    }
-  }
-
-  // 开始读取流
-  readStream();
-}
-
-// 调用函数来发起请求并处理响应
-fetchStream();
-```
-
-> 核心：获取流的读取器 -> const reader = response.body.getReader();
+- 跳转：[在 nextjs 中，讨论一下 Streaming](./Streaming.md)
 
 ### 小结（初识路由 route.js）
 
@@ -2624,159 +2541,9 @@ Suspense 是 Next.js 项目中常用的一个组件，了解其 **原理和背�
 ### Suspense
 
 - 为了解决这些问题，React 18 引入了 <Suspense> 组件。
-- 我们来介绍下这个组件：
-  - <Suspense> 允许你推迟渲染某些内容，直到满足某些条件（例如数据加载完毕）。
-  - 你可以将 **动态组件** 包装在 Suspense 中，然后向其传递一个 fallback UI，以便在 **动态组件加载时** 显示。
-  - 如果**数据请求缓慢**，使用 Suspense 流式渲染该组件，不会影响页面其他部分的渲染，更不会阻塞整个页面。
-- 让我们来写一个例子，新建 app/dashboard/page.js，代码如下：
+- 跳转：[Suspense](./Suspense.md)
 
-```js
-import { Suspense } from 'react'
-
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-
-async function PostFeed() {
-  await sleep(2000)
-  return <h1>Hello PostFeed</h1>
-}
-
-async function Weather() {
-  await sleep(8000)
-  return <h1>Hello Weather</h1>
-}
-
-async function Recommend() {
-  await sleep(5000)
-  return <h1>Hello Recommend</h1>
-}
-
-export default function Dashboard() {
-  return (
-    <section style={{padding: '20px'}}>
-      <Suspense fallback={<p>Loading PostFeed Component</p>}>
-        <PostFeed />
-      </Suspense>
-      <Suspense fallback={<p>Loading Weather Component</p>}>
-        <Weather />
-      </Suspense>
-      <Suspense fallback={<p>Loading Recommend Component</p>}>
-        <Recommend />
-      </Suspense>
-    </section>
-  )
-}
-```
-
-- 页面会显示：
-  - **Loading PostFeed Component**，然后 **2s** 后显示 **Hello PostFeed**。
-  - **Loading Weather Component**，然后 **8s** 后显示 **Hello Weather**。
-  - **Loading Recommend Component**，然后 **5s** 后显示 **Hello Recommend**。
-- 让我们观察下 dashboard 这个 HTML 文件的加载情况：（network）
-  - 你会发现它一开始是 2.03s
-  - 然后变成了 5.03s
-  - 最后变成了 8.04s
-- 这不就正是我们设置的 sleep 时间吗？
-- 查看 dashboard 请求的响应头：
-  - **Transfer-Encoding** 标头的值为 **chunked**：表示数据将以 **一系列分块的形式** 进行发送。
-
-> 分块传输编码（Chunked transfer encoding）是超文本传输协议（HTTP）中的一种数据传输机制。
-> 允许 HTTP由网页服务器发送给客户端应用（ 通常是网页浏览器）的数据可以分成多个部分。
-> 分块传输编码只在 HTTP 协议1.1版本（HTTP/1.1）中提供。
-
-- 再查看 dashboard 返回的数据就会发现：
-  - **使用 Suspense 组件的 fallback UI** 和 **渲染后的内容** 都会出现在该 HTML 文件中。
-  - 说明该 请求 **持续** 与 服务端 保持连接，服务端在 **组件渲染完后** 会将 渲染后的内容 **追加传给客户端**。
-  - 客户端收到新的内容后进行解析，执行类似于 $RC("B:2", "S:2")这样的函数交换 DOM 内容，使 fallback UI 替换为渲染后的内容。
-- 这个过程被称之为 Streaming Server Rendering（流式渲染），它解决了上节说的传统 SSR 的第一个问题：
-  - fix：数据获取必须在组件渲染之前。
-- 使用 Suspense，先渲染 Fallback UI，等 **数据返回再渲染** 具体的组件内容。
-
-- 使用 Suspense 还有一个好处就是：
-  - Selective Hydration（选择性水合）。
-  - 简单的来说，当多个组件等待水合的时候，React 可以根据 **用户交互决定** 组件水合的 **优先级**。
-  - 比如 Sidebar 和 MainContent 组件都在等待水合，快要到 Sidebar 了，但此时用户点击了 MainContent 组件：
-    - React 会在 **单击事件的捕获阶段** 同步水合 MainContent 组件以保证立即响应，Sidebar 稍后水合。
-- 总结一下，使用 Suspense，可以解锁两个主要的好处，使得 SSR 的功能更加强大：
-  1. Streaming Server Rendering（流式渲染）：从 服务器 到 客户端 **渐进式渲染 HTML**。
-  2. Selective Hydration（选择性水合）：React 根据 **用户交互** 决定水合的优先级。
-
-### Suspense 会影响 SEO 吗？
-
-- 首先，Next.js 会等待 generateMetadata 内的数据请求完毕后，再将 UI 流式传输到客户端，这保证了响应的第一部分就会包含 <head> 标签。
-- 其次，因为 Streaming 是流式渲染，HTML 中会包含最终渲染的内容，所以它不会影响 SEO。
-
-#### 面试：你在使用 React 的 <Suspense> 组件时，是怎么处理 SEO 和搜索引擎爬虫的？
-
-- 当我使用 <Suspense> 组件时，主要关注的是页面的 **初始渲染** 和 **SEO**。
-  - Suspense 是用来 **处理异步加载的组件** 的，它允许我们在 **数据还在加载时** 显示一个 **占位符**，比如一个加载中的小圈圈。
-  - 但是，对于 SEO 和搜索引擎爬虫来说，它们最关心的是 **页面的初始内容**，尤其是 <head> 里面的 **元数据** 和 **页面的主体部分**。
-  - 所以，在设计页面时，需要先确保这些 **关键内容** 在 **初始渲染时** 就已经确定，并且包含在发送给客户端的 HTML 里。
-  - 这样，即使页面里有一些 **异步加载的子组件**，爬虫在抓取页面时也能拿到完整的 <head> 信息和主体内容。
-  - 而异步组件嘛，它们 **加载完成后** 只是 **替换掉之前的占位符**，不会影响到已经发送给爬虫的内容。
-- 所以，总的来说，使用 <Suspense> 组件并不会对 SEO 产生负面影响，关键是要 **确保页面的关键内容** 在初始渲染时就已经准备好。”
-  - **关键内容**：
-    - <head> 里面的元数据
-      - title、description、keywords 等
-    - 页面的主体内容
-      - 比如文章的标题、正文、图片等
-    - 其他搜索引擎爬虫关心的内容
-      - 比如链接、导航、标签等
-    - 这些内容都要在初始渲染时就已经确定，并且包含在发送给客户端的 HTML 里。
-
-### Suspense 如何控制渲染顺序？
-
-- 在刚才的例子中，我们是将三个组件同时进行渲染，哪个组件的数据先返回，就先渲染哪个组件。
-- 但有的时候，希望按照某种顺序展示组件:
-  - 比如先展示 PostFeed，再展示Weather，最后展示Recommend
-  - 此时，你可以将 Suspense 组件进行嵌套：
-
-```js
-import { Suspense } from 'react'
-
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-
-async function PostFeed() {
-  await sleep(2000)
-  return <h1>Hello PostFeed</h1>
-}
-
-async function Weather() {
-  await sleep(8000)
-  return <h1>Hello Weather</h1>
-}
-
-async function Recommend() {
-  await sleep(5000)
-  return <h1>Hello Recommend</h1>
-}
-
-export default function Dashboard() {
-  return (
-    <section style={{padding: '20px'}}>
-      <Suspense fallback={<p>Loading PostFeed Component</p>}>
-        <PostFeed />
-        <Suspense fallback={<p>Loading Weather Component</p>}>
-          <Weather />
-          <Suspense fallback={<p>Loading Recommend Component</p>}>
-            <Recommend />
-          </Suspense>
-        </Suspense>
-      </Suspense>
-    </section>
-  )
-}
-```
-
-- 那么问题来了，此时页面的最终加载时间是多少秒？
-- 是请求花费时间最长的 8s 还是 2 + 8 + 5 = 15s 呢？
-- 答案是 8s:
-  - 这些数据请求是同时发送的。
-  - 所以当 Weather 组件返回的时候：
-    - Recommend 组件立刻就展示了出来。
-
-> 注意：这也是因为这里的数据请求并没有前后依赖关系，如果有那就另讲了。
-
-### Streaming
+### Streaming 概念
 
 - Suspense 背后的这种技术称之为 Streaming:
   - 将页面的 HTML 拆分成多个 chunks，然后逐步将这些块从服务端发送到客户端。
@@ -2795,8 +2562,8 @@ export default function Dashboard() {
 
 - 在 Next.js 中有两种实现 Streaming 的方法：
   1. 页面级别，使用 loading.jsx
-  2. 特定组件，使用 <Suspense>
-- <Suspense> 上节已经介绍过，loading.jsx 在 《路由篇 | App Router》也介绍过。
+  2. 特定组件，使用 `<Suspense>`
+- `<Suspense>` 上节已经介绍过，loading.jsx 在 《路由篇 | App Router》也介绍过。
 
 ### 缺点
 
@@ -2824,6 +2591,8 @@ export default function Dashboard() {
 
 > 至此，渲染篇基本介绍完毕，我们开始进入数据获取篇！
 
+---
+
 ## 数据获取 ｜ 数据获取、缓存与重新验证
 
 - 在 Next.js 中如何获取数据呢？
@@ -2836,9 +2605,9 @@ export default function Dashboard() {
 
 > 让我们来看看具体如何使用吧。
 
-## 1. 服务端使用 fetch
+### 1. 服务端使用 fetch
 
-### 1.1. 基本用法
+#### 1.1. 基本用法
 
 - Next.js 拓展了原生的 fetch Web API，可以为服务端的每个请求 **配置缓存（caching）** 和 **重新验证（ revalidating）**行为。
 
@@ -2861,7 +2630,7 @@ export default async function Page() {
 }
 ```
 
-### 1.2. 默认缓存
+#### 1.2. 默认缓存
 
 - 默认情况下，Next.js 会自动缓存服务端 fetch 请求的返回值（背后用的是数据缓存（Data Cache））。这意味着：
   - 如果两个请求的 URL 和参数相同，Next.js 会 **自动复用** 第一个请求的返回值。
@@ -2879,7 +2648,7 @@ fetch('https://...', { cache: 'force-cache' })
 
 > 简单的来说，在 **服务端组件** 和 **只有 GET 方法的路由处理程序** 中使用 fetch，返回结果会 **自动缓存**。
 
-#### 1.2.1. logging 配置项
+##### 1.2.1. logging 配置项
 
 - 让我们分别举个例子演示下。但在写代码之前，先让我们修改下 next.config.mjs 的配置：
 
@@ -2897,7 +2666,7 @@ export default nextConfig;
 
 - 目前 logging 只有这一个配置，用于在开发模式下显示 fetch 请求和缓存日志：
   - fullUrl: true 表示显示完整的 URL，而不是相对路径。
-- 访问：https://dog.ceo/api/breeds/image/random，我们来看看控制台的输出：
+- 访问：<https://dog.ceo/api/breeds/image/random，我们来看看控制台的输出：>
 
 ```shell
 GET /api/cache 200 in 385ms
@@ -2908,7 +2677,7 @@ GET /api/cache 200 in 385ms
   - 访问 /api/cache 路由，其中 GET 请求了 dog.ceo/api/breeds/… 这个接口，接口 20ms 返回，状态码 200，此次请求命中了缓存（HIT）。
 - 这个日志会帮助我们查看缓存情况（实际用的时候有的日志结果不是很准，还有待改进）。
 
-#### 1.2.2. 服务端组件
+##### 1.2.2. 服务端组件
 
 - 第一种在 **服务端组件** 中使用，修改 app/page.js，代码如下：
 
@@ -2937,7 +2706,7 @@ export default async function Page() {
 - 运行 npm run build && npm run start 开启生产版本：
   - 因为 fetch 请求的返回结果被缓存了，无论是否硬刷新，图片数据都会保持不变。
 
-#### 1.2.3. 路由处理程序 GET 请求
+##### 1.2.3. 路由处理程序 GET 请求
 
 - 第二种在路由处理程序中使用，新建 app/api/cache/route.js，代码如下：
 
@@ -2958,7 +2727,7 @@ export async function GET() {
 - 运行 npm run build && npm run start 开启生产版本：
   - 因为 fetch 请求的返回结果被缓存了，无论是否硬刷新，接口数据都会保持不变。
 
-### 1.3. 重新验证
+#### 1.3. 重新验证
 
 > 在 Next.js 中，**清除数据缓存** 并 **重新获取最新数据** 的过程 就叫做 **重新验证（Revalidation）**。
 
@@ -2973,7 +2742,7 @@ export async function GET() {
     - 两种方法重新验证数据。
     - 适用于需要尽快展示最新数据的场景。
 
-#### 基于时间的重新验证
+##### 基于时间的重新验证
 
 - 使用基于时间的重新验证，你需要在使用 fetch 的时候设置 next.revalidate 选项（以秒为单位）：
 
@@ -2991,36 +2760,36 @@ export const revalidate = 3600
 - 注：在一个**静态渲染的路由**中，如果你有多个请求，每个请求设置了不同的重新验证时间，**将会使用最短的时间** 用于 **所有** 的请求。
 - 而对于 **动态渲染的路由**，每一个 fetch 请求都将独立重新验证。
 
-#### 按需重新验证
+##### 按需重新验证
 
 - 在 Next.js 中，按需重新验证允许你通过 **路径（revalidatePath）** 或 **缓存标签（revalidateTag）** 更新缓存。
 
 - 以下是关于 revalidatePath 的具体说明和使用示例。
 
-##### revalidatePath 使用示例
+###### revalidatePath 使用示例
 
 - 跳转：[revalidatePath 使用示例](./revalidatePath.md)
 
-##### revalidateTag 使用示例
+###### revalidateTag 使用示例
 
 - 跳转：[revalidateTag 使用示例](./revalidateTag.md)
 
-##### 错误处理和重新验证
+###### 错误处理和重新验证
 
 - 如果在尝试 **重新验证的过程中** 出现错误:
   - 缓存会 -> 继续提供 -> 上一个重新生成的数据。
   - 而在下一个后续请求中，Next.js 会 **尝试再次重新验证数据**。
 
-### 1.4. 退出数据缓存
+#### 1.4. 退出数据缓存
 
 - 当 fetch 请求满足这些条件时都会退出数据缓存：
   - fetch 请求添加了 cache: 'no-store' 选项
   - fetch 请求添加了 revalidate: 0 选项
   - fetch 请求在路由处理程序中并使用了 POST 方法
-  - 使用headers 或 cookies 的方法之后使用 fetch请求
+  - 使用 headers 或 cookies 的方法之后使用 fetch请求
   - 配置了路由段选项 const dynamic = 'force-dynamic'
   - 配置了路由段选项 fetchCache ，默认会跳过缓存
-  - fetch 请求使用了 Authorization或者 Cookie请求头，并且在组件树中其上方还有一个未缓存的请求
+  - fetch 请求使用了 Authorization或者 Cookie 请求头，并且在组件树中其上方还有一个未缓存的请求
 - 在具体使用的时候，如果你不想缓存某个单独请求：
 
 ```js
@@ -3037,6 +2806,136 @@ export const dynamic = 'force-dynamic'
 
 > **!!!: Next.js 推荐单独配置每个请求的缓存行为，这可以让你更精细化的控制缓存行为。**
 
-## 2.服务端使用三方请求库
+### 2.服务端使用三方请求库
 
-...待续
+- 也不是所有时候都能使用 fetch 请求，如果你使用了 **不支持** 或者 **暴露 fetch 方法** 的三方库（如数据库、CMS 或 ORM 客户端）。
+- **但又想实现数据缓存机制？**
+- 那你可以使用 React 的 **cache 函数** 和 **路由段配置项** 来 **实现** 请求的缓存和重新验证。
+- 举个例子：
+
+```js
+// app/utils.js
+import { cache } from 'react'
+ 
+const getItem = cache(async (id) => {
+  const item = await db.item.findUnique({ id })
+  return item
+})
+
+export {getItem}
+```
+
+- 现在我们调用两次 getItem:
+
+```js
+// app/item/[id]/layout.js
+import { getItem } from '@/utils/get-item'
+ 
+export const revalidate = 3600
+ 
+export default async function Layout({ params: { id } }) {
+  const item = await getItem(id)
+  // ...
+}
+```
+
+```js
+// app/item/[id]/page.js
+import { getItem } from '@/utils/get-item'
+ 
+export const revalidate = 3600
+ 
+export default async function Page({ params: { id } }) {
+  const item = await getItem(id)
+  // ...
+}
+```
+
+- 在这个例子中，尽管 getItem 被调用两次，但只会产生一次数据库查询。
+
+### 3. 客户端使用路由处理程序
+
+- 如果你需要在 **客户端组件中获取数据**，可以在 **客户端** 调用 **路由处理程序**。
+- **路由处理程序** 会在 **服务端** 被执行，然后将数据 **返回给客户端**，适用于不想暴露敏感信息给客户端（比如 API tokens）的场景。
+
+> 如果你使用的是 **服务端组件**，**无须借助** 路由处理程序，直接获取数据即可。
+
+#### 面试题：**路由处理程序** 会在 **服务端** 被执行？什么意思？
+
+> !核心：当你使用 fetch 去请求一个以 /api 开头的URL时，这个请求会被Next.js的服务端接收并处理。
+
+- 原本，我可能会在客户端组件中直接使用fetch来请求某个具体的URL以获取数据。例如：
+
+```js
+// 客户端组件中直接使用fetch请求外部API
+fetch('https://api.example.com/data')
+  .then(response => response.json())
+  .then(data => {
+    // 处理并展示数据
+  });
+```
+
+- 然而，这种方式是直接从客户端（用户的浏览器）向外部API发起请求，存在暴露敏感信息、受限于跨域策略等问题。
+- 现在，我了解了Next.js中的API路由机制。
+- 我可以在Next.js应用的 app/api 目录下创建一个 **API路由文件**，比如data.js，并在其中 **编写服务端逻辑** 来 **获取数据**：
+
+```js
+// app/api/data.js
+export default function handler(req, res) {
+  // 假设我们从某个内部数据库或调用另一个API获取数据
+  const data = { message: "Hello from server-side API route!" };
+  res.status(200).json(data);
+}
+```
+
+- 然后，在客户端组件中，我改为请求这个API路由：
+
+```js
+// 客户端组件中请求Next.js的API路由
+fetch('/api/data')
+  .then(response => response.json())
+  .then(data => {
+    // 处理并展示从API路由返回的数据
+    console.log(data.message); // 输出: Hello from server-side API route!
+  });
+```
+
+- 通过这种方式，请求首先被Next.js的服务端接收，由app/api/data.js中的逻辑处理，并将数据作为响应返回给客户端。
+- 这样，我可以在服务端安全地处理敏感信息、执行复杂的数据逻辑，并将处理后的数据传递给客户端进行展示。
+
+> 名词解释：
+  > 路由处理程序：通常指的是处理特定路由请求的函数或代码块。
+  > 在Next.js中，当你创建一个API路由时，你实际上是在定义一个 **路由处理程序**，它负责响应发送到该路由的请求。
+  > 创建一个API路由：在app/api目录下创建一个文件，然后在其中编写处理请求的代码。
+
+### 4. 客户端使用三方请求库
+
+- 你也可以在客户端使用三方的库如 SWR 或 React Query 来获取数据。
+- 这些库都有提供自己的 API 实现记忆请求、缓存、重新验证和更改数据。
+
+### 5. 建议与最佳实践
+
+- 有一些在 React 和 Next.js 中获取数据的建议和最佳实践，本节来介绍一下：
+
+#### 5.1. 尽可能在服务端获取数据
+
+- 尽可能在服务端获取数据，这样做有很多好处，比如：
+  1. 可以直接访问后端资源（如数据库）
+  2. 防止敏感信息泄漏
+  3. 减少客户端和服务端之间的来回通信，加快响应时间
+  4. ...
+
+#### 5.2. 在需要的地方就地获取数据
+
+- 如果组件树中的多个组件使用相同的数据，无须先全局获取，再通过 props 传递，你可以直接在需要的地方使用 fetch 或者 React cache 获取数据。
+- 不用担心多次请求造成的性能问题，因为 fetch 请求会 **自动被记忆化**。
+- 这也同样适用于布局，
+- 毕竟本来父子布局之间也不能传递数据。
+
+#### 5.3. 适当的时候使用 Streaming
+
+- Streaming 和 Suspense 都是 React 的功能，允许你 **增量传输内容** 以及 **渐进式渲染 UI 单元**。
+  - 具体现象：
+    - 页面可以 **直接渲染部分内容**。
+    - 剩余获取数据的部分会 **展示加载态**。
+- 这也意味着用户不需要等到页面完全加载完才能与其交互。
