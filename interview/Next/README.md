@@ -2939,3 +2939,143 @@ fetch('/api/data')
     - 页面可以 **直接渲染部分内容**。
     - 剩余获取数据的部分会 **展示加载态**。
 - 这也意味着用户不需要等到页面完全加载完才能与其交互。
+
+#### 5.4. 串行获取数据
+
+- 在 React 组件内获取数据时，有两种数据获取模式，**并行** 和 **串行**。
+- **串行数据获取:**
+  - 数据请求相互依赖，形成瀑布结构，这种行为有的时候是必要的，但也会导致加载时间更长。
+- **并行数据获取:**
+  - 请求同时发生并加载数据，这会减少加载数据所需的总时间。
+
+- 我们先说说串行数据获取，直接举个例子：
+
+```js
+// app/artist/page.js
+// ...
+ 
+async function Playlists({ artistID }) {
+  // 等待 playlists 数据
+  const playlists = await getArtistPlaylists(artistID)
+ 
+  return (
+    <ul>
+      {playlists.map((playlist) => (
+        <li key={playlist.id}>{playlist.name}</li>
+      ))}
+    </ul>
+  )
+}
+ 
+export default async function Page({ params: { username } }) {
+  // 等待 artist 数据
+  const artist = await getArtist(username)
+ 
+  return (
+    <>
+      <h1>{artist.name}</h1>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Playlists artistID={artist.id} />
+      </Suspense>
+    </>
+  )
+}
+```
+
+- 在这个例子中，`<Playlists />` 只有当 `<Artist />` 获取到数据后，才会开始获取数据，因为 Playlists 组件依赖 artistId 这个 prop。
+- 这也很容易理解，毕竟只有先知道了是哪位艺术家，才能获取这位艺术家对应的曲目。
+
+- 在这种情况下，你可以使用 loading.js 或者 React 的 `<Suspense>` 组件，展示一个即时加载状态。
+  - 防止整个路由被 **数据请求阻塞**，而且 **用户** 还可以与 **未被阻塞的部分** 进行 **交互**。
+
+- 关于阻塞数据请求：
+  - 一种 **防止出现** 串行数据请求 的方法是：
+    - 在 **应用程序根部** 全局获取数据。
+    - 但这会阻塞其下所有路由段的渲染，直到数据加载完毕。
+  - 任何使用 await 的 fetch 请求都会 **阻塞渲染** 和 **下方所有组件的数据请求**，除非它们使用了 `<Suspense>` 或者 loading.js。
+
+> 另一种替代方式就是: 使用 **并行数据请求** 或者 **预加载模式**。
+
+#### 5.5. 并行数据请求
+
+- 要实现并行请求数据，你可以:
+  - 在 **使用数据的组件外** 定义请求，然后在 **组件内部调用**，举个例子：
+
+```js
+import Albums from './albums'
+
+// 组件外定义
+async function getArtist(username) {
+  const res = await fetch(`https://api.example.com/artist/${username}`)
+  return res.json()
+}
+ 
+async function getArtistAlbums(username) {
+  const res = await fetch(`https://api.example.com/artist/${username}/albums`)
+  return res.json()
+}
+ 
+export default async function Page({ params: { username } }) {
+  // 组件内调用，这里是并行的
+  const artistData = getArtist(username)
+  const albumsData = getArtistAlbums(username)
+ 
+  // 等待 promise resolve
+  const [artist, albums] = await Promise.all([artistData, albumsData])
+ 
+  return (
+    <>
+      <h1>{artist.name}</h1>
+      <Albums list={albums}></Albums>
+    </>
+  )
+}
+```
+
+- 在这个例子中，getArtist 和 getArtistAlbums 函数都是在 Page 组件外定义，然后在 Page 组件内部调用。
+  - 用户需要等待两个 promise 都 resolve 后才能看到结果。
+
+> 为了提升用户体验，可以使用 Suspense 组件来 **分解渲染工作**，尽快展示出部分结果。
+
+#### 5.6. 预加载数据
+
+- 跳转：[nextjs 中的 “数据接口” 预加载](./Preload.md#nextjs-中的-数据接口-预加载)
+
+#### 5.7. 使用 React cache server-only 和预加载模式
+
+- 你可以将 cache 函数，preload 模式和 server-only 包一起使用，创建一个 可在 **整个应用使用的** 数据请求 **工具函数**。
+
+```js
+// utils/get-article.js
+import { cache } from 'react'
+import 'server-only'
+ 
+export const preloadArticle = (id) => {
+  void getArticle(id)
+}
+ 
+export const getArticle = cache(async (id) => {
+  // ...
+})
+```
+
+- 现在，你可以提前获取数据、缓存返回结果，并保证数据获取只发生在服务端。
+- 此外，布局、页面、组件都可以使用 utils/get-article.js
+
+### 总结 ｜ 数据获取、缓存与重新验证
+
+- 本节主要介绍了 Next.js 中的数据获取、缓存和重新验证机制。
+- 通过 fetch 方法，你可以在服务端获取数据，并且 Next.js 会自动缓存请求的返回值。
+- 你可以通过设置 next.revalidate 选项来重新验证数据，也可以使用 revalidatePath 和 revalidateTag 来按需重新验证数据。
+- 如果你使用了不支持 fetch 方法的三方库，你可以使用 React cache 函数和路由段配置项来实现请求的缓存和重新验证。
+- 最后，我们还介绍了一些在 React 和 Next.js 中获取数据的建议和最佳实践，比如尽可能在服务端获取数据、在需要的地方就地获取数据、适当的时候使用 Streaming 等。
+- 通过这些方法，你可以更好地控制数据的获取、缓存和重新验证，提高应用的性能和用户体验。
+
+> 在 Next.js 中，为了提高性能，应该尽可能的使用缓存，但为了保证数据的时效性，也应该设置合理的重新验证逻辑。
+> Next.js 推荐单独配置每个请求的缓存行为，这可以让你更精细化的控制缓存行为。
+
+---
+
+## 缓存 ｜ Caching
+
+... 未完待续
