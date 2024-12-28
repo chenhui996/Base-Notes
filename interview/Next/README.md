@@ -3140,3 +3140,9 @@ export const getArticle = cache(async (id) => {
 
 > 在实际项目开发中，路由缓存可能是一个让人头疼的问题。
 > 因为它经常使用，但又无法退出，为此有的时候需要特殊处理，所以关于路由缓存可以多关注一下。
+
+---
+
+## 数据获取 ｜ Server Actions
+
+- 跳转：[Server Actions](./Server-Actions.md)
