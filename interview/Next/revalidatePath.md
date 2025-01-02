@@ -1,6 +1,6 @@
 # revalidatePath 使用示例
 
-- **revalidatePath** 可以在 **路由处理程序** 或 **Server Action** 中调用，用来更新特定路径的缓存。
+- **revalidatePath** 可以在 **路由处理程序** 或 **Server Action** 中调用，用来更新 **特定路径** 的缓存。
 - 创建目录：
 
 ```bash
