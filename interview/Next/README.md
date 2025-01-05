@@ -3147,8 +3147,14 @@ export const getArticle = cache(async (id) => {
 
 - 跳转：[Server Actions](./Server-Actions.md)
 
----
-
 ## 样式 ｜ Tailwind CSS、CSS-in-JS 和 Sass
 
 - 跳转：[Tailwind CSS、CSS-in-JS 和 Sass](./Style.md)
+
+## 配置 ｜ 环境变量、路径别名和 src 目录
+
+- 跳转：[环境变量、路径别名和 src 目录](./config-part/Env-path-src.md)
+
+## 配置 ｜ 路由段配置
+
+- 跳转：[路由段配置](./config-part/Route.md)
