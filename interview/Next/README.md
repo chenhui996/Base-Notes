@@ -3185,3 +3185,9 @@ export const getArticle = cache(async (id) => {
 ### 4. Script
 
 - 跳转：[Script 组件](./components/Script.md)
+
+---
+
+## API | next.config.js
+
+- 跳转：[next.config.js](./config-part/next.config.md)
