@@ -383,8 +383,8 @@ export async function createToDoDirectly(value) {
 
 - 有时候我们需要获取表单提交时的状态, 比如:
   - 表单是否正在提交
-  - 表单提交成功
   - 表单提交失败
+  - 表单提交成功
 - useFormStatus, 这是 React 的官方 hook, 用于返回表单提交的状态信息。示例代码如下:
 
 ```jsx
@@ -482,7 +482,7 @@ export default function Home() {
 
 #### 3. 实战体会 (useFormStatus 和 useFormState)
 
-- 现在让我们结合 useFormStatus 和 useFormState, 讲解使用 Server Actions 如何处理 form 提交。
+- 现在让我们结合 useFormStatus 和 **useFormState**, 讲解使用 Server Actions 如何处理 form 提交。
 - 涉及的目录和文件如下:
 
 ```bash
@@ -539,7 +539,7 @@ export default function AddToDoForm() {
   return (
     <form action={formAction}>
       <input type="text" name="todo" />
-      <SubmitButton />
+      <**SubmitButton** />
       <p aria-live="polite" className="sr-only">
         {state?.message}
       </p>
@@ -577,6 +577,7 @@ export async function createToDo(prevState, formData) {
 - 注意: 当使用 useFormState 的时候, 对应 Server Action 函数的参数, 第一个参数是 prevState, 第二个参数是 formData。
 - 当使用 useFormStatus 的时候, 要写在 form 下的单独的组件中。
 - 使用的时候, 注意这两点就行。
+- 特别注意：现在使用 React.useActionState 一个 api，即可替换上面的 useFormState 和 useFormStatus。（是React 19 新增的）
 
 ### Server Actions 注意点
 
