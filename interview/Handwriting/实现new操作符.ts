@@ -52,3 +52,10 @@ namespace NewPerson {
 const newPerson = myNew(NewPerson.Person, 'Alice', 30);
 newPerson.sayHello(); // 应该输出：Hello, my name is Alice and I am 30 years old.
 
+
+// 总结
+// fn.prototype 代表构造函数的 原型对象，存储了共享方法（如 sayHello）。
+// Object.create(fn.prototype) 创建一个新的对象，并让它的 __proto__ 指向 fn.prototype，从而继承方法。
+// fn.apply(newObj, args) 让新对象执行构造函数，初始化 name、age 等属性。
+// 这就是 new 操作符的核心实现！💡
+

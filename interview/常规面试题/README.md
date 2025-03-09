@@ -1,6 +1,6 @@
 # 常规面试题
 
-### 何为 REM 布局？REM 布局的原理是什么？
+## 何为 REM 布局？REM 布局的原理是什么？
 
 - REM 是 CSS3 新增的一个相对单位（root em，根em），这个单位引起了广泛关注。
 - 这个单位与em有什么区别呢？
@@ -10,7 +10,7 @@
     - 又可以 **避免** -> 字体大小逐层复合的连锁反应。
 - 目前，除了IE8及更早版本外，所有浏览器均已支持rem。
 
-### 说说BFC
+## 说说BFC
 
 - BFC(Block Formatting Context)直译为"块级格式化上下文"。
 - 是一个独立的渲染区域，只有Block-level box参与，它规定了内部的Block-level Box如何布局。
@@ -49,7 +49,7 @@
   - GFC：网格布局格式化上下文（Grid Formatting Context）
   - FFC：自适应格式化上下文（Flex Formatting Context）
 
-### Object.assign() 是浅拷贝还是深拷贝？
+## Object.assign() 是浅拷贝还是深拷贝？
 
 - Object.assign() 是浅拷贝。
 - 深拷贝：
@@ -60,40 +60,7 @@
       - 这种方法适用于大多数普通对象，但对于包含特殊属性（如函数、undefined、null、Date、RegExp等）的对象可能不适用。
 - 浅拷贝：只会拷贝对象的第一层属性，如果属性是对象，拷贝的是对象的引用。
 
-### 说说你对闭包的理解
-
-- 闭包是指 -> 有权访问 -> 另一个函数作用域 -> 中的变量 -> 的函数。
-- 创建闭包的常见方式，就是 **在一个函数内部创建另一个函数**。
-- 闭包的特性：
-  - 函数内再嵌套函数
-  - 内部函数可以引用外层的参数和变量
-  - 参数和变量不会被垃圾回收机制回收
-- 闭包的作用：
-  - 实现公有变量
-  - 做缓存
-  - 可以实现封装，属性私有化
-- 闭包的缺点：
-  - 作用域链的延长
-  - 对内存消耗
-  - 可能会导致内存泄漏
-- 闭包的应用：
-  - 循环遍历创建函数
-  - 函数柯里化
-  - 定时器
-  - 面向对象和闭包
-- 闭包的注意点：
-  - 闭包会使得函数中的变量都被保存在内存中，内存消耗很大，所以不能滥用闭包，否则会造成网页的性能问题。
-  - 解决方法：在退出函数之前，将不使用的局部变量全部删除。
-- 闭包的实现：
-  - 闭包是函数内部嵌套函数，内部函数引用外部函数的变量，外部函数返回内部函数。
-  - 闭包的实现方式：函数作为返回值，函数作为参数传递。
-- 闭包的应用场景：
-  - 闭包常常用来封装变量，隐藏细节，只提供接口，如工厂函数。
-  - 闭包常常用来实现数据的封装，即只提供接口，不提供数据。
-  - 闭包常常用来实现模块化，即将一些功能封装在闭包中，只暴露一些接口给外部使用。
-    - 举例：在react中，使用useEffect的闭包特性，可以在useEffect中访问到外部的变量。
-
-### 你在前端工作中，如何处理压力和面对挑战？
+## 你在前端工作中，如何处理压力和面对挑战？
 
 - 前端工作中，压力和挑战是常有的事情，如何处理压力和面对挑战，是每个前端工程师都需要思考的问题。
 - 处理压力和面对挑战的方法：
@@ -104,7 +71,7 @@
   - 学会自我调节，适当的休息和放松，保持身心健康。
   - 学会自我提升，不断学习新知识，提高自己的技术水平。
 
-### 什么是 event.target 和 event.currentTarget？
+## 什么是 event.target 和 event.currentTarget？
 
 - event.target：触发事件的元素。
 - event.currentTarget：绑定事件的元素。
@@ -112,7 +79,7 @@
   - event.target：触发事件的元素，可能是事件的源头，也可能是事件的目标。
   - event.currentTarget：绑定事件的元素，一般是事件的目标。
 
-### 如何实现一个元素的拖拽？
+## 如何实现一个元素的拖拽？
 
 - 实现一个元素的拖拽，可以通过原生JS或者JQuery来实现。
 - 原生JS实现拖拽的步骤：
@@ -120,7 +87,7 @@
   - 给document绑定mousemove事件，当鼠标移动时，计算鼠标移动的距离，更新元素的位置。
   - 给document绑定mouseup事件，当鼠标松开时，取消mousemove事件。
 
-### js事件坐标 screen、client、page、offset、layer 的区别
+## js事件坐标 screen、client、page、offset、layer 的区别
 
 - **screenX、screenY**：
   - 鼠标相对于屏幕左上角的坐标。
@@ -137,7 +104,7 @@
 > 以上坐标都是相对于视口的坐标，不随页面滚动而改变。
 > 以上坐标都是相对于事件源元素的坐标，不随父元素的定位而改变。
 
-### 利用 reduce 函数，将 树状结构扁平化
+## 利用 reduce 函数，将 树状结构扁平化
 
 ```javascript
 
@@ -186,7 +153,7 @@ function flatten(tree) {
 console.log(flatten(tree));
 ```
 
-### commonJS 和 ES6 模块化的区别
+## commonJS 和 ES6 模块化的区别
 
 - **CommonJS**：
   - 是一种模块化规范，Node.js采用了这种规范。
@@ -211,7 +178,7 @@ console.log(flatten(tree));
   - CommonJS是单例模式，ES6模块化是多例模式。
   - CommonJS是同步加载，ES6模块化是异步加载。
 
-### 单例模式的实现
+## 单例模式的实现
 
 - **单例模式**：
   - 单例模式是一种常用的设计模式，保证一个类仅有一个实例，并提供一个访问它的全局访问点。
@@ -238,7 +205,7 @@ console.log(flatten(tree));
 
 当然可以，以下是单例模式的几种实现方式的代码例子：
 
-#### 懒汉式
+### 懒汉式
 
 在JavaScript中，懒汉式单例模式可以通过在第一次调用时创建对象来实现。
 
@@ -268,7 +235,7 @@ const instance2 = SingletonLazy.getInstance();
 console.log(instance1 === instance2); // true
 ```
 
-#### 饿汉式
+### 饿汉式
 
 饿汉式在类加载（或脚本执行）时就实例化对象。
 
@@ -299,7 +266,7 @@ const eagerInstance2 = SingletonEager.getInstance();
 console.log(eagerInstance1 === eagerInstance2); // true
 ```
 
-#### 使用闭包（模块模式）
+### 使用闭包（模块模式）
 
 在JavaScript中，可以利用闭包（或模块模式）来创建一个私有的实例，并提供一个全局的访问点。
 
@@ -328,7 +295,7 @@ const moduleInstance2 = SingletonModule.getInstance();
 console.log(moduleInstance1 === moduleInstance2); // true
 ```
 
-#### 使用ES6 Symbol和私有字段
+### 使用ES6 Symbol和私有字段
 
 在ES6中，可以使用Symbol和类的私有字段来实现单例模式。
 
@@ -362,7 +329,7 @@ const symbolInstance2 = SingletonSymbol.getInstance();
 console.log(symbolInstance1 === symbolInstance2); // true
 ```
 
-### 问：new操作符具体干了什么呢？
+## 问：new操作符具体干了什么呢？
 
 - 在 JavaScript 中，当你使用 new 操作符来创建一个对象时，会发生几件事情：
   1. 创建一个新的空对象。
