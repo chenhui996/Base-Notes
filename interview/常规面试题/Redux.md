@@ -389,6 +389,6 @@ export default connect(mapStateToProps, mapDispatchToProps)(TodoList);
 - **Redux**:
   - 适合大型应用，提供严格的单向数据流、中间件支持、事件旅行调试。
   - 缺点：模版代码多。
-- Context API：
+- **Context API**：
   - 适合中小型应用或局部状态共享，API更简单。
   - 缺点：缺乏中间件等高级功能，性能优化需手动处理。
