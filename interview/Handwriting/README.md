@@ -644,12 +644,9 @@ console.log(s1 === s2) // true
 - **功能**：将多个函数组合成一个新函数。
 
 ```js
-function compose(...fns){
+function compose (...fns) {
   return fns.reduce((acc, cul) => {
-      return (...args) => {
-          const result = cul(...args); // 第一个函数执行完
-          return acc(result); // 传给第二个函数继续执行
-      }
+    return (...args) => acc(cul(...args))
   })
 }
 
@@ -658,4 +655,131 @@ const add = x => x + 1;
 const multiply = x => x * 2;
 const func = compose(multiply, add);
 console.log(func(3)); // (3 + 1) * 2 = 8
+```
+
+## 19. 深拷贝：使用迭代替代深拷贝
+
+```js
+function deepClone (obj) {
+  // 处理非对象类型（原始值、函数、Symbol）
+  if (obj === null || typeof obj !== 'object') {
+    // 如果是 Symbol，返回一个新的 Symbol
+    if (typeof obj === 'symbol') {
+      return Symbol(obj.description)
+    }
+
+    // 如果是函数，直接返回（函数不需要深拷贝）
+    if (typeof obj === 'function') {
+      return obj
+    }
+
+    // 其他原始值直接返回
+    return obj
+  }
+
+  // ---------------------------------------------
+
+  // 处理特殊对象（Date、RegExp、Set、Map）
+  if (obj instanceof Date) {
+    return new Date(obj)
+  }
+
+  if (obj instanceof RegExp) {
+    return new RegExp(obj)
+  }
+
+  if (obj instanceof Set) {
+    return new Set([...obj].map(deepClone))
+  }
+
+  if (obj instanceof Map) {
+    return new Map([...obj].map(([k, v]) => [deepClone(k), deepClone(v)]))
+  }
+
+  // ---------------------------------------------
+
+  // 使用 WeakMap 缓存已拷贝的对象，解决循环引用问题
+  const cache = new WeakMap()
+
+  // 初始化栈，用于迭代遍历
+  const stack = [
+    {
+      original: obj,
+      clone: Object.create(Object.getPrototypeOf(obj))
+    }
+  ]
+
+  cache.set(obj, stack[0].clone)
+
+  while (stack.length > 0) {
+    const { original, clone } = stack.pop()
+
+    // 遍历原始对象的属性
+    for (let key in original) {
+      if (original.hasOwnProperty(key)) {
+        const value = original[key] // value 是原始对象中某个属性的引用（如 obj.xx 或 obj.xx.xx），而不是一个新创建的对象
+
+        // 如果是对象且未被缓存，则入栈处理
+        if (value !== null && typeof value === 'object') {
+          if (cache.has(value)) {
+            clone[key] = cache.get(value) // 如果已缓存，直接使用缓存的值
+          } else {
+            // 创建新对象，并设置原型链
+            const newClone = Array.isArray(value)
+              ? []
+              : Object.create(Object.getPrototypeOf(value))
+
+            clone[key] = newClone
+
+            cache.set(value, newClone) // 缓存新对象
+            stack.push({
+              original: value,
+              clone: newClone
+            }) // 入栈，继续处理
+          }
+        } else {
+          // 如果没有 key，也就是原始值，则直接赋值
+          clone[key] = deepClone(value)
+        }
+      }
+    }
+  }
+
+  // 返回拷贝后的对象
+  return cache.get(obj)
+}
+
+// 测试对象
+const obj = {
+  a: 1,
+  b: { c: 2 },
+  d: new Date(),
+  e: /regexp/,
+  f: new Set([1, 2, 3]),
+  g: new Map([
+    [1, 'one'],
+    [2, 'two']
+  ]),
+  h: Symbol('test'),
+  i: function () {
+    console.log('hello')
+  },
+  j: [1, 2, { k: 3 }]
+}
+
+// 添加循环引用
+obj.self = obj
+
+// 深拷贝
+const clonedObj = deepClone(obj)
+
+// 输出结果
+console.log(clonedObj)
+console.log(clonedObj.self === clonedObj) // true，循环引用保持正确
+console.log(clonedObj.d instanceof Date) // true
+console.log(clonedObj.e instanceof RegExp) // true
+console.log(clonedObj.f instanceof Set) // true
+console.log(clonedObj.g instanceof Map) // true
+console.log(clonedObj.h === obj.h) // false，Symbol 是新的
+console.log(clonedObj.i === obj.i) // true，函数直接复用
 ```
