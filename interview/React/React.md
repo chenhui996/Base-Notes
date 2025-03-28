@@ -40,7 +40,8 @@
     - 高阶组件是一个函数，它接收一个组件并返回一个新的组件。HOC可以用于复用组件逻辑、条件渲染、权限控制等场景。
 
 12. **React中的渲染属性（Render Props）是什么？请给出一个使用例子。**
-    - 渲染属性是一个返回UI的函数属性，它允许你将组件要渲染的内容作为函数参数传递给另一个组件。例如：`<DataProvider render={data => <DisplayComponent data={data} />} />`。
+    - 渲染属性是一个返回UI的函数属性，它允许你将组件要渲染的内容作为函数参数传递给另一个组件。例如：
+    - `<DataProvider render={data => <DisplayComponent data={data} />} />`。
 
 13. **解释一下什么是React的PureComponent，以及它如何提高性能。**
     - PureComponent是React提供的一个优化组件性能的基类。它通过浅比较props和state来决定是否重新渲染组件，从而避免了不必要的渲染。

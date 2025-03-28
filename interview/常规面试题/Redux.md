@@ -22,13 +22,11 @@
 
 ### 1.2 redux 三大原则
 
-- **单一数据源（single sourse of truth）**：
+- **1. 单一数据源（single sourse of truth）**：
   - 整个应用的 **状态** 存储在 **唯一一个store** 的 **state 对象中**。
-  - 类比：整个公司的财务数据 统一由 财务部门管理。
-- **状态是只读的（state is read-only）**：
+- **2. 状态是只读的（state is read-only）**：
   - 修改状态的唯一方式是触发 `action`（一个描述 “发生了什么” 的普通对象）。
-  - 类比：修改银行账户，必须填写申请表（action），不能直接修改数据库。
-- **使用纯函数修改状态（Changes with Pure Reducers）**
+- **3. 使用纯函数修改状态（Changes with Pure Reducers）**
   - 通过 `reducer` 函数接收 **旧状态** 和 **action**，**返回新状态**。
   - 纯函数特征：无副作用，同样输入必得同样输出。
 
