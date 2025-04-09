@@ -61,7 +61,7 @@
     - Hooks是React 16.8引入的一组函数，它们允许你在函数组件中使用state和其他React特性。Hooks使得函数组件能够像类组件一样拥有状态、生命周期等特性，从而改变了React组件的编写方式。
 
 18. **请详细解释`useState`和`useEffect`这两个钩子的工作原理，并给出使用例子。**
-    - `useState`是一个Hook，它返回一个state值和一个函数来更新它。例如：`const [count, setCount] = useState(0);`。`useEffect`是一个执行副作用的Hook，它接收一个函数作为参数，并在组件渲染到屏幕之后执行。例如：`useEffect(() => { document.title = `You clicked ${count} times`; }, [count]);`。
+    - `useState`是一个Hook，它返回一个state值和一个函数来更新它。例如：`const [count, setCount] = useState(0);`。`useEffect`是一个执行副作用的Hook，它接收一个函数作为参数，并在组件渲染到屏幕之后执行。例如：`useEffect(() => { document.title =`You clicked ${count} times`; }, [count]);`。
 
 19. **React中的并发模式（Concurrent Mode）是什么？它带来了哪些好处？**
     - 并发模式是React的一个实验性功能，它允许React应用以更细粒度的方式更新UI，从而提高应用的响应性和可中断渲染能力。并发模式带来了更好的用户体验、更高效的CPU利用和更灵活的更新策略等好处。
@@ -141,4 +141,3 @@
 - **思考性能优化**：了解如何使用这两个Hooks进行性能优化，如避免不必要的重新渲染、使用函数式更新等。
 
 通过以上准备，你应该能够更好地应对关于`useState`和`useEffect`工作原理的深入面试问题。
-
