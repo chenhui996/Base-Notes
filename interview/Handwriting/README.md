@@ -799,3 +799,79 @@ console.log(clonedObj.g instanceof Map) // true
 console.log(clonedObj.h === obj.h) // false，Symbol 是新的
 console.log(clonedObj.i === obj.i) // true，函数直接复用
 ```
+
+---
+
+## 20. 递归查找树节点方法
+
+```js
+/**
+ * 递归查找树中的节点
+ * @param {Array} tree - 树形结构数据
+ * @param {Number|String} targetId - 要查找的节点ID
+ * @returns {Object|null} 找到的节点或null
+ */
+function findNodeById(tree, targetId) {
+  // 遍历树的每个节点
+  for (const node of tree) {
+    // 如果当前节点ID匹配，返回该节点
+    if (node.id === targetId) {
+      return node;
+    }
+    
+    // 如果当前节点有子节点，递归查找
+    if (node.children && node.children.length > 0) {
+      const foundNode = findNodeById(node.children, targetId);
+      if (foundNode) {
+        return foundNode; // 如果在子树中找到，立即返回
+      }
+    }
+  }
+  
+  // 遍历完整个树都没找到，返回null
+  return null;
+}
+
+// 示例使用
+const treeData = [
+  {
+    id: 1,
+    name: '节点1',
+    children: [
+      {
+        id: 3,
+        name: '节点1-1',
+        children: [
+          {
+            id: 6,
+            name: '节点1-1-1'
+          }
+        ]
+      },
+      {
+        id: 4,
+        name: '节点1-2'
+      }
+    ]
+  },
+  {
+    id: 2,
+    name: '节点2',
+    children: [
+      {
+        id: 5,
+        name: '节点2-1'
+      }
+    ]
+  }
+];
+
+// 查找ID为5的节点
+const node = findNodeById(treeData, 5);
+console.log(node); 
+// 输出: { id: 5, name: '节点2-1', children: [] }
+
+// 查找不存在的ID
+const notFoundNode = findNodeById(treeData, 99);
+console.log(notFoundNode); // 输出: null
+```
