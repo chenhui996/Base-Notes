@@ -1,4 +1,4 @@
-// 基于基础版 冒泡排序而来
+// 基于基础版 冒泡排序1 而来
 function bubbleSort (nums) {
   let isSorted = false // 是否已经排序完成
   for (let i = 0; i < nums.length; i++) {
