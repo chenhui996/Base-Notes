@@ -1,16 +1,24 @@
-// 基于基础版 冒泡排序而来
+// 基于基础版 冒泡排序2而来
 function bubbleSort (nums) {
-  let isSorted = false // 是否已经排序完成
-  for (let i = 0; i < nums.length; i++) {
+  const n = nums.length - 1
+  let isSorted
+  let lastSortIndex = n
+  let isSortedIndex = -1
+
+  for (let i = 0; i <= n; i++) {
     isSorted = false
-    for (let j = 0; j < nums.length - i; j++) {
+    for (let j = 0; j <= lastSortIndex; j++) {
       if (nums[j] > nums[j + 1]) {
         const temp = nums[j]
         nums[j] = nums[j + 1]
         nums[j + 1] = temp
+
         isSorted = true
+        isSortedIndex = j
       }
     }
+
+    lastSortIndex = isSortedIndex
 
     if (!isSorted) {
       break

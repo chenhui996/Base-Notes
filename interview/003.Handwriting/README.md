@@ -8,23 +8,32 @@
 - **功能**：改变 `this` 指向并 **立即执行函数**。
 
 ```js
-Function.prototype.myCall = function(context, ...args){
-  context = context || window; // 默认全局对象
+// 手写 call
+Function.prototype.myCall = function (context, ...args) {
+  // 1. 如果未传 context，则默认为全局对象（浏览器下为 window，Node.js 中为 global）
+  context = context || window
 
-  const fn = Symbol(); // 创建唯一标识
-  context[fn] = this; // 将当前函数挂载到 context 对象
+  // 2. 创建一个唯一的属性名，用来暂存当前函数（即调用 myCall 的函数）
+  const fn = Symbol()
 
-  const result = context[fn](...args); // 调用函数
+  // 3. 将当前函数作为 context 的属性，这样调用它时，this 就指向 context
+  context[fn] = this
 
-  delete context[fn]; // 清理临时属性
-  return result;
+  // 4. 调用函数，并传入参数
+  const result = context[fn](...args)
+
+  // 5. 删除临时添加到 context 上的属性，防止污染原对象
+  delete context[fn]
+
+  return result
 }
 
-
 // 使用示例
-const obj = { name: 'Alice' };
-function greet() { console.log(this.name); }
-greet.myCall(obj); // 输出 'Alice'
+const obj = { name: 'Alice' }
+function greet () {
+  console.log(this.name)
+}
+greet.myCall(obj)
 ```
 
 ---
@@ -34,29 +43,38 @@ greet.myCall(obj); // 输出 'Alice'
 - **功能**：返回一个绑定 `this` 的新函数。
 
 ```js
-Function.prototype.myBind = function(context, ...args){
-    const self = this; // 保存原函数，以便后续调用。
+// 手写 bind
+Function.prototype.myBind = function (context, ...args) {
+  // 1. 保存原函数，后续需要在指定 context 上调用它
+  const self = this
 
-    return function(...innerArgs){
-        // 自行实现类似于 apply
-        const fn = Symbol();
-        context[fn] = self;
-        
-        const result = context[fn](...args.concat(innerArgs));
-        
-        delete context(fn);
-        return result;
-    }
+  // 2. 返回一个新的函数，调用时可以继续传参（实现柯里化）
+  return function (...innerArgs) {
+    // 3. 创建一个唯一的属性名，避免与 context 上已有属性冲突
+    const fn = Symbol()
+
+    // 4. 将原函数临时赋值给 context 的属性（通过 this 指向 context）
+    context[fn] = self
+
+    // 5. 调用函数，合并 bind 时传入的参数 和 调用时 传入的参数
+    const result = context[fn](...args.concat(innerArgs))
+
+    // 6. 删除临时属性，防止污染原对象
+    delete context[fn]
+
+    return result
+  }
 }
 
-// 使用示例
-const obj = {x: 42};
-function add(y){
-    return this.x + y;
+const obj = { x: 42 }
+
+function add (y) {
+  return this.x + y
 }
 
-const boundAdd = add.myBind(obj, 10);
-console.log(boundAdd()); // 52
+const boundAdd = add.myBind(obj, 10)
+console.log(boundAdd()) // 52
+
 ```
 
 - **解析**：
@@ -75,37 +93,45 @@ console.log(boundAdd()); // 52
 - **功能**：克隆对象及其嵌套属性。
 
 ```js
-function deepClone(obj, map = new WeakMap()){
-    if(typeof obj !== 'object' || obj === null){
-        return obj; // 最里层判断
+// 手写深拷贝（递归版
+function deepClone (obj, map = new WeakMap()) {
+  // 1. 确定递归终止条件
+  if (typeof obj !== 'object' || obj === null) {
+    return obj // 最里层判断
+  }
+
+  // 2. 检测循环引用
+  if (map.has(obj)) {
+    return map.get(obj)
+  }
+
+  // 3. 初始化参数区
+  const clone = Array.isArray(obj) ? [] : {}
+
+  // 4. 记录已拷贝对象
+  map.set(obj, clone)
+
+  // 5. 主流程执行区
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      clone[key] = deepClone(obj[key], map) // 递归拷贝
     }
-    
-    if(map.has(obj)){
-        return map.get(obj); // 检测循环引用
-    }
+  }
 
-    const clone = Array.isArray(obj) ? [] : {};
-
-    map.set(obj, clone); // 记录已拷贝的对象
-
-    for(const key in obj){
-        if(obj,hasOwnProperty(key)){
-            clone[key] = deepClone(obj[key], map); // 递归拷贝
-        }
-    }
-
-    return clone;
+  return clone
 }
 
 // 使用示例
 const obj = {
-    a: 1,
-    b: {
-        c: 2
-    }
-};
+  a: 1,
+  b: {
+    c: 2
+  }
+}
 
-const cloned = deepClone(obj);
+const cloned = deepClone(obj)
+
+console.log(cloned)
 ```
 
 ---
@@ -115,23 +141,27 @@ const cloned = deepClone(obj);
 - **功能**：高频事件 延迟 执行，只执行最后一次。
 
 ```js
-function debounce(fn, delay, immediate = false){
-    let timer;
-    return function(...args){
-        if(immediate && !timer){
-            fn.apply(this, args); // 立即执行
-        }
+// 手写防抖 debounce
+function debounce (fn, delay, immediate = false) {
+  let timer
 
-        clearTimeout(timer);
+  return function (...args) {
+    const context = this
 
-        timer = setTimeout(() => {
-            if(!immediate){
-                fn.apply(this, args); // 延迟执行
-            }
-
-            timer = null;
-        }, delay)
+    if (immediate && !timer) {
+      fn.apply(context, args)
     }
+
+    clearTimeout(timer)
+
+    timer = setTimeout(() => {
+      if (!immediate) {
+        fn.apply(context, args)
+      }
+
+      timer = null
+    }, delay)
+  }
 }
 
 // 使用示例
@@ -874,4 +904,125 @@ console.log(node);
 // 查找不存在的ID
 const notFoundNode = findNodeById(treeData, 99);
 console.log(notFoundNode); // 输出: null
+```
+
+## 21. 树转数组
+
+```js
+const tree = [
+  {
+    id: 1,
+    name: 'A',
+    children: [
+      {
+        id: 2,
+        name: 'B',
+        children: [{ id: 4, name: 'D' }]
+      },
+      { id: 3, name: 'C' }
+    ]
+  }
+]
+
+// 将树形结构扁平化为数组结构
+function treeToArray (tree) {
+  const result = [] // 用于收集所有节点（去掉 children 后）
+
+  // 递归函数：遍历每一层的节点数组
+  function dfs (nodeList) {
+    for (const node of nodeList) {
+      // 1. 将 当前节点 解构：保留 除 children 外的 所有属性
+      const { children, ...rest } = node
+
+      // 2. 把当前节点（不含 children）加入结果数组中
+      result.push(rest)
+
+      // 3. 如果当前节点有子节点，递归处理子节点数组
+      if (children) {
+        dfs(children)
+      }
+    }
+  }
+
+  dfs(tree)
+
+  return result
+}
+
+console.log(treeToArray(tree))
+```
+
+## 22. 数组转树
+
+```js
+const arr = [
+  { id: 1, name: 'A', parentId: null },
+  { id: 2, name: 'B', parentId: 1 },
+  { id: 3, name: 'C', parentId: 1 },
+  { id: 4, name: 'D', parentId: 2 }
+]
+
+// 数组转树
+function arrayToTree (arr) {
+  const result = [] // 用于： 保存最终的树形结构
+  const idMap = {} // 用于：快速查找每个节点：id -> node
+
+  // 1. 现将每个节点 按 id 映射存起来（便于 后续 根据 parentId 找父节点）
+  for (const item of arr) {
+    idMap[item.id] = { ...item }
+  }
+
+  // 2. 遍历数组，构建树结构
+  for (const item of arr) {
+    const node = idMap[item.id] // 当前节点（已经在 idMap 中）
+
+    if (item.parentId === null) {
+      // 如果没有父节点，说明时顶层节点，放入result 中
+      result.push(node)
+    } else {
+      const parent = idMap[item.parentId] // 找到父节点
+
+      if (parent) {
+        // 如果父节点存在，添加当前节点到父节点的children 中
+        if (!parent?.children) {
+          parent.children = []
+        }
+        parent.children.push(node)
+      }
+    }
+  }
+
+  return result
+}
+
+console.log(JSON.stringify(arrayToTree(arr), null, 2))
+```
+
+## 23. 记忆函数（缓存结果）
+
+```js
+function memoize(fn) {
+  const cache = new Map();
+
+  return function (...args) {
+    const key = JSON.stringify(args); // 简单序列化作为缓存 key
+
+    if (cache.has(key)) {
+      return cache.get(key); // 命中缓存
+    }
+
+    const result = fn.apply(this, args);
+    cache.set(key, result); // 存入缓存
+    return result;
+  };
+}
+
+// 使用示例
+function slowAdd(a, b) {
+  console.log('计算中...');
+  return a + b;
+}
+const memoizedAdd = memoize(slowAdd);
+console.log(memoizedAdd(1, 2)); // 计算中... → 3
+console.log(memoizedAdd(1, 2)); // 直接取缓存 → 3
 ```
