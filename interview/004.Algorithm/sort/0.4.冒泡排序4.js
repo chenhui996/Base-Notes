@@ -1,7 +1,7 @@
 // 本 demo 特点：使用 位运算 避免使用临时变量（大厂有考过
 function bubbleSort(nums) {
   for (let i = 0; i < nums.length; i++) {
-    for (let j = 0; j < nums.length - i; j++) {
+    for (let j = 0; j < nums.length - 1 - i; j++) {
       if (nums[j] > nums[j + 1]) {
         nums[j] = nums[j] ^ nums[j + 1];
         nums[j + 1] = nums[j + 1] ^ nums[j];
