@@ -29,7 +29,7 @@ function selectionSort (nums) {
 
     // 特殊情况：正好最大值就是刚刚调换的 i，也就是 maxIndex === i，那需要将 maxIndex 指向刚刚顺序改变后的位置
     if (maxIndex === i) {
-      maxIndex === minIndex
+      maxIndex = minIndex
     }
 
     // 将 最大值 调换至 “本轮” 尾部
@@ -42,4 +42,4 @@ function selectionSort (nums) {
   return nums
 }
 
-console.log(selectionSort([2, 1, 3, 4, 8, 6, 2, 1]))
+console.log(selectionSort([ 4, 2, 3, 1 ]))

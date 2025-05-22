@@ -1026,3 +1026,28 @@ const memoizedAdd = memoize(slowAdd);
 console.log(memoizedAdd(1, 2)); // 计算中... → 3
 console.log(memoizedAdd(1, 2)); // 直接取缓存 → 3
 ```
+
+## 24. 快排
+
+```js
+function quickSort(arr) {
+  if (arr.length <= 1) return arr; // 递归出口：空数组或只包含一个元素
+
+  const pivot = arr[0]; // 选取第一个元素作为基准值
+  const left = [];      // 小于 pivot 的元素放左边
+  const right = [];     // 大于等于 pivot 的元素放右边
+
+  for (let i = 1; i < arr.length; i++) {
+    if (arr[i] < pivot) {
+      left.push(arr[i]);
+    } else {
+      right.push(arr[i]);
+    }
+  }
+
+  // 递归排序左右子数组，再合并
+  return [...quickSort(left), pivot, ...quickSort(right)];
+}
+
+console.log(quickSort([5, 3, 8, 4, 2, 7, 1]));
+```
