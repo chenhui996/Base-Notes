@@ -165,9 +165,18 @@ function debounce (fn, delay, immediate = false) {
 }
 
 // 使用示例
-const debouncedHandler = debounce(() => console.log('Resize'), 300);
+const debouncedHandler = debounce(() => console.log('Resize'), 300)
 
-window.addEventListener('resize', debouncedHandler)
+debouncedHandler()
+debouncedHandler()
+debouncedHandler()
+debouncedHandler()
+debouncedHandler()
+debouncedHandler()
+
+setTimeout(() => {
+  debouncedHandler()
+}, 400);
 ```
 
 - **注意点**：
@@ -198,7 +207,14 @@ function throttle(fn, delay){
 // 使用示例
 const throttleHandle = throttle(() => console.log('Scroll'), 100);
 
-window.addEventListener('scroll', throttleHandle);
+throttleHandle()
+throttleHandle()
+setTimeout(() => {
+  throttleHandle()
+}, 200)
+setTimeout(() => {
+  throttleHandle()
+}, 400)
 ```
 
 ## 6. 手写 Promise
@@ -477,7 +493,7 @@ function myStringify(obj){
     }
 
     const entries = Object.entries(obj)
-        .map((key, val) => {
+        .map(([key, val]) => {
             return `"${key}": ${myStringify(val)}`
         })
 
