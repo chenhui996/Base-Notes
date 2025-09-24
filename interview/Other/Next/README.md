@@ -1286,7 +1286,7 @@ app
 - 路由处理程序是指:
   - 使用 Web Request 和 Response API 对于 -> **给定的路由** -> **自定义处理逻辑**。
 - 简单的来说，前后端分离架构中，客户端与服务端之间通过 API 接口来交互。
-- 这个“API 接口”在 Next.js 中有个更为正式的称呼，就是**路由处理程序**。
+- 这个“API 接口”在 Next.js 中有个更为正式的称呼，就是 **路由处理程序**。
   - 也就是说，路由处理程序就是一个 API 接口，用于处理客户端请求。
 
 ## 定义路由处理程序
@@ -1395,21 +1395,31 @@ export async function GET(request, { params }) {
 - 让我们举个例子，新建 app/api/time/route.js，代码如下：
 
 ```js
+// export async function GET() {
+//   console.log('GET /api/time')
+//   return Response.json({ data: new Date().toLocaleTimeString() })
+// }
+
+// 2025-09-24 更新笔记：
+export const dynamic = 'force-static'
+
 export async function GET() {
   console.log('GET /api/time')
   return Response.json({ data: new Date().toLocaleTimeString() })
 }
+
+// tips：next 最新版，get 请求默认不会缓存，除非手动指定，也就是 force-static。由于成本问题，目前仅改了代码，下方依旧为老教材，我会逐步更改
 ```
 
 > 注意：在 **开发模式(dev)** 下，并不会被缓存，每次刷新时间都会改变.
 
 - 部署 **生产版本(prod)**，运行 npm run build && npm run start：
-  - 时间会被缓存，刷新页面时间 **不会改变**。
+  - 时间会被缓存，刷新页面时间 **不会改变**。（tips：next 15，改了！get 请求等，默认，不会被缓存）
   - 可是为什么呢？Next.js 是怎么实现的呢？
   - 让我们看下构建（npm run build）时的命令行输出：
-    - 根据输出的结果，你会发现 **/api/time 是静态的**，也就是被预渲染为静态的内容.
+    - 根据输出的结果，你会发现 **/api/time 是静态的**，也就是被预渲染为静态的内容.（tips：next15， api请求，现在需要手动指定，才能被预渲染为 静态）
     - 换言之，/api/time 的返回结果:
-      - 在 **构建的时候** 就已经确定了
+      - 在 **构建的时候** 就已经确定了。
       - 而不是在 **第一次请求的时候** 才确定。
 
 #### 手动设置缓存
