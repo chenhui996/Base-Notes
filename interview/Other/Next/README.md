@@ -645,7 +645,6 @@ export default function NotFound() {
 ```
 
 - 于 app/not-found.js 一定要说明一点的是，它只能由**两种情况**触发：
-
   - 当组件 抛出了 notFound 函数的时候
   - 当路由 地址不匹配的时候
 
@@ -893,7 +892,7 @@ export default async function Profile({ params }) {
 - 也可以使用浏览器原生的 window.history.pushState 和 window.history.replaceState 方法更新浏览器的历史记录堆栈。
 - 通常与 usePathname（获取路径名的 hook） 和 useSearchParams（获取页面参数的 hook） 一起使用。
 
-- 比如用 pushState 对列表进行排序：
+- 比如用 pushState 对列表进行排序(为 url 添加 sort 参数)：
 
 ```js
 'use client'
@@ -1223,7 +1222,7 @@ app
 │  ├─ loading.js
 │  └─ error.js
 └─ @analytics
-   ├─ page.jsa s d s
+   ├─ page.js
    ├─ loading.js
    └─ error.js
 ```
@@ -1273,8 +1272,8 @@ app
 - 这一节我们介绍了：
   - 动态路由 -> [] -> 动态数据
   - 路由组 -> () -> 组织代码
-  - 平行路由 -> (.) -> 同时渲染
-  - 拦截路由 -> (@) -> 拦截路由
+  - 平行路由 -> (@) -> 同时渲染
+  - 拦截路由 -> (.) -> 拦截路由
 - 它们的共同特点就需要对文件名进行修饰。
 - 其中：
   - **动态路由** 用来 **处理动态的链接**
